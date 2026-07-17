@@ -150,13 +150,13 @@ def test_compile_does_not_mutate_process() -> None:
 
 
 def test_review_is_explicitly_pending() -> None:
-    """review_score 固定为 0.0，warnings 包含 Reviewer 未执行提示。"""
+    """B-M3 后 review_score > 0，warnings 不再包含"Reviewer 尚未执行"。"""
     result = _compile()
     for plan in result.plans:
-        assert plan.review_score == 0.0, f"{plan.plan_type} review_score 不为 0.0"
+        assert plan.review_score > 0, f"{plan.plan_type} review_score 仍为 0"
         warning_text = " ".join(plan.warnings)
-        assert "Reviewer" in warning_text or "review" in warning_text.lower(), (
-            f"{plan.plan_type} warnings 未提及 Reviewer 未执行"
+        assert "尚未执行" not in warning_text, (
+            f"{plan.plan_type} warnings 仍含 Reviewer 尚未执行"
         )
 
 

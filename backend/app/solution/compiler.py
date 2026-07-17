@@ -17,7 +17,9 @@ from backend.app.contracts.solution import (
     WorkflowNode,
 )
 from backend.app.solution.capabilities import CapabilityCapsule, load_capabilities
+from backend.app.solution.constraints import validate_constraints
 from backend.app.solution.retriever import retrieve_components
+from backend.app.solution.reviewer import review_solution
 
 # ---------------------------------------------------------------------------
 # 策略定义
@@ -226,9 +228,8 @@ def _build_assumptions(process: ProcessSpec) -> list[str]:
 
 
 def _build_warnings() -> list[str]:
-    """构建警告列表，明确 Reviewer 尚未执行。"""
+    """构建设计阶段警告列表（不含 Reviewer 状态，由编译器后续替换）。"""
     return [
-        "当前方案尚未经过 Reviewer 正式评分，review_score=0.0 为占位值。",
         "预期指标需由成员 C 的 Runtime/ValueProof 实际验证，当前仅为指标名称而非结果。",
     ]
 
@@ -303,7 +304,7 @@ def compile_solution(process: ProcessSpec) -> SolutionBundle:
 
     # 按策略顺序构建三套方案
     plan_types = ["conservative", "balanced", "innovative"]
-    plans = [
+    raw_plans = [
         _build_plan(
             process,
             pt,
@@ -315,4 +316,26 @@ def compile_solution(process: ProcessSpec) -> SolutionBundle:
         for pt in plan_types
     ]
 
-    return SolutionBundle(project_id=process.project_id, plans=plans)
+    # 对每套方案执行约束校验和 Reviewer 评分
+    final_plans = []
+    for plan in raw_plans:
+        validation = validate_constraints(plan, list(process.constraints))
+        review = review_solution(plan, process, validation)
+
+        # 合并 warnings：设计警告 + 校验警告 + Reviewer 警告
+        merged_warnings = list(plan.warnings)
+        for w in validation.warnings:
+            if w not in merged_warnings:
+                merged_warnings.append(w)
+        for w in review.warnings:
+            if w not in merged_warnings:
+                merged_warnings.append(w)
+
+        # 用 model_copy 安全更新，不修改公共模型定义
+        updated_plan = plan.model_copy(update={
+            "review_score": review.score,
+            "warnings": merged_warnings,
+        })
+        final_plans.append(updated_plan)
+
+    return SolutionBundle(project_id=process.project_id, plans=final_plans)

@@ -167,10 +167,10 @@
       ],
       "assumptions": [],
       "warnings": [
-        "当前方案尚未经过 Reviewer 正式评分，review_score=0.0 为占位值。",
-        "预期指标需由成员 C 的 Runtime/ValueProof 实际验证，当前仅为指标名称而非结果。"
+        "预期指标需由成员 C 的 Runtime/ValueProof 实际验证，当前仅为指标名称而非结果。",
+        "所有组件的 evidence_urls 为空，证据引用尚未补齐，需后续补充公开引用。"
       ],
-      "review_score": 0.0
+      "review_score": 83.73809523809524
     },
     {
       "schema_version": "1.0",
@@ -403,10 +403,10 @@
       ],
       "assumptions": [],
       "warnings": [
-        "当前方案尚未经过 Reviewer 正式评分，review_score=0.0 为占位值。",
-        "预期指标需由成员 C 的 Runtime/ValueProof 实际验证，当前仅为指标名称而非结果。"
+        "预期指标需由成员 C 的 Runtime/ValueProof 实际验证，当前仅为指标名称而非结果。",
+        "所有组件的 evidence_urls 为空，证据引用尚未补齐，需后续补充公开引用。"
       ],
-      "review_score": 0.0
+      "review_score": 84.73809523809524
     },
     {
       "schema_version": "1.0",
@@ -724,10 +724,10 @@
       ],
       "assumptions": [],
       "warnings": [
-        "当前方案尚未经过 Reviewer 正式评分，review_score=0.0 为占位值。",
-        "预期指标需由成员 C 的 Runtime/ValueProof 实际验证，当前仅为指标名称而非结果。"
+        "预期指标需由成员 C 的 Runtime/ValueProof 实际验证，当前仅为指标名称而非结果。",
+        "所有组件的 evidence_urls 为空，证据引用尚未补齐，需后续补充公开引用。"
       ],
-      "review_score": 0.0
+      "review_score": 82.64285714285715
     }
   ]
 }

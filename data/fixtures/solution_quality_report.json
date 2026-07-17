@@ -1,0 +1,289 @@
+{
+  "project_id": "procurement-demo-001",
+  "generated_from_fixture": "process_spec.json",
+  "plans": [
+    {
+      "solution_id": "procurement-demo-001-conservative-v1",
+      "plan_type": "conservative",
+      "constraint_validation": {
+        "is_valid": true,
+        "checks": [
+          {
+            "constraint_id": "constraint-001",
+            "constraint_type": "approval",
+            "hard": true,
+            "status": "passed",
+            "message": "方案包含 human_gate 且 gate_reason 体现了审批阈值或约束声明",
+            "required_component_ids": [
+              "human-approval"
+            ],
+            "missing_component_ids": [],
+            "affected_node_ids": [
+              "conservative-003",
+              "conservative-004"
+            ]
+          }
+        ],
+        "passed_count": 1,
+        "failed_count": 0,
+        "unverifiable_count": 0,
+        "warnings": []
+      },
+      "review": {
+        "score": 83.73809523809524,
+        "dimensions": [
+          {
+            "name": "约束合规",
+            "score": 30.0,
+            "max_score": 30.0,
+            "reasons": [
+              "全部约束通过校验"
+            ]
+          },
+          {
+            "name": "需求与痛点覆盖",
+            "score": 10.880952380952381,
+            "max_score": 25.0,
+            "reasons": [
+              "痛点 pain-001 未完全覆盖",
+              "业务目标关键词覆盖: 1/7",
+              "目标指标覆盖: 5.0/5",
+              "关键流程区域覆盖: 5/6"
+            ]
+          },
+          {
+            "name": "工作流完整性",
+            "score": 20.0,
+            "max_score": 20.0,
+            "reasons": [
+              "有工作流节点: +2",
+              "节点 ID 唯一: +3",
+              "无悬空 next_id: +5",
+              "存在终止节点: +3",
+              "组件与节点基本一致: +3",
+              "hard approval 有 human gate: +2",
+              "executor 无明显冲突: +2"
+            ]
+          },
+          {
+            "name": "可解释性与证据",
+            "score": 15.0,
+            "max_score": 15.0,
+            "reasons": [
+              "所有组件 reason 非空: +5",
+              "非占位 reason: 6/6",
+              "required_data 明确: 6/6",
+              "evidence_urls 未伪造: +2",
+              "assumptions/warnings 存在: +2"
+            ]
+          },
+          {
+            "name": "实施可行性",
+            "score": 7.857142857142857,
+            "max_score": 10.0,
+            "reasons": [
+              "implementation_steps 非空: +1",
+              "steps 数量与组件匹配: +1",
+              "组件数 6 ≤ 7: +3",
+              "数据覆盖率 57.1%: +2.9"
+            ]
+          }
+        ],
+        "warnings": [
+          "所有组件的 evidence_urls 为空，证据引用尚未补齐，需后续补充公开引用。",
+          "预期指标需由成员 C 的 Runtime/ValueProof 实际验证，当前仅为指标名称而非结果。"
+        ],
+        "recommendation": "acceptable",
+        "summary": "稳健合规方案 综合评分 83.7/100，建议: acceptable。优势维度: 约束合规(30.0/30)。待改进维度: 需求与痛点覆盖(10.9/25)。"
+      }
+    },
+    {
+      "solution_id": "procurement-demo-001-balanced-v1",
+      "plan_type": "balanced",
+      "constraint_validation": {
+        "is_valid": true,
+        "checks": [
+          {
+            "constraint_id": "constraint-001",
+            "constraint_type": "approval",
+            "hard": true,
+            "status": "passed",
+            "message": "方案包含 human_gate 且 gate_reason 体现了审批阈值或约束声明",
+            "required_component_ids": [
+              "human-approval"
+            ],
+            "missing_component_ids": [],
+            "affected_node_ids": [
+              "balanced-007"
+            ]
+          }
+        ],
+        "passed_count": 1,
+        "failed_count": 0,
+        "unverifiable_count": 0,
+        "warnings": []
+      },
+      "review": {
+        "score": 84.73809523809524,
+        "dimensions": [
+          {
+            "name": "约束合规",
+            "score": 30.0,
+            "max_score": 30.0,
+            "reasons": [
+              "全部约束通过校验"
+            ]
+          },
+          {
+            "name": "需求与痛点覆盖",
+            "score": 13.857142857142858,
+            "max_score": 25.0,
+            "reasons": [
+              "痛点 pain-001 未完全覆盖",
+              "业务目标关键词覆盖: 4/7",
+              "目标指标覆盖: 5.0/5",
+              "关键流程区域覆盖: 6/6"
+            ]
+          },
+          {
+            "name": "工作流完整性",
+            "score": 20.0,
+            "max_score": 20.0,
+            "reasons": [
+              "有工作流节点: +2",
+              "节点 ID 唯一: +3",
+              "无悬空 next_id: +5",
+              "存在终止节点: +3",
+              "组件与节点基本一致: +3",
+              "hard approval 有 human gate: +2",
+              "executor 无明显冲突: +2"
+            ]
+          },
+          {
+            "name": "可解释性与证据",
+            "score": 15.0,
+            "max_score": 15.0,
+            "reasons": [
+              "所有组件 reason 非空: +5",
+              "非占位 reason: 9/9",
+              "required_data 明确: 9/9",
+              "evidence_urls 未伪造: +2",
+              "assumptions/warnings 存在: +2"
+            ]
+          },
+          {
+            "name": "实施可行性",
+            "score": 5.880952380952381,
+            "max_score": 10.0,
+            "reasons": [
+              "implementation_steps 非空: +1",
+              "steps 数量与组件匹配: +1",
+              "组件数 9 8-10: +1.5",
+              "数据覆盖率 47.6%: +2.4"
+            ]
+          }
+        ],
+        "warnings": [
+          "所有组件的 evidence_urls 为空，证据引用尚未补齐，需后续补充公开引用。",
+          "预期指标需由成员 C 的 Runtime/ValueProof 实际验证，当前仅为指标名称而非结果。"
+        ],
+        "recommendation": "acceptable",
+        "summary": "效率平衡方案 综合评分 84.7/100，建议: acceptable。优势维度: 约束合规(30.0/30)。待改进维度: 需求与痛点覆盖(13.9/25)。"
+      }
+    },
+    {
+      "solution_id": "procurement-demo-001-innovative-v1",
+      "plan_type": "innovative",
+      "constraint_validation": {
+        "is_valid": true,
+        "checks": [
+          {
+            "constraint_id": "constraint-001",
+            "constraint_type": "approval",
+            "hard": true,
+            "status": "passed",
+            "message": "方案包含 human_gate 且 gate_reason 体现了审批阈值或约束声明",
+            "required_component_ids": [
+              "human-approval"
+            ],
+            "missing_component_ids": [],
+            "affected_node_ids": [
+              "innovative-009"
+            ]
+          }
+        ],
+        "passed_count": 1,
+        "failed_count": 0,
+        "unverifiable_count": 0,
+        "warnings": []
+      },
+      "review": {
+        "score": 82.64285714285715,
+        "dimensions": [
+          {
+            "name": "约束合规",
+            "score": 30.0,
+            "max_score": 30.0,
+            "reasons": [
+              "全部约束通过校验"
+            ]
+          },
+          {
+            "name": "需求与痛点覆盖",
+            "score": 13.857142857142858,
+            "max_score": 25.0,
+            "reasons": [
+              "痛点 pain-001 未完全覆盖",
+              "业务目标关键词覆盖: 4/7",
+              "目标指标覆盖: 5.0/5",
+              "关键流程区域覆盖: 6/6"
+            ]
+          },
+          {
+            "name": "工作流完整性",
+            "score": 20.0,
+            "max_score": 20.0,
+            "reasons": [
+              "有工作流节点: +2",
+              "节点 ID 唯一: +3",
+              "无悬空 next_id: +5",
+              "存在终止节点: +3",
+              "组件与节点基本一致: +3",
+              "hard approval 有 human gate: +2",
+              "executor 无明显冲突: +2"
+            ]
+          },
+          {
+            "name": "可解释性与证据",
+            "score": 15.0,
+            "max_score": 15.0,
+            "reasons": [
+              "所有组件 reason 非空: +5",
+              "非占位 reason: 13/13",
+              "required_data 明确: 13/13",
+              "evidence_urls 未伪造: +2",
+              "assumptions/warnings 存在: +2"
+            ]
+          },
+          {
+            "name": "实施可行性",
+            "score": 3.7857142857142856,
+            "max_score": 10.0,
+            "reasons": [
+              "implementation_steps 非空: +1",
+              "steps 数量与组件匹配: +1",
+              "组件数 13 > 10: +0",
+              "数据覆盖率 35.7%: +1.8"
+            ]
+          }
+        ],
+        "warnings": [
+          "所有组件的 evidence_urls 为空，证据引用尚未补齐，需后续补充公开引用。",
+          "预期指标需由成员 C 的 Runtime/ValueProof 实际验证，当前仅为指标名称而非结果。"
+        ],
+        "recommendation": "acceptable",
+        "summary": "智能重构方案 综合评分 82.6/100，建议: acceptable。优势维度: 约束合规(30.0/30)。待改进维度: 实施可行性(3.8/10)。"
+      }
+    }
+  ]
+}
