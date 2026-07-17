@@ -25,13 +25,14 @@ from backend.app.solution.reviewer import (
     SolutionReviewResult,
     review_solution,
 )
-from backend.app.solution.service import compile_solution
+from backend.app.solution.service import compile_solution, recompile_solution
 
 __all__ = [
     "CapabilityCapsule",
     "load_capabilities",
     "retrieve_components",
     "compile_solution",
+    "recompile_solution",
     "ConstraintCheck",
     "ConstraintValidationResult",
     "validate_constraints",
