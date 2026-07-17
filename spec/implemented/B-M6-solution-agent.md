@@ -70,11 +70,48 @@ Agent 只允许调用：
 
 ## 真实 API 冒烟结果
 
-环境变量未设置，smoke 脚本正确检测并提示配置。真实 API 调用需用户配置 `LLM_API_KEY`、`LLM_BASE_URL`、`LLM_MODEL` 后运行 `scripts/smoke_solution_agent.py`。
+**验证日期：** 2026-07-17
+**服务类型：** OpenAI-compatible（阿里云百炼 DashScope）
+**模型名称：** qwen3.7-plus
+**API Key：** 未记录（仅存在于环境变量，未写入任何文件）
+
+### compile 指令
+
+- 意图：compile ✅
+- 工具调用：Step 2: compile_solution (success) — 生成 3 套方案
+- 返回方案：conservative (83.7) / balanced (84.7) / innovative (82.6)
+- balanced solution_id：procurement-demo-001-balanced-v1
+
+### recompile 指令
+
+- 意图：recompile ✅
+- 工具调用：Step 2: recompile_solution (success) — v1→v2
+- previous_solution_id：procurement-demo-001-balanced-v1
+- new_solution.solution_id：procurement-demo-001-balanced-v2
+- added_component_ids：['data-masking', 'local-model']
+- changed_node_ids：11 个
+- 约束通过 BusinessConstraint 校验 ✅
+
+### 安全验证
+
+- 输出中无 API Key ✅
+- 无 Authorization 头 ✅
+- 无 Bearer token ✅
+- Agent 业务结果全部来自确定性工具 ✅
+- LLM 未直接覆盖 review_score / components / nodes / diff ✅
+
+### 回归测试
+
+- test_llm_provider: 5 passed
+- test_solution_agent: 15 passed
+- test_solution_agent_api: 4 passed
+- tests (全量): 152 passed
+
+**本次结果只证明 API 和工具调用链可用，不代表真实业务效果。**
 
 ## 当前限制
 
-- 真实 API 尚未在 CI 中验证（需用户手动配置密钥）
 - Agent 最大步数为 4，复杂场景可能不够
 - LLM 失败时仅支持 compile 回退
 - 无对话历史（单轮交互）
+- 真实 API 已验证可用（qwen3.7-plus），但不在 CI 中自动运行
