@@ -1,0 +1,84 @@
+{
+  "project_id": "procurement-demo-001",
+  "plans": [
+    {
+      "schema_version": "1.0",
+      "solution_id": "solution-balanced-001",
+      "source_project_id": "procurement-demo-001",
+      "plan_type": "balanced",
+      "name": "采购异常智能处理均衡方案",
+      "summary": "自动处理低风险异常，高金额和高风险订单保留人工审批。",
+      "selected_components": [
+        {
+          "component_id": "document-check",
+          "name": "单据完整性检查",
+          "reason": "自动识别订单、收货记录和发票是否齐全",
+          "required_data": [
+            "采购订单",
+            "收货记录",
+            "发票记录"
+          ],
+          "evidence_urls": []
+        },
+        {
+          "component_id": "risk-scoring",
+          "name": "风险评分",
+          "reason": "识别高金额和重复付款风险",
+          "required_data": [
+            "历史采购记录"
+          ],
+          "evidence_urls": []
+        }
+      ],
+      "to_be_nodes": [
+        {
+          "id": "new-node-001",
+          "name": "自动检查单据",
+          "component_id": "document-check",
+          "executor": "ai",
+          "next_ids": [
+            "new-node-002"
+          ],
+          "human_gate": false,
+          "gate_reason": null
+        },
+        {
+          "id": "new-node-002",
+          "name": "高风险人工审批",
+          "component_id": "risk-scoring",
+          "executor": "human",
+          "next_ids": [],
+          "human_gate": true,
+          "gate_reason": "超过50万元或存在重复付款风险"
+        }
+      ],
+      "applied_constraints": [
+        {
+          "id": "constraint-001",
+          "type": "approval",
+          "statement": "超过50万元的订单必须人工审批",
+          "hard": true,
+          "parameters": {
+            "amount_threshold": 500000
+          }
+        }
+      ],
+      "implementation_steps": [
+        "接入采购和发票数据",
+        "配置单据检查规则",
+        "配置高风险人工审批",
+        "接入飞书通知"
+      ],
+      "expected_metrics": [
+        "平均异常处理时间",
+        "自动化率",
+        "人工处理量"
+      ],
+      "assumptions": [
+        "客户能够提供结构化采购数据"
+      ],
+      "warnings": [],
+      "review_score": 88
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "project_id": "procurement-demo-001",
+  "industry": "企业采购",
+  "department": "采购与财务",
+  "business_goal": "降低采购异常处理时间和重复付款风险",
+  "roles": [
+    "采购专员",
+    "仓库人员",
+    "财务审核员"
+  ],
+  "available_data": [
+    "采购订单",
+    "收货记录",
+    "发票记录"
+  ],
+  "existing_systems": [
+    "ERP",
+    "飞书"
+  ],
+  "as_is_nodes": [
+    {
+      "id": "node-001",
+      "name": "人工核对订单和发票",
+      "actor": "财务审核员",
+      "node_type": "human",
+      "description": "人工检查采购订单、收货记录和发票",
+      "next_ids": [
+        "node-002"
+      ]
+    },
+    {
+      "id": "node-002",
+      "name": "异常处理",
+      "actor": "财务审核员",
+      "node_type": "human",
+      "description": "人工联系相关人员处理异常",
+      "next_ids": []
+    }
+  ],
+  "pain_points": [
+    {
+      "id": "pain-001",
+      "description": "订单、收货和发票需要人工反复核对",
+      "severity": "high",
+      "affected_node_ids": [
+        "node-001"
+      ]
+    }
+  ],
+  "constraints": [
+    {
+      "id": "constraint-001",
+      "type": "approval",
+      "statement": "超过50万元的订单必须人工审批",
+      "hard": true,
+      "parameters": {
+        "amount_threshold": 500000
+      }
+    }
+  ],
+  "target_metrics": [
+    "平均异常处理时间",
+    "人工处理量",
+    "高风险遗漏率"
+  ],
+  "missing_information": [],
+  "clarification_questions": [],
+  "readiness_score": 90
+}
