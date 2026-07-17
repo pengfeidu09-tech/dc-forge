@@ -13,10 +13,21 @@ from backend.app.contracts.solution import (
     SolutionBundle,
     SolutionPlan,
 )
+from backend.app.solution.agent import AgentRequest, AgentResponse, run_solution_agent
+from backend.app.solution.llm_provider import LLMProvider
 from backend.app.solution.reviewer import SolutionReviewResult
 from backend.app.solution.service import compile_solution, recompile_solution
 
 router = APIRouter(tags=["solution"])
+
+# Agent provider 覆盖（测试用）
+_agent_provider_override: LLMProvider | None = None
+
+
+def set_agent_provider(provider: LLMProvider | None) -> None:
+    """设置 Agent LLM Provider（测试依赖注入用）。"""
+    global _agent_provider_override
+    _agent_provider_override = provider
 
 
 class ReviewRequest(BaseModel):
@@ -50,3 +61,8 @@ def review_endpoint(request: ReviewRequest) -> SolutionReviewResult:
 
     validation = validate_constraints(request.solution, list(request.process.constraints))
     return review_solution(request.solution, request.process, validation)
+
+
+@router.post("/agent/solution", response_model=AgentResponse)
+def agent_endpoint(request: AgentRequest) -> AgentResponse:
+    return run_solution_agent(request, provider=_agent_provider_override)
