@@ -4,13 +4,16 @@
 - CapabilityCapsule: 能力胶囊私有模型
 - load_capabilities: 能力胶囊加载器
 - retrieve_components: 确定性组件检索器
+- compile_solution: 三套方案编译器
 """
 
 from backend.app.solution.capabilities import CapabilityCapsule, load_capabilities
 from backend.app.solution.retriever import retrieve_components
+from backend.app.solution.service import compile_solution
 
 __all__ = [
     "CapabilityCapsule",
     "load_capabilities",
     "retrieve_components",
+    "compile_solution",
 ]
