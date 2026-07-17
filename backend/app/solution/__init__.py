@@ -11,8 +11,12 @@
 - ReviewDimension: 评分维度
 - SolutionReviewResult: 方案评审结果
 - review_solution: 方案 Reviewer
+- AgentRequest: Agent 请求
+- AgentResponse: Agent 响应
+- run_solution_agent: Solution Agent
 """
 
+from backend.app.solution.agent import AgentRequest, AgentResponse, run_solution_agent
 from backend.app.solution.capabilities import CapabilityCapsule, load_capabilities
 from backend.app.solution.constraints import (
     ConstraintCheck,
@@ -39,4 +43,7 @@ __all__ = [
     "ReviewDimension",
     "SolutionReviewResult",
     "review_solution",
+    "AgentRequest",
+    "AgentResponse",
+    "run_solution_agent",
 ]
