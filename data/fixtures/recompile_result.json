@@ -146,7 +146,7 @@
       },
       {
         "id": "balanced-003",
-        "name": "信息提取",
+        "name": "单据智能抽取",
         "component_id": "document-extraction",
         "executor": "ai",
         "next_ids": [
@@ -157,7 +157,7 @@
       },
       {
         "id": "balanced-004",
-        "name": "信息完整性检查",
+        "name": "字段完整性检查",
         "component_id": "field-completeness-check",
         "executor": "system",
         "next_ids": [
@@ -168,7 +168,7 @@
       },
       {
         "id": "balanced-005",
-        "name": "规则校验",
+        "name": "业务规则引擎",
         "component_id": "rule-engine",
         "executor": "system",
         "next_ids": [
@@ -223,7 +223,7 @@
       },
       {
         "id": "balanced-010",
-        "name": "通知",
+        "name": "飞书通知",
         "component_id": "feishu-notification",
         "executor": "system",
         "next_ids": [
@@ -234,7 +234,7 @@
       },
       {
         "id": "balanced-011",
-        "name": "审计记录",
+        "name": "审计日志",
         "component_id": "audit-log",
         "executor": "system",
         "next_ids": [],

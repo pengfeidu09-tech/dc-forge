@@ -25,6 +25,7 @@ from backend.app.solution.compiler import (
 )
 from backend.app.solution.constraints import validate_constraints
 from backend.app.solution.reviewer import review_solution
+from backend.app.solution import scenario
 
 
 # ---------------------------------------------------------------------------
@@ -153,12 +154,12 @@ def _rebuild_workflow(
     plan_type: str,
     component_ids: list[str],
     capabilities_map: dict[str, CapabilityCapsule],
-    has_hard_approval: bool,
-    approval_statement: str | None,
+    scenario_name: str,
+    gate_reason: str,
 ) -> list[WorkflowNode]:
     """用扩展后的组件列表重建工作流。"""
     return _build_workflow_nodes(
-        plan_type, component_ids, capabilities_map, has_hard_approval, approval_statement
+        plan_type, component_ids, capabilities_map, scenario_name, gate_reason
     )
 
 
@@ -223,15 +224,9 @@ def recompile_solution(request: RecompileRequest) -> RecompileResult:
         # 重排序：前置处理组件在前
         extended_ids = _reorder_components(extended_ids)
 
-        # 检查硬审批
-        has_hard_approval = any(
-            c.type == "approval" and c.hard for c in merged_constraints
-        )
-        approval_statement = None
-        for c in merged_constraints:
-            if c.type == "approval" and c.hard:
-                approval_statement = c.statement
-                break
+        # 识别场景和审批理由
+        recompile_scenario = scenario.identify_scenario(updated_process)
+        recompile_gate_reason = scenario.get_gate_reason(recompile_scenario, updated_process)
 
         # 重建组件引用
         # 对新增组件使用约束触发原因
@@ -261,14 +256,14 @@ def recompile_solution(request: RecompileRequest) -> RecompileResult:
                 component_id=cap.component_id,
                 name=cap.name,
                 reason=reason,
-                required_data=list(cap.required_data),
+                required_data=scenario.get_required_data(recompile_scenario, cid, cap.required_data),
                 evidence_urls=list(cap.evidence_urls),
             ))
 
         # 重建工作流
         to_be_nodes = _rebuild_workflow(
             old_plan.plan_type, extended_ids, capabilities_map,
-            has_hard_approval, approval_statement,
+            recompile_scenario, recompile_gate_reason,
         )
 
         # 重新校验和评分

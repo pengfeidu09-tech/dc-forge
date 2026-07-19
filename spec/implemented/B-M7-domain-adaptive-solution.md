@@ -37,14 +37,43 @@ human-approval 节点统一设置 `executor="human"`, `human_gate=true`，gate_r
 - test_domain_adaptive_compiler: 7 passed
 - tests/solution: 156 passed
 - tests/test_contracts.py: 3 passed
-- tests (全量): 159 passed
+- tests (全量): 161 passed
 
 ## 真实 Agent 验证
 
 qwen3.7-plus 正确识别 compile 意图，调用 compile_solution，返回场景化方案，无 API Key 泄露。
 
+## B-M7.1 required_data 遗留修复
+
+### 问题
+
+B-M7 完成后，非采购场景的 `selected_components[*].required_data` 仍包含采购硬编码（来自 capabilities.json 原始数据被直接复制）。
+
+- 修复前 balanced 违规数量：56
+- 修复前完整 Bundle 违规数量：167
+
+### 修复
+
+在 scenario.py 中新增 `get_required_data()` 函数，为每种场景的每个组件生成场景化 required_data。compiler.py 和 recompiler.py 不再直接复制 cap.required_data，而是调用场景化函数。
+
+### 修复后结果
+
+- 全字段递归违规数量：**0**
+- 采购场景回归：仍允许合理出现采购术语 ✅
+
+### domain_adaptation_report（修复后）
+
+```json
+{
+  "forbidden_procurement_term_violations": 0,
+  "human_approval_node_count": 30,
+  "human_gate_true_count": 30,
+  "unique_component_sets": 5,
+  "unique_node_sequences": 5
+}
+```
+
 ## 当前限制
 
 - 场景识别基于关键词匹配，后续可替换为语义理解
 - 工作流仍为线性链
-- capabilities.json 的 required_data 仍包含采购相关术语（共享数据，不在本任务修改范围）

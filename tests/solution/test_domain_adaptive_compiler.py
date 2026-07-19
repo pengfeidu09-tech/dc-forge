@@ -239,3 +239,73 @@ def test_recommendation_text_does_not_conflict_with_score() -> None:
         forbidden = ["评分最高", "绝对最优", "默认推荐"]
         for term in forbidden:
             assert term not in balanced.summary, f"balanced 非最高分但 summary 含 '{term}'"
+
+
+# ===== 测试八：全字段递归采购术语检测 =====
+
+
+def _extract_all_strings(obj) -> list[str]:
+    """递归提取对象中所有字符串值。"""
+    strings = []
+    if isinstance(obj, str):
+        strings.append(obj)
+    elif isinstance(obj, dict):
+        for v in obj.values():
+            strings.extend(_extract_all_strings(v))
+    elif isinstance(obj, list):
+        for item in obj:
+            strings.extend(_extract_all_strings(item))
+    return strings
+
+
+def test_no_procurement_terms_in_any_field_for_non_procurement() -> None:
+    """非采购场景的整个 SolutionBundle 中不得出现无来源采购术语（全字段递归检查）。"""
+    process = _make_process(
+        project_id="test-network-full",
+        industry="互联网基础服务",
+        department="网站运维",
+        business_goal="缩短平台故障恢复时间",
+        available_data=["网站可用性监控", "域名解析监控"],
+        pain_points=[{"id": "pp-1", "description": "客户无法编辑网站", "severity": "high"}],
+    )
+    # 确认输入不含采购术语
+    input_text = json.dumps(process.model_dump(), ensure_ascii=False)
+    for term in FORBIDDEN_PROCUREMENT_TERMS:
+        assert term not in input_text, f"输入不应含 {term}"
+
+    bundle = compile_solution(process)
+    # 递归检查所有字符串字段
+    all_strings = _extract_all_strings(bundle.model_dump(mode="json"))
+    all_text = " ".join(all_strings)
+    for term in FORBIDDEN_PROCUREMENT_TERMS:
+        assert term not in all_text, f"全字段扫描发现无来源采购术语: {term}"
+
+    # 重点断言 required_data
+    for plan in bundle.plans:
+        for comp in plan.selected_components:
+            for rd in comp.required_data:
+                for term in FORBIDDEN_PROCUREMENT_TERMS:
+                    assert term not in rd, (
+                        f"{plan.plan_type}.{comp.component_id}.required_data 含采购术语 '{term}': {rd}"
+                    )
+
+
+def test_procurement_scenario_allows_procurement_terms() -> None:
+    """采购场景允许合理出现采购术语。"""
+    process = _make_process(
+        project_id="test-procurement-001",
+        industry="企业采购",
+        department="采购与财务",
+        business_goal="降低采购异常处理时间",
+        available_data=["采购订单", "收货记录", "发票记录"],
+        pain_points=[{"id": "pp-1", "description": "订单核对耗时", "severity": "medium"}],
+    )
+    bundle = compile_solution(process)
+    assert len(bundle.plans) == 3
+    # 采购场景的 required_data 允许包含采购术语
+    balanced = next(p for p in bundle.plans if p.plan_type == "balanced")
+    all_rd = []
+    for comp in balanced.selected_components:
+        all_rd.extend(comp.required_data)
+    # 至少有一些采购相关数据
+    assert any("采购" in rd or "发票" in rd or "收货" in rd for rd in all_rd), "采购场景应允许采购术语"

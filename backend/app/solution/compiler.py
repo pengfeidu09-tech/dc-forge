@@ -49,6 +49,7 @@ def _build_component_refs(
     component_ids: list[str],
     capabilities_map: dict[str, CapabilityCapsule],
     retrieved_map: dict[str, ComponentRef],
+    scenario_name: str,
 ) -> list[ComponentRef]:
     """为策略构建 ComponentRef 列表，去重且顺序稳定。"""
     refs: list[ComponentRef] = []
@@ -67,7 +68,7 @@ def _build_component_refs(
                 component_id=cap.component_id,
                 name=cap.name,
                 reason=reason,
-                required_data=list(cap.required_data),
+                required_data=scenario.get_required_data(scenario_name, comp_id, cap.required_data),
                 evidence_urls=list(cap.evidence_urls),
             )
         )
@@ -164,7 +165,7 @@ def _build_plan(
     component_ids = scenario.get_scenario_components(scenario_name, plan_type)
 
     selected_components = _build_component_refs(
-        plan_type, component_ids, capabilities_map, retrieved_map
+        plan_type, component_ids, capabilities_map, retrieved_map, scenario_name
     )
     to_be_nodes = _build_workflow_nodes(
         plan_type, component_ids, capabilities_map, scenario_name, gate_reason

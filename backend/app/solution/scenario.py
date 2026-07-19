@@ -599,3 +599,132 @@ def _innovative_steps(scenario: str, data: str, systems: str, goal: str, industr
         ],
     }
     return base.get(scenario, base["generic"])
+
+
+# ---------------------------------------------------------------------------
+# 场景化 required_data
+# ---------------------------------------------------------------------------
+
+# 非采购场景的 required_data 映射
+# procurement_exception 返回 None 表示使用 capabilities.json 原始数据
+_REQUIRED_DATA: dict[str, dict[str, list[str]]] = {
+    "incident_response": {
+        "anomaly-classification": ["故障事件记录", "网络告警记录", "客服工单记录"],
+        "ticket-routing": ["故障事件记录", "工单处理人信息"],
+        "process-monitoring": ["流程状态", "节点执行记录", "网络告警状态"],
+        "human-approval": ["故障影响评估", "处置方案", "审批记录"],
+        "feishu-notification": ["通知接收人", "故障状态信息"],
+        "audit-log": ["操作记录", "执行者信息"],
+        "quality-dashboard": ["故障指标数据", "处理统计"],
+        "feedback-loop": ["处理结果", "用户反馈"],
+        "enterprise-rag": ["运维知识库", "历史故障案例"],
+        "document-extraction": ["故障报告", "事件描述"],
+        "field-completeness-check": ["事件信息字段", "故障描述"],
+        "rule-engine": ["故障规则", "事件数据"],
+        "risk-scoring": ["影响范围", "故障严重度"],
+        "data-masking": ["客户联系方式", "敏感配置信息"],
+        "local-model": ["模型权重", "推理输入数据"],
+    },
+    "fraud_risk": {
+        "anomaly-classification": ["交易记录", "客户申诉记录"],
+        "risk-scoring": ["交易记录", "风险特征", "历史风险记录"],
+        "rule-engine": ["风险规则", "交易数据"],
+        "human-approval": ["风险评分结果", "异常交易信息", "复核记录"],
+        "audit-log": ["操作记录", "执行者信息"],
+        "data-masking": ["客户敏感信息", "账户或交易数据"],
+        "process-monitoring": ["风险监控状态", "交易异常告警"],
+        "local-model": ["模型权重", "推理输入数据"],
+        "quality-dashboard": ["风险指标数据", "处置统计"],
+        "ticket-routing": ["风险事件记录", "处理人信息"],
+        "feishu-notification": ["通知接收人", "风险处置结果"],
+        "document-extraction": ["交易凭证", "申诉材料"],
+        "field-completeness-check": ["交易字段", "案件信息"],
+        "enterprise-rag": ["反欺诈规则", "历史案件"],
+        "feedback-loop": ["处置结果", "客户反馈"],
+    },
+    "identity_account": {
+        "document-extraction": ["身份证明材料", "资料变更申请"],
+        "field-completeness-check": ["身份材料", "申请字段"],
+        "rule-engine": ["身份规则", "申请数据"],
+        "data-masking": ["客户身份信息", "敏感个人信息"],
+        "human-approval": ["身份核验结果", "资料变更申请", "审批记录"],
+        "audit-log": ["操作记录", "执行者信息"],
+        "feishu-notification": ["通知接收人", "变更结果"],
+        "local-model": ["模型权重", "推理输入数据"],
+        "feedback-loop": ["处理结果", "客户反馈"],
+        "anomaly-classification": ["申请记录", "异常标记"],
+        "risk-scoring": ["申请风险特征", "历史记录"],
+        "ticket-routing": ["申请记录", "处理人信息"],
+        "process-monitoring": ["流程状态", "申请处理记录"],
+        "quality-dashboard": ["处理指标", "申请统计"],
+        "enterprise-rag": ["身份核验规则", "历史案例"],
+    },
+    "dispute_investigation": {
+        "document-extraction": ["争议申请材料", "征信或调查记录"],
+        "enterprise-rag": ["业务规则", "历史调查记录", "处理政策"],
+        "field-completeness-check": ["争议字段", "申请信息"],
+        "rule-engine": ["争议规则", "调查数据"],
+        "ticket-routing": ["争议记录", "调查人员信息"],
+        "human-approval": ["调查结论", "争议材料", "人工复核记录"],
+        "audit-log": ["操作记录", "执行者信息"],
+        "quality-dashboard": ["调查指标", "争议处理统计"],
+        "feedback-loop": ["处理结果", "消费者反馈"],
+        "anomaly-classification": ["争议记录", "异常分类"],
+        "risk-scoring": ["争议风险", "历史记录"],
+        "data-masking": ["消费者敏感信息", "征信数据"],
+        "feishu-notification": ["通知接收人", "调查结果"],
+        "local-model": ["模型权重", "推理输入数据"],
+        "process-monitoring": ["调查流程状态", "案件记录"],
+    },
+    "customer_service": {
+        "enterprise-rag": ["客服知识库", "客户对话记录", "历史工单"],
+        "anomaly-classification": ["客户问题记录", "异常分类"],
+        "ticket-routing": ["客户问题记录", "工单分类", "处理人信息"],
+        "human-approval": ["处理方案", "客户问题记录", "审批记录"],
+        "feishu-notification": ["通知接收人", "处理结果"],
+        "audit-log": ["操作记录", "执行者信息"],
+        "feedback-loop": ["处理结果", "客户满意度"],
+        "quality-dashboard": ["服务指标", "工单统计"],
+        "process-monitoring": ["服务流程状态", "工单记录"],
+        "document-extraction": ["客户对话记录", "问题描述"],
+        "field-completeness-check": ["问题字段", "客户信息"],
+        "rule-engine": ["服务规则", "问题数据"],
+        "risk-scoring": ["问题风险", "客户历史"],
+        "data-masking": ["客户个人信息", "联系方式"],
+        "local-model": ["模型权重", "推理输入数据"],
+    },
+    "generic": {
+        "document-extraction": ["业务记录", "事件描述"],
+        "field-completeness-check": ["业务字段", "记录信息"],
+        "rule-engine": ["业务规则", "记录数据"],
+        "anomaly-classification": ["业务记录", "异常标记"],
+        "risk-scoring": ["风险特征", "历史记录"],
+        "ticket-routing": ["业务记录", "处理人信息"],
+        "human-approval": ["处理方案", "审批记录"],
+        "feishu-notification": ["通知接收人", "处理结果"],
+        "audit-log": ["操作记录", "执行者信息"],
+        "data-masking": ["敏感信息", "业务数据"],
+        "enterprise-rag": ["业务知识库", "历史记录"],
+        "local-model": ["模型权重", "推理输入数据"],
+        "process-monitoring": ["流程状态", "执行记录"],
+        "quality-dashboard": ["指标数据", "流程统计"],
+        "feedback-loop": ["处理结果", "用户反馈"],
+    },
+}
+
+
+def get_required_data(scenario: str, component_id: str, original: list[str]) -> list[str]:
+    """获取场景化的 required_data。
+
+    Args:
+        scenario: 场景类型
+        component_id: 组件 ID
+        original: capabilities.json 中的原始 required_data
+
+    Returns:
+        场景化的 required_data 列表。procurement_exception 返回原始数据。
+    """
+    if scenario == "procurement_exception":
+        return list(original)
+    mapping = _REQUIRED_DATA.get(scenario, _REQUIRED_DATA["generic"])
+    return list(mapping.get(component_id, _REQUIRED_DATA["generic"].get(component_id, ["业务数据"])))
