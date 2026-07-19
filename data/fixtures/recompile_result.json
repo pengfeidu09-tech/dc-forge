@@ -1,0 +1,316 @@
+{
+  "previous_solution_id": "procurement-demo-001-balanced-v1",
+  "new_solution": {
+    "schema_version": "1.0",
+    "solution_id": "procurement-demo-001-balanced-v2",
+    "source_project_id": "procurement-demo-001",
+    "plan_type": "balanced",
+    "name": "效率平衡方案",
+    "summary": "风险、成本和自动化程度平衡，引入异常分类、风险评分和工单路由，保留高风险人工审批。",
+    "selected_components": [
+      {
+        "component_id": "local-model",
+        "name": "本地模型推理",
+        "reason": "行业匹配: 企业采购; 部门匹配: 采购与财务; 约束匹配: security",
+        "required_data": [
+          "模型权重",
+          "推理输入数据"
+        ],
+        "evidence_urls": []
+      },
+      {
+        "component_id": "data-masking",
+        "name": "数据脱敏",
+        "reason": "行业匹配: 企业采购; 部门匹配: 采购与财务; 约束匹配: security",
+        "required_data": [
+          "原始数据字段"
+        ],
+        "evidence_urls": []
+      },
+      {
+        "component_id": "document-extraction",
+        "name": "单据智能抽取",
+        "reason": "行业匹配: 企业采购; 部门匹配: 采购与财务; 数据匹配: 采购订单, 发票记录, 收货记录",
+        "required_data": [
+          "采购订单",
+          "发票记录",
+          "收货记录"
+        ],
+        "evidence_urls": []
+      },
+      {
+        "component_id": "field-completeness-check",
+        "name": "字段完整性检查",
+        "reason": "行业匹配: 企业采购; 部门匹配: 采购与财务; 数据匹配: 采购订单, 收货记录, 发票记录",
+        "required_data": [
+          "采购订单",
+          "收货记录",
+          "发票记录"
+        ],
+        "evidence_urls": []
+      },
+      {
+        "component_id": "rule-engine",
+        "name": "业务规则引擎",
+        "reason": "行业匹配: 企业采购; 部门匹配: 采购与财务; 数据匹配: 采购订单; 约束匹配: approval",
+        "required_data": [
+          "采购订单",
+          "供应商信息"
+        ],
+        "evidence_urls": []
+      },
+      {
+        "component_id": "anomaly-classification",
+        "name": "异常分类",
+        "reason": "行业匹配: 企业采购; 部门匹配: 采购与财务; 痛点/目标匹配: 异常处理; 数据匹配: 采购订单",
+        "required_data": [
+          "采购订单",
+          "异常记录"
+        ],
+        "evidence_urls": []
+      },
+      {
+        "component_id": "risk-scoring",
+        "name": "风险评分",
+        "reason": "行业匹配: 企业采购; 部门匹配: 采购与财务; 痛点/目标匹配: 重复付款; 数据匹配: 采购订单; 约束匹配: approval",
+        "required_data": [
+          "采购订单",
+          "历史采购记录",
+          "供应商信息"
+        ],
+        "evidence_urls": []
+      },
+      {
+        "component_id": "ticket-routing",
+        "name": "工单路由",
+        "reason": "行业匹配: 企业采购; 部门匹配: 采购与财务; 痛点/目标匹配: 异常处理",
+        "required_data": [
+          "异常记录",
+          "处理人信息"
+        ],
+        "evidence_urls": []
+      },
+      {
+        "component_id": "human-approval",
+        "name": "人工审批",
+        "reason": "行业匹配: 企业采购; 部门匹配: 采购与财务; 数据匹配: 采购订单; 约束匹配: approval; 审批约束优先匹配: human-approval",
+        "required_data": [
+          "采购订单",
+          "审批记录"
+        ],
+        "evidence_urls": []
+      },
+      {
+        "component_id": "feishu-notification",
+        "name": "飞书通知",
+        "reason": "行业匹配: 企业采购; 部门匹配: 采购与财务",
+        "required_data": [
+          "飞书用户ID",
+          "通知内容"
+        ],
+        "evidence_urls": []
+      },
+      {
+        "component_id": "audit-log",
+        "name": "审计日志",
+        "reason": "行业匹配: 企业采购; 部门匹配: 采购与财务; 约束匹配: security, approval",
+        "required_data": [
+          "操作记录",
+          "执行者信息"
+        ],
+        "evidence_urls": []
+      }
+    ],
+    "to_be_nodes": [
+      {
+        "id": "balanced-001",
+        "name": "本地模型推理",
+        "component_id": "local-model",
+        "executor": "ai",
+        "next_ids": [
+          "balanced-002"
+        ],
+        "human_gate": false,
+        "gate_reason": null
+      },
+      {
+        "id": "balanced-002",
+        "name": "数据脱敏",
+        "component_id": "data-masking",
+        "executor": "system",
+        "next_ids": [
+          "balanced-003"
+        ],
+        "human_gate": false,
+        "gate_reason": null
+      },
+      {
+        "id": "balanced-003",
+        "name": "单据智能抽取",
+        "component_id": "document-extraction",
+        "executor": "ai",
+        "next_ids": [
+          "balanced-004"
+        ],
+        "human_gate": false,
+        "gate_reason": null
+      },
+      {
+        "id": "balanced-004",
+        "name": "字段完整性检查",
+        "component_id": "field-completeness-check",
+        "executor": "system",
+        "next_ids": [
+          "balanced-005"
+        ],
+        "human_gate": false,
+        "gate_reason": null
+      },
+      {
+        "id": "balanced-005",
+        "name": "业务规则引擎",
+        "component_id": "rule-engine",
+        "executor": "system",
+        "next_ids": [
+          "balanced-006"
+        ],
+        "human_gate": false,
+        "gate_reason": null
+      },
+      {
+        "id": "balanced-006",
+        "name": "异常分类",
+        "component_id": "anomaly-classification",
+        "executor": "ai",
+        "next_ids": [
+          "balanced-007"
+        ],
+        "human_gate": false,
+        "gate_reason": null
+      },
+      {
+        "id": "balanced-007",
+        "name": "风险评分",
+        "component_id": "risk-scoring",
+        "executor": "ai",
+        "next_ids": [
+          "balanced-008"
+        ],
+        "human_gate": false,
+        "gate_reason": null
+      },
+      {
+        "id": "balanced-008",
+        "name": "工单路由",
+        "component_id": "ticket-routing",
+        "executor": "system",
+        "next_ids": [
+          "balanced-009"
+        ],
+        "human_gate": false,
+        "gate_reason": null
+      },
+      {
+        "id": "balanced-009",
+        "name": "人工审批",
+        "component_id": "human-approval",
+        "executor": "human",
+        "next_ids": [
+          "balanced-010"
+        ],
+        "human_gate": true,
+        "gate_reason": "超过50万元的订单必须人工审批"
+      },
+      {
+        "id": "balanced-010",
+        "name": "飞书通知",
+        "component_id": "feishu-notification",
+        "executor": "system",
+        "next_ids": [
+          "balanced-011"
+        ],
+        "human_gate": false,
+        "gate_reason": null
+      },
+      {
+        "id": "balanced-011",
+        "name": "审计日志",
+        "component_id": "audit-log",
+        "executor": "system",
+        "next_ids": [],
+        "human_gate": false,
+        "gate_reason": null
+      }
+    ],
+    "applied_constraints": [
+      {
+        "id": "constraint-001",
+        "type": "approval",
+        "statement": "超过50万元的订单必须人工审批",
+        "hard": true,
+        "parameters": {
+          "amount_threshold": 500000
+        }
+      },
+      {
+        "id": "constraint-security-local-001",
+        "type": "security",
+        "statement": "采购发票包含敏感信息，数据不得出域，必须在本地处理并完成脱敏和审计留痕",
+        "hard": true,
+        "parameters": {
+          "data_local_only": true,
+          "mask_sensitive_fields": true,
+          "audit_required": true
+        }
+      }
+    ],
+    "implementation_steps": [
+      "接入采购订单、收货记录、发票记录",
+      "对接ERP、飞书",
+      "配置单据抽取和字段完整性检查规则",
+      "部署异常分类和风险评分模型",
+      "配置低风险工单自动路由",
+      "配置高风险人工审批流程",
+      "接入通知和审计日志"
+    ],
+    "expected_metrics": [
+      "平均异常处理时间",
+      "人工处理量",
+      "高风险遗漏率",
+      "自动化率",
+      "审批等待时间",
+      "风险遗漏率"
+    ],
+    "assumptions": [],
+    "warnings": [
+      "预期指标需由成员 C 的 Runtime/ValueProof 实际验证，当前仅为指标名称而非结果。",
+      "存在 hard 约束校验失败，方案需修改后重新评审",
+      "所有组件的 evidence_urls 为空，证据引用尚未补齐，需后续补充公开引用。"
+    ],
+    "review_score": 82.94047619047619
+  },
+  "changed_node_ids": [
+    "balanced-001",
+    "balanced-002",
+    "balanced-003",
+    "balanced-004",
+    "balanced-005",
+    "balanced-006",
+    "balanced-007",
+    "balanced-008",
+    "balanced-009",
+    "balanced-010",
+    "balanced-011"
+  ],
+  "added_component_ids": [
+    "data-masking",
+    "local-model"
+  ],
+  "removed_component_ids": [],
+  "change_explanations": [
+    "新增或覆盖约束: constraint-security-local-001",
+    "新增组件: data-masking, local-model",
+    "流程节点变化: balanced-001, balanced-002, balanced-003, balanced-004, balanced-005...",
+    "review_score 由 84.7 变为 82.9"
+  ]
+}

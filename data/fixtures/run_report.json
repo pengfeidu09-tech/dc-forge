@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "run_id": "run-001",
+  "case_id": "case-001",
+  "solution_id": "solution-balanced-001",
+  "status": "needs_human_review",
+  "before": {
+    "average_processing_minutes": 30,
+    "manual_steps": 5,
+    "automation_rate": 0.1,
+    "risk_score": 65,
+    "estimated_cost": 100
+  },
+  "after": {
+    "average_processing_minutes": 12,
+    "manual_steps": 2,
+    "automation_rate": 0.65,
+    "risk_score": 25,
+    "estimated_cost": 55
+  },
+  "audit_events": [
+    {
+      "node_id": "new-node-001",
+      "action": "检查采购订单和发票",
+      "executor": "ai",
+      "result": "发现订单金额超过审批阈值",
+      "timestamp": "2026-07-17T10:00:00"
+    },
+    {
+      "node_id": "new-node-002",
+      "action": "创建人工审批任务",
+      "executor": "system",
+      "result": "等待财务负责人审批",
+      "timestamp": "2026-07-17T10:00:02"
+    }
+  ],
+  "warnings": []
+}
