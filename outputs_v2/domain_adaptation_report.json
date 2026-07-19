@@ -1,0 +1,18 @@
+{
+  "total_count": 10,
+  "compile_success_count": 10,
+  "compile_failure_count": 0,
+  "scenario_counts": {
+    "incident_response": 3,
+    "customer_service": 1,
+    "identity_account": 1,
+    "fraud_risk": 2,
+    "dispute_investigation": 3
+  },
+  "unique_component_sets": 5,
+  "unique_node_sequences": 5,
+  "human_approval_node_count": 30,
+  "human_gate_true_count": 30,
+  "forbidden_procurement_term_violations": 0,
+  "failures": []
+}
