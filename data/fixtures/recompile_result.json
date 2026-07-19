@@ -6,7 +6,7 @@
     "source_project_id": "procurement-demo-001",
     "plan_type": "balanced",
     "name": "效率平衡方案",
-    "summary": "风险、成本和自动化程度平衡，引入异常分类、风险评分和工单路由，保留高风险人工审批，作为 Demo 默认推荐方案。",
+    "summary": "风险、成本和自动化程度平衡，引入异常分类、风险评分和工单路由，保留高风险人工审批。",
     "selected_components": [
       {
         "component_id": "local-model",
@@ -146,7 +146,7 @@
       },
       {
         "id": "balanced-003",
-        "name": "单据智能抽取",
+        "name": "信息提取",
         "component_id": "document-extraction",
         "executor": "ai",
         "next_ids": [
@@ -157,7 +157,7 @@
       },
       {
         "id": "balanced-004",
-        "name": "字段完整性检查",
+        "name": "信息完整性检查",
         "component_id": "field-completeness-check",
         "executor": "system",
         "next_ids": [
@@ -168,7 +168,7 @@
       },
       {
         "id": "balanced-005",
-        "name": "业务规则引擎",
+        "name": "规则校验",
         "component_id": "rule-engine",
         "executor": "system",
         "next_ids": [
@@ -223,7 +223,7 @@
       },
       {
         "id": "balanced-010",
-        "name": "飞书通知",
+        "name": "通知",
         "component_id": "feishu-notification",
         "executor": "system",
         "next_ids": [
@@ -234,7 +234,7 @@
       },
       {
         "id": "balanced-011",
-        "name": "审计日志",
+        "name": "审计记录",
         "component_id": "audit-log",
         "executor": "system",
         "next_ids": [],
@@ -265,13 +265,13 @@
       }
     ],
     "implementation_steps": [
-      "接入采购订单、收货记录和发票数据",
-      "配置文档抽取和字段完整性检查规则",
-      "配置业务规则引擎校验条件",
+      "接入采购订单、收货记录、发票记录",
+      "对接ERP、飞书",
+      "配置单据抽取和字段完整性检查规则",
       "部署异常分类和风险评分模型",
       "配置低风险工单自动路由",
       "配置高风险人工审批流程",
-      "接入飞书通知和审计日志"
+      "接入通知和审计日志"
     ],
     "expected_metrics": [
       "平均异常处理时间",
