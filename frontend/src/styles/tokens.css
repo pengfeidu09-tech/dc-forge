@@ -1,0 +1,12 @@
+:root {
+  color-scheme: light;
+  --canvas: #f7f8fc;
+  --surface: #ffffff;
+  --ink: #252c40;
+  --muted: #858c9e;
+  --line: #e7e9f0;
+  --primary: #6757e8;
+  --sidebar-width: 246px;
+  --sidebar-collapsed: 76px;
+  --shadow-soft: 0 9px 28px rgba(30, 36, 64, 0.055);
+}
