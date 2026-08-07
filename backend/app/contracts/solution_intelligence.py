@@ -129,6 +129,67 @@ class AssetCandidate(StrictModel):
     evidence_refs: list[str] = Field(default_factory=list)
 
 
+class HardGateResult(StrictModel):
+    gate_id: str
+    category: Literal[
+        "security",
+        "deployment",
+        "data",
+        "system",
+        "rule",
+        "budget",
+        "time",
+        "risk",
+    ]
+    passed: bool
+    reason: str = Field(min_length=1)
+    constraint_ids: list[str] = Field(default_factory=list)
+    evidence_refs: list[str] = Field(default_factory=list)
+
+
+class FitDimensionScore(StrictModel):
+    name: Literal[
+        "role",
+        "object",
+        "data_knowledge",
+        "rules",
+        "tools_systems",
+        "technology",
+        "evidence",
+    ]
+    score: float = Field(ge=0, le=100)
+    weight: float = Field(gt=0, le=1)
+    explanation: str = Field(min_length=1)
+
+
+class FitAssessment(StrictModel):
+    schema_version: Literal["1.0"] = "1.0"
+    project_id: str
+    asset_id: str
+    eligible: bool
+    hard_gates: list[HardGateResult]
+    dimensions: list[FitDimensionScore]
+    raw_fit_score: float = Field(ge=0, le=100)
+    effective_fit_score: float | None = Field(default=None, ge=0, le=100)
+    business_value_score: float = Field(ge=0, le=100)
+    implementation_difficulty_score: float = Field(ge=0, le=100)
+    quadrant: FitQuadrant
+    matched_action_ids: list[str] = Field(default_factory=list)
+    unmatched_action_ids: list[str] = Field(default_factory=list)
+    hard_blockers: list[str] = Field(default_factory=list)
+    soft_gaps: list[str] = Field(default_factory=list)
+    explanation: str = Field(min_length=1)
+    evidence_refs: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_eligibility_score(self) -> "FitAssessment":
+        if self.eligible and self.effective_fit_score is None:
+            raise ValueError("eligible FitAssessment requires effective_fit_score")
+        if not self.eligible and self.effective_fit_score is not None:
+            raise ValueError("blocked FitAssessment must not have effective_fit_score")
+        return self
+
+
 class SolutionAsset(StrictModel):
     schema_version: Literal["1.0"] = "1.0"
     asset_id: str
