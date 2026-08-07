@@ -119,6 +119,16 @@ class AIGene(StrictModel):
     evidence_refs: list[str] = Field(default_factory=list)
 
 
+class AssetCandidate(StrictModel):
+    """A retrieval-stage candidate, not a final solution recommendation."""
+
+    asset_id: str
+    retrieval_score: float = Field(ge=0, le=100)
+    matched_terms: list[str] = Field(default_factory=list)
+    matched_gene_ids: list[str] = Field(default_factory=list)
+    evidence_refs: list[str] = Field(default_factory=list)
+
+
 class SolutionAsset(StrictModel):
     schema_version: Literal["1.0"] = "1.0"
     asset_id: str
