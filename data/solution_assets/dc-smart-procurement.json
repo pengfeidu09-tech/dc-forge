@@ -1,0 +1,106 @@
+{
+  "asset_id": "dc-smart-procurement",
+  "name": "神州问学智能招采",
+  "version": "1.0",
+  "provider": "神州数码",
+  "source_type": "official_solution",
+  "industries": ["企业采购"],
+  "value_chains": ["采购"],
+  "processes": ["招采知识复用", "招采文档生成", "文档结构解析", "文档审查"],
+  "scenarios": ["智能招采"],
+  "target_roles": ["采购人员", "审查人员"],
+  "pain_points": ["招采知识复用", "招采文档生成与审查"],
+  "action_genes": [
+    {
+      "gene_id": "smart-procurement-document-review",
+      "action_name": "招采文档审查",
+      "role": ["审查人员"],
+      "object": ["招采文档"],
+      "data_and_knowledge": ["招采知识库", "审查规则"],
+      "technology": ["RAG", "多模型", "向量数据库"],
+      "standards_and_rules": ["审查规则"],
+      "inputs": ["招采文档"],
+      "outputs": ["审查结果", "风险定位"],
+      "execution_mode": "ai_assisted",
+      "risk_level": "high",
+      "evidence_refs": ["sp-solution-overview", "sp-knowledge-base"]
+    }
+  ],
+  "modules": [
+    {
+      "module_id": "procurement-knowledge-reuse",
+      "name": "招采知识复用",
+      "description": "官方方案材料列出招采知识复用与招采知识库。",
+      "capability_ids": ["enterprise-rag"],
+      "required_knowledge": ["招采知识库"],
+      "evidence_refs": ["sp-knowledge-base"]
+    },
+    {
+      "module_id": "procurement-document-workbench",
+      "name": "招采文档生成与结构解析",
+      "description": "官方方案材料列出招采、招标、合同文档生成与文档结构解析。",
+      "capability_ids": ["document-extraction"],
+      "required_data": ["招采、招标或合同文档"],
+      "evidence_refs": ["sp-solution-overview"]
+    },
+    {
+      "module_id": "procurement-review-and-risk-location",
+      "name": "审查规则配置与风险定位",
+      "description": "官方方案材料列出审查规则配置、审查点匹配、风险定位和人工复核。",
+      "capability_ids": ["rule-engine", "human-approval"],
+      "required_rules": ["审查规则"],
+      "configurable_items": ["审查规则", "审查点"],
+      "evidence_refs": ["sp-solution-overview"]
+    }
+  ],
+  "supported_data": ["招采、招标或合同文档"],
+  "supported_knowledge": ["招采知识库"],
+  "standards_and_rules": ["审查规则"],
+  "evidence": [
+    {
+      "evidence_id": "sp-solution-overview",
+      "source_type": "official_solution",
+      "title": "智能招采方案能力说明",
+      "document_name": "神州问学-智能招采解决方案",
+      "page_start": 7,
+      "page_end": 12,
+      "kind": "asset_definition",
+      "statement": "材料列出招采文档生成、文档结构解析、审查规则配置、审查点匹配、风险定位和人工复核等能力。",
+      "verified": true
+    },
+    {
+      "evidence_id": "sp-knowledge-base",
+      "source_type": "official_solution",
+      "title": "招采知识库",
+      "document_name": "神州问学-智能招采解决方案",
+      "page_start": 13,
+      "page_end": 13,
+      "kind": "capability",
+      "statement": "材料列出招采知识库。",
+      "verified": true
+    },
+    {
+      "evidence_id": "sp-historical-document-generation-time",
+      "source_type": "official_solution",
+      "title": "招标文件生成历史效果",
+      "document_name": "神州问学-智能招采解决方案",
+      "page_start": 7,
+      "page_end": 12,
+      "kind": "historical_outcome",
+      "statement": "官方资料记录：招标文件生成从约 3 小时缩短至 30 分钟。",
+      "verified": true
+    }
+  ],
+  "value_claims": [
+    {
+      "claim_id": "sp-historical-bid-document-generation-time",
+      "claim_type": "historical",
+      "metric_name": "招标文件生成耗时",
+      "value_text": "约 3 小时缩短至 30 分钟",
+      "evidence_refs": ["sp-historical-document-generation-time"]
+    }
+  ],
+  "limitations": [
+    "本资产未记录未经明确来源支持的客户系统接入、部署方式、ROI 或交付结果。"
+  ]
+}

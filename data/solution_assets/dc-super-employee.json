@@ -1,0 +1,90 @@
+{
+  "asset_id": "dc-super-employee",
+  "name": "神州数码超级员工",
+  "version": "1.0",
+  "provider": "神州数码",
+  "source_type": "official_case",
+  "industries": [],
+  "processes": ["助手场景"],
+  "scenarios": ["神州数码超级员工"],
+  "modules": [
+    {
+      "module_id": "super-employee-case-scope",
+      "name": "超级员工案例范围",
+      "description": "当前已核验材料仅确认该案例的名称与收录位置；详细模块边界待原始案例页进一步人工策展。",
+      "evidence_refs": ["se-case"]
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "se-case",
+      "source_type": "official_case",
+      "title": "神州数码超级员工",
+      "document_name": "神州问学案例合集",
+      "page_start": 16,
+      "page_end": 16,
+      "kind": "asset_definition",
+      "statement": "案例合集收录神州数码超级员工案例。",
+      "verified": true
+    },
+    {
+      "evidence_id": "se-historical-questions",
+      "source_type": "official_case",
+      "title": "神州数码超级员工运行结果：累计解答问题",
+      "document_name": "神州问学案例合集",
+      "page_start": 16,
+      "page_end": 16,
+      "kind": "historical_outcome",
+      "statement": "官方案例记录：上线 6 个月累计解答 10W+ 问题。",
+      "verified": true
+    },
+    {
+      "evidence_id": "se-historical-employee-coverage",
+      "source_type": "official_case",
+      "title": "神州数码超级员工运行结果：员工覆盖",
+      "document_name": "神州问学案例合集",
+      "page_start": 16,
+      "page_end": 16,
+      "kind": "historical_outcome",
+      "statement": "官方案例记录：覆盖 60% 员工。",
+      "verified": true
+    },
+    {
+      "evidence_id": "se-historical-satisfaction",
+      "source_type": "official_case",
+      "title": "神州数码超级员工运行结果：问答满意度",
+      "document_name": "神州问学案例合集",
+      "page_start": 16,
+      "page_end": 16,
+      "kind": "historical_outcome",
+      "statement": "官方案例记录：问答满意度为 98.7%。",
+      "verified": true
+    }
+  ],
+  "value_claims": [
+    {
+      "claim_id": "se-historical-questions-answered",
+      "claim_type": "historical",
+      "metric_name": "上线后累计解答问题数量",
+      "value_text": "上线 6 个月累计解答 10W+ 问题",
+      "evidence_refs": ["se-historical-questions"]
+    },
+    {
+      "claim_id": "se-historical-employee-coverage",
+      "claim_type": "historical",
+      "metric_name": "员工覆盖率",
+      "value_text": "覆盖 60% 员工",
+      "evidence_refs": ["se-historical-employee-coverage"]
+    },
+    {
+      "claim_id": "se-historical-answer-satisfaction",
+      "claim_type": "historical",
+      "metric_name": "问答满意度",
+      "value_text": "98.7%",
+      "evidence_refs": ["se-historical-satisfaction"]
+    }
+  ],
+  "limitations": [
+    "当前资产仅沉淀已核验的案例名称与来源位置，不声明未经人工核验的能力、客户系统、技术栈、交付效果或量化结果。"
+  ]
+}

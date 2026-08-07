@@ -1,0 +1,83 @@
+{
+  "asset_id": "dc-tobacco-smart-procurement",
+  "name": "烟草智能招采助手",
+  "version": "1.0",
+  "provider": "神州数码",
+  "source_type": "official_case",
+  "industries": ["烟草"],
+  "value_chains": ["采购"],
+  "processes": ["智能招采", "文档审查", "文档结构解析"],
+  "scenarios": ["烟草智能招采"],
+  "modules": [
+    {
+      "module_id": "tobacco-document-structure-parsing",
+      "name": "文档结构解析",
+      "description": "冻结规格将烟草智能招采中的文档结构解析列为能源案例可复用的历史能力。",
+      "capability_ids": ["document-extraction"],
+      "required_data": ["招采文档"],
+      "evidence_refs": ["tsp-case"]
+    },
+    {
+      "module_id": "tobacco-document-review",
+      "name": "文档审查",
+      "description": "冻结规格将烟草智能招采中的文档审查列为能源案例可复用的历史能力。",
+      "capability_ids": ["rule-engine"],
+      "required_rules": ["客户审查规则"],
+      "evidence_refs": ["tsp-case"]
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "tsp-case",
+      "source_type": "official_case",
+      "title": "烟草智能招采",
+      "document_name": "神州问学案例合集",
+      "page_start": 18,
+      "page_end": 18,
+      "kind": "asset_definition",
+      "statement": "案例合集收录烟草智能招采案例；冻结规格据此标注其文档审查与结构解析能力可供跨行业复用。",
+      "verified": true
+    },
+    {
+      "evidence_id": "tsp-historical-writing-time",
+      "source_type": "official_case",
+      "title": "烟草智能招采人工编写历史效果",
+      "document_name": "神州问学案例合集",
+      "page_start": 18,
+      "page_end": 18,
+      "kind": "historical_outcome",
+      "statement": "官方案例记录：人工编写时间可减少约 40%。",
+      "verified": true
+    },
+    {
+      "evidence_id": "tsp-historical-review-time",
+      "source_type": "official_case",
+      "title": "烟草智能招采人工审查历史效果",
+      "document_name": "神州问学案例合集",
+      "page_start": 18,
+      "page_end": 18,
+      "kind": "historical_outcome",
+      "statement": "官方案例记录：人工审查时间可减少 50% 以上。",
+      "verified": true
+    }
+  ],
+  "value_claims": [
+    {
+      "claim_id": "tsp-historical-writing-time-reduction",
+      "claim_type": "historical",
+      "metric_name": "人工编写时间",
+      "value_text": "可减少约 40%",
+      "evidence_refs": ["tsp-historical-writing-time"]
+    },
+    {
+      "claim_id": "tsp-historical-review-time-reduction",
+      "claim_type": "historical",
+      "metric_name": "人工审查时间",
+      "value_text": "可减少 50% 以上",
+      "evidence_refs": ["tsp-historical-review-time"]
+    }
+  ],
+  "limitations": [
+    "未从当前已核验材料补充客户系统、部署方式、量化结果或行业专属规则。"
+  ]
+}

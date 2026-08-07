@@ -1,0 +1,108 @@
+{
+  "asset_id": "dc-auto-store-mate",
+  "name": "汽车门店 Mate / 智能陪练案例",
+  "version": "1.0",
+  "provider": "神州数码",
+  "source_type": "official_case",
+  "industries": ["汽车"],
+  "processes": ["门店助手场景"],
+  "scenarios": ["汽车门店 Mate", "智能陪练"],
+  "modules": [
+    {
+      "module_id": "auto-store-mate-case-scope",
+      "name": "汽车门店 Mate 案例范围",
+      "description": "当前已核验材料仅确认该案例的名称与收录位置；详细模块边界待原始案例页进一步人工策展。",
+      "evidence_refs": ["asm-case"]
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "asm-case",
+      "source_type": "official_case",
+      "title": "汽车门店 Mate",
+      "document_name": "神州问学案例合集",
+      "page_start": 19,
+      "page_end": 19,
+      "kind": "asset_definition",
+      "statement": "案例合集收录汽车门店 Mate 案例。",
+      "verified": true
+    },
+    {
+      "evidence_id": "asm-historical-store-coverage",
+      "source_type": "official_case",
+      "title": "汽车门店 Mate 运行结果：门店覆盖",
+      "document_name": "神州问学案例合集",
+      "page_start": 19,
+      "page_end": 19,
+      "kind": "historical_outcome",
+      "statement": "官方案例记录：覆盖 20 家门店。",
+      "verified": true
+    },
+    {
+      "evidence_id": "asm-historical-sales-pilot",
+      "source_type": "official_case",
+      "title": "汽车门店 Mate 运行结果：销售参与内测",
+      "document_name": "神州问学案例合集",
+      "page_start": 19,
+      "page_end": 19,
+      "kind": "historical_outcome",
+      "statement": "官方案例记录：200+ 销售参与内测。",
+      "verified": true
+    },
+    {
+      "evidence_id": "asm-historical-practice-rounds",
+      "source_type": "official_case",
+      "title": "汽车门店 Mate 运行结果：累计对练",
+      "document_name": "神州问学案例合集",
+      "page_start": 19,
+      "page_end": 19,
+      "kind": "historical_outcome",
+      "statement": "官方案例记录：累计 4000+ 轮对练。",
+      "verified": true
+    },
+    {
+      "evidence_id": "asm-historical-daily-active",
+      "source_type": "official_case",
+      "title": "汽车门店 Mate 运行结果：日活",
+      "document_name": "神州问学案例合集",
+      "page_start": 19,
+      "page_end": 19,
+      "kind": "historical_outcome",
+      "statement": "官方案例记录：日活超 1000。",
+      "verified": true
+    }
+  ],
+  "value_claims": [
+    {
+      "claim_id": "asm-historical-store-coverage",
+      "claim_type": "historical",
+      "metric_name": "覆盖门店数量",
+      "value_text": "20 家门店",
+      "evidence_refs": ["asm-historical-store-coverage"]
+    },
+    {
+      "claim_id": "asm-historical-sales-pilot-participants",
+      "claim_type": "historical",
+      "metric_name": "销售内测参与人数",
+      "value_text": "200+",
+      "evidence_refs": ["asm-historical-sales-pilot"]
+    },
+    {
+      "claim_id": "asm-historical-practice-rounds",
+      "claim_type": "historical",
+      "metric_name": "累计对练轮次",
+      "value_text": "4000+",
+      "evidence_refs": ["asm-historical-practice-rounds"]
+    },
+    {
+      "claim_id": "asm-historical-daily-active",
+      "claim_type": "historical",
+      "metric_name": "日活",
+      "value_text": "超 1000",
+      "evidence_refs": ["asm-historical-daily-active"]
+    }
+  ],
+  "limitations": [
+    "当前资产仅沉淀已核验的案例名称与来源位置，不声明未经人工核验的能力、客户系统、技术栈、交付效果或量化结果。"
+  ]
+}

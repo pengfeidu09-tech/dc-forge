@@ -1,0 +1,62 @@
+{
+  "asset_id": "dc-energy-serious-longtext",
+  "name": "能源严肃长文本智能生成助手",
+  "version": "1.0",
+  "provider": "神州数码",
+  "source_type": "official_case",
+  "industries": ["能源"],
+  "processes": ["严肃长文本生成", "文档结构解析", "文档审查"],
+  "scenarios": ["能源严肃长文本"],
+  "modules": [
+    {
+      "module_id": "energy-document-structure-parsing",
+      "name": "文档结构解析",
+      "description": "该模块的结构解析能力具备跨行业复用依据，来源于烟草智能招采。",
+      "capability_ids": ["document-extraction"],
+      "evidence_refs": ["energy-case", "energy-reuse-basis"]
+    },
+    {
+      "module_id": "energy-document-review",
+      "name": "文档审查",
+      "description": "该模块的文档审查能力具备跨行业复用依据，来源于烟草智能招采。",
+      "capability_ids": ["rule-engine"],
+      "configurable_items": ["能源行业专属规则"],
+      "evidence_refs": ["energy-case", "energy-reuse-basis"]
+    },
+    {
+      "module_id": "energy-longtext-generation",
+      "name": "严肃长文本生成",
+      "description": "案例合集收录能源严肃长文本智能生成助手；当前材料未将其行业专属规则描述为从烟草方案继承。",
+      "evidence_refs": ["energy-case"]
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "energy-case",
+      "source_type": "official_case",
+      "title": "能源严肃长文本智能生成助手",
+      "document_name": "神州问学案例合集",
+      "page_start": 14,
+      "page_end": 14,
+      "kind": "asset_definition",
+      "statement": "案例合集收录能源严肃长文本智能生成助手。",
+      "verified": true
+    },
+    {
+      "evidence_id": "energy-reuse-basis",
+      "source_type": "official_case",
+      "title": "跨行业复用依据",
+      "document_name": "神州问学案例合集",
+      "page_start": 14,
+      "page_end": 18,
+      "kind": "reuse_basis",
+      "statement": "冻结规格依据案例材料说明：能源案例复用了烟草智能招采中的文档审查与结构解析能力，并结合能源行业新增能力。",
+      "verified": true
+    }
+  ],
+  "limitations": [
+    "火电行业规则和碳排放计算是能源新增适配条件，不从烟草智能招采继承。",
+    "未从当前已核验材料补充客户系统、部署方式、量化结果或技术栈。"
+  ],
+  "derived_from_asset_ids": ["dc-tobacco-smart-procurement"]
+}

@@ -1,0 +1,33 @@
+{
+  "asset_id": "dc-medical-evidence-assistant",
+  "name": "医药智能循证助手",
+  "version": "1.0",
+  "provider": "神州数码",
+  "source_type": "internal_material",
+  "industries": ["医药"],
+  "processes": ["循证助手场景"],
+  "scenarios": ["医药智能循证助手"],
+  "modules": [
+    {
+      "module_id": "medical-evidence-case-scope",
+      "name": "医药循证案例范围",
+      "description": "冻结规格将该案例列入首批人工校验资产；详细功能边界待与原始官方材料逐页核验后再补充。",
+      "evidence_refs": ["mea-corpus-definition"]
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "mea-corpus-definition",
+      "source_type": "internal_material",
+      "title": "初始 SolutionAsset Corpus",
+      "document_name": "B-M8_Solution_Intelligence_Engine_v1.0_FROZEN.md",
+      "source_locator": "第 19 节",
+      "kind": "asset_definition",
+      "statement": "冻结规格将医药智能循证助手列为首批六个经过人工校验的 SolutionAsset 之一。",
+      "verified": true
+    }
+  ],
+  "limitations": [
+    "冻结规格未提供该案例的原始官方材料页码；在取得并核验原件前，不声明其数据、系统、规则、技术栈、客户成果或量化结果。"
+  ]
+}
