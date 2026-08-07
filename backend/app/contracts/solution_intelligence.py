@@ -190,6 +190,68 @@ class FitAssessment(StrictModel):
         return self
 
 
+class ReuseDecision(StrictModel):
+    schema_version: Literal["1.0"] = "1.0"
+    project_id: str
+    asset_id: str
+    module_id: str = Field(min_length=1)
+    decision: ReuseMode
+    rationale: str = Field(min_length=1)
+    matched_requirements: list[str] = Field(default_factory=list)
+    gaps: list[str] = Field(default_factory=list)
+    required_changes: list[str] = Field(default_factory=list)
+    dependencies: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+    estimated_effort: Literal["none", "small", "medium", "large", "unknown"]
+    human_review_required: bool = False
+    evidence_refs: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_rationale(self) -> "ReuseDecision":
+        if not self.rationale.strip():
+            raise ValueError("reuse decision rationale must not be blank")
+        return self
+
+
+class ReuseSummary(StrictModel):
+    direct_reuse_count: int = Field(ge=0)
+    configuration_count: int = Field(ge=0)
+    customization_count: int = Field(ge=0)
+    unavailable_count: int = Field(ge=0)
+    direct_reuse_ratio: float = Field(ge=0, le=1)
+    configuration_ratio: float = Field(ge=0, le=1)
+    customization_ratio: float = Field(ge=0, le=1)
+    unavailable_ratio: float = Field(ge=0, le=1)
+
+    @model_validator(mode="after")
+    def validate_aggregate(self) -> "ReuseSummary":
+        counts = (
+            self.direct_reuse_count
+            + self.configuration_count
+            + self.customization_count
+            + self.unavailable_count
+        )
+        if counts == 0:
+            raise ValueError("reuse summary requires at least one decision")
+        ratios = (
+            self.direct_reuse_ratio,
+            self.configuration_ratio,
+            self.customization_ratio,
+            self.unavailable_ratio,
+        )
+        if abs(sum(ratios) - 1.0) >= 1e-6:
+            raise ValueError("reuse summary ratios must sum to 1")
+        expected = (
+            self.direct_reuse_count / counts,
+            self.configuration_count / counts,
+            self.customization_count / counts,
+            self.unavailable_count / counts,
+        )
+        if any(abs(actual - target) >= 1e-6 for actual, target in zip(ratios, expected)):
+            raise ValueError("reuse summary ratios must match counts")
+        return self
+
+
 class SolutionAsset(StrictModel):
     schema_version: Literal["1.0"] = "1.0"
     asset_id: str
