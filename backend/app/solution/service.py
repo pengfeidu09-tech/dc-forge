@@ -9,6 +9,8 @@ from backend.app.contracts.process import ProcessSpec
 from backend.app.contracts.solution import RecompileRequest, RecompileResult, SolutionBundle
 from backend.app.solution.compiler import compile_solution as _compile_solution
 from backend.app.solution.recompiler import recompile_solution as _recompile_solution
+from backend.app.contracts.solution_intelligence import SolutionBundleV2
+from backend.app.solution.solution_intelligence_compiler import SolutionIntelligenceCompiler
 
 
 def compile_solution(process: ProcessSpec) -> SolutionBundle:
@@ -19,3 +21,7 @@ def compile_solution(process: ProcessSpec) -> SolutionBundle:
 def recompile_solution(request: RecompileRequest) -> RecompileResult:
     """接收 RecompileRequest，返回增量重编译结果。"""
     return _recompile_solution(request)
+
+
+def compile_solution_v2(process: ProcessSpec) -> SolutionBundleV2:
+    return SolutionIntelligenceCompiler().compile(process)

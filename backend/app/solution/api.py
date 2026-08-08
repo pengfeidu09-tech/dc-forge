@@ -17,6 +17,8 @@ from backend.app.solution.agent import AgentRequest, AgentResponse, run_solution
 from backend.app.solution.llm_provider import LLMProvider
 from backend.app.solution.reviewer import SolutionReviewResult
 from backend.app.solution.service import compile_solution, recompile_solution
+from backend.app.solution.service import compile_solution_v2
+from backend.app.contracts.solution_intelligence import SolutionBundleV2
 
 router = APIRouter(tags=["solution"])
 
@@ -47,6 +49,11 @@ def health() -> dict[str, str]:
 @router.post("/compile-solution", response_model=SolutionBundle)
 def compile_endpoint(request: CompileRequest) -> SolutionBundle:
     return compile_solution(request.process)
+
+
+@router.post("/compile-solution-v2", response_model=SolutionBundleV2)
+def compile_v2_endpoint(process: ProcessSpec) -> SolutionBundleV2:
+    return compile_solution_v2(process)
 
 
 @router.post("/recompile-solution", response_model=RecompileResult)

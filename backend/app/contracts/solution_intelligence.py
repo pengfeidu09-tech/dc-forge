@@ -3,6 +3,8 @@ from typing import Literal
 from pydantic import Field, model_validator
 
 from backend.app.contracts.common import StrictModel
+from backend.app.contracts.common import BusinessConstraint
+from backend.app.contracts.solution import ComponentRef, WorkflowNode
 
 
 SourceType = Literal[
@@ -30,6 +32,11 @@ ReuseMode = Literal[
 ]
 FitQuadrant = Literal["quick_win", "strategic", "experiment", "avoid"]
 ValueClaimType = Literal["historical", "expected", "verified"]
+_PLAN_STRATEGY = {
+    "conservative": "quick_win",
+    "balanced": "production_fit",
+    "innovative": "transform",
+}
 
 
 class EvidenceRecord(StrictModel):
@@ -249,6 +256,107 @@ class ReuseSummary(StrictModel):
         )
         if any(abs(actual - target) >= 1e-6 for actual, target in zip(ratios, expected)):
             raise ValueError("reuse summary ratios must match counts")
+        return self
+
+
+class SolutionPlanV2(StrictModel):
+    schema_version: Literal["2.0"] = "2.0"
+    solution_id: str
+    source_project_id: str
+    plan_type: Literal["conservative", "balanced", "innovative"]
+    display_strategy: Literal["quick_win", "production_fit", "transform"]
+    name: str
+    summary: str
+    primary_asset_ids: list[str]
+    supporting_asset_ids: list[str] = Field(default_factory=list)
+    fit_assessments: list[FitAssessment]
+    reuse_decisions: list[ReuseDecision]
+    reuse_summary: ReuseSummary
+    selected_components: list[ComponentRef]
+    to_be_nodes: list[WorkflowNode]
+    applied_constraints: list[BusinessConstraint]
+    data_requirements: list[str] = Field(default_factory=list)
+    knowledge_requirements: list[str] = Field(default_factory=list)
+    system_integrations: list[str] = Field(default_factory=list)
+    implementation_steps: list[str]
+    assumptions: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+    evidence_refs: list[str] = Field(default_factory=list)
+    value_claims: list[ValueClaim] = Field(default_factory=list)
+    demo_blueprint_id: str | None = None
+    review_score: float = Field(ge=0, le=100)
+
+    @model_validator(mode="after")
+    def validate_executable_selection(self) -> "SolutionPlanV2":
+        if not self.primary_asset_ids or not self.reuse_decisions or not self.implementation_steps:
+            raise ValueError("v2 plan requires selected assets, reuse decisions, and implementation steps")
+        if self.display_strategy != _PLAN_STRATEGY[self.plan_type]:
+            raise ValueError("display_strategy must match the fixed plan_type mapping")
+        if any(item.decision == "unavailable" for item in self.reuse_decisions):
+            raise ValueError("unavailable reuse decision cannot be executable")
+        if any(item.project_id != self.source_project_id for item in self.reuse_decisions):
+            raise ValueError("reuse decisions must belong to source_project_id")
+        if any(item.project_id != self.source_project_id for item in self.fit_assessments):
+            raise ValueError("fit assessments must belong to source_project_id")
+        if len({(item.asset_id, item.module_id) for item in self.reuse_decisions}) != len(self.reuse_decisions):
+            raise ValueError("reuse decisions must have unique asset/module values per plan")
+        plan_asset_ids = set(self.primary_asset_ids + self.supporting_asset_ids)
+        if any(item.asset_id not in plan_asset_ids for item in self.reuse_decisions):
+            raise ValueError("reuse decisions must reference plan assets")
+        if any(item.asset_id not in plan_asset_ids for item in self.fit_assessments):
+            raise ValueError("fit assessments must reference plan assets")
+        component_ids = {item.component_id for item in self.selected_components}
+        executable_component_ids = {
+            f"{item.asset_id}:{item.module_id}" for item in self.reuse_decisions
+        }
+        if component_ids != executable_component_ids:
+            raise ValueError("selected components must exactly match executable reuse decisions")
+        if any(node.component_id not in component_ids for node in self.to_be_nodes):
+            raise ValueError("workflow nodes must reference selected components")
+        counts = {
+            mode: sum(item.decision == mode for item in self.reuse_decisions)
+            for mode in ("direct_reuse", "configuration", "customization", "unavailable")
+        }
+        if (
+            self.reuse_summary.direct_reuse_count != counts["direct_reuse"]
+            or self.reuse_summary.configuration_count != counts["configuration"]
+            or self.reuse_summary.customization_count != counts["customization"]
+            or self.reuse_summary.unavailable_count != counts["unavailable"]
+        ):
+            raise ValueError("reuse_summary counts must exactly aggregate reuse decisions")
+        return self
+
+
+class SolutionBundleV2(StrictModel):
+    schema_version: Literal["2.0"] = "2.0"
+    project_id: str
+    recommended_solution_id: str
+    plans: list[SolutionPlanV2]
+    retrieval_asset_ids: list[str]
+    warnings: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_bundle(self) -> "SolutionBundleV2":
+        if len(self.plans) != 3 or {plan.plan_type for plan in self.plans} != {"conservative", "balanced", "innovative"}:
+            raise ValueError("v2 bundle requires exactly conservative, balanced, and innovative plans")
+        if len({plan.solution_id for plan in self.plans}) != 3:
+            raise ValueError("v2 solution_id values must be unique")
+        if self.recommended_solution_id not in {plan.solution_id for plan in self.plans}:
+            raise ValueError("recommended_solution_id must reference a plan")
+        if any(plan.source_project_id != self.project_id for plan in self.plans):
+            raise ValueError("all plans must belong to bundle project_id")
+        retrieved_asset_ids = set(self.retrieval_asset_ids)
+        if any(
+            not set(plan.primary_asset_ids + plan.supporting_asset_ids) <= retrieved_asset_ids
+            for plan in self.plans
+        ):
+            raise ValueError("plan assets must be present in retrieval_asset_ids")
+        if any(
+            not {fit.asset_id for fit in plan.fit_assessments} <= retrieved_asset_ids
+            for plan in self.plans
+        ):
+            raise ValueError("fit assessments must be present in retrieval_asset_ids")
         return self
 
 
