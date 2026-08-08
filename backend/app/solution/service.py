@@ -10,6 +10,8 @@ from backend.app.contracts.solution import RecompileRequest, RecompileResult, So
 from backend.app.solution.compiler import compile_solution as _compile_solution
 from backend.app.solution.recompiler import recompile_solution as _recompile_solution
 from backend.app.contracts.solution_intelligence import SolutionBundleV2
+from backend.app.contracts.solution_intelligence import DemoBlueprint, SolutionPlanV2
+from backend.app.solution.demo_blueprint import DemoBlueprintCompiler
 from backend.app.solution.solution_intelligence_compiler import SolutionIntelligenceCompiler
 
 
@@ -25,3 +27,8 @@ def recompile_solution(request: RecompileRequest) -> RecompileResult:
 
 def compile_solution_v2(process: ProcessSpec) -> SolutionBundleV2:
     return SolutionIntelligenceCompiler().compile(process)
+
+
+def compile_demo_blueprint(process: ProcessSpec, solution: SolutionPlanV2) -> DemoBlueprint:
+    """Service-level B-to-C handoff; it compiles metadata and never executes Runtime."""
+    return DemoBlueprintCompiler().compile(process, solution)

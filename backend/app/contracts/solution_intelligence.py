@@ -360,6 +360,133 @@ class SolutionBundleV2(StrictModel):
         return self
 
 
+class DemoInput(StrictModel):
+    name: str
+    type: str
+    required: bool = True
+    description: str
+    fixture_ref: str | None = None
+
+
+class DemoAssertion(StrictModel):
+    assertion_id: str
+    description: str
+    severity: Literal["info", "warning", "blocking"]
+    metric_name: str | None = None
+    expected_condition: str
+
+
+class DemoNode(StrictModel):
+    id: str
+    name: str
+    node_type: Literal[
+        "retrieval", "transform", "llm", "rule", "tool", "human_gate", "report"
+    ]
+    executor: Literal["ai", "human", "system"]
+    component_id: str | None = None
+    asset_module_id: str | None = None
+    input_keys: list[str] = Field(default_factory=list)
+    output_keys: list[str] = Field(default_factory=list)
+    next_ids: list[str] = Field(default_factory=list)
+    human_gate: bool = False
+    gate_reason: str | None = None
+    timeout_seconds: int | None = Field(default=None, gt=0)
+    fallback_node_id: str | None = None
+
+
+class DemoBlueprint(StrictModel):
+    schema_version: Literal["1.0"] = "1.0"
+    demo_id: str
+    project_id: str
+    solution_id: str
+    title: str
+    objective: str
+    source_asset_ids: list[str]
+    inputs: list[DemoInput]
+    nodes: list[DemoNode]
+    expected_outputs: list[str]
+    metric_names: list[str]
+    assertions: list[DemoAssertion]
+    required_integrations: list[str] = Field(default_factory=list)
+    security_requirements: list[str] = Field(default_factory=list)
+    evidence_refs: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_graph(self) -> "DemoBlueprint":
+        input_names = [item.name for item in self.inputs]
+        if len(input_names) != len(set(input_names)):
+            raise ValueError("DemoInput name values must be unique")
+        node_ids = [node.id for node in self.nodes]
+        if len(node_ids) != len(set(node_ids)):
+            raise ValueError("DemoNode id values must be unique")
+        if not node_ids:
+            raise ValueError("DemoBlueprint requires at least one node")
+
+        node_id_set = set(node_ids)
+        for node in self.nodes:
+            if not set(node.next_ids) <= node_id_set:
+                raise ValueError("DemoNode next_ids must reference existing nodes")
+            if node.fallback_node_id is not None and node.fallback_node_id not in node_id_set:
+                raise ValueError("DemoNode fallback_node_id must reference an existing node")
+            if node.human_gate and node.executor != "human" and node.node_type != "human_gate":
+                raise ValueError("human_gate requires a human executor or human_gate node_type")
+            if node.human_gate and not node.gate_reason:
+                raise ValueError("human_gate requires gate_reason")
+
+        edges = {
+            node.id: list(node.next_ids)
+            + ([node.fallback_node_id] if node.fallback_node_id is not None else [])
+            for node in self.nodes
+        }
+        reverse_edges = {node_id: [] for node_id in node_ids}
+        for source, targets in edges.items():
+            for target in targets:
+                reverse_edges[target].append(source)
+        starts = [node_id for node_id in node_ids if not reverse_edges[node_id]]
+        if not starts:
+            raise ValueError("DemoBlueprint graph requires at least one start node")
+        terminals = [node_id for node_id in node_ids if not edges[node_id]]
+        if not terminals:
+            raise ValueError("DemoBlueprint graph requires at least one terminal node")
+
+        reachable = _graph_reachable(starts, edges)
+        if reachable != node_id_set:
+            raise ValueError("DemoBlueprint graph contains unreachable node")
+        terminal_reachable = _graph_reachable(terminals, reverse_edges)
+        if terminal_reachable != node_id_set:
+            raise ValueError("DemoBlueprint graph contains a closed infinite cycle")
+
+        input_name_set = set(input_names)
+        output_sources: dict[str, str] = {}
+        for node in self.nodes:
+            for output_key in node.output_keys:
+                if output_key in output_sources:
+                    raise ValueError("DemoNode output_keys must have unique producers")
+                output_sources[output_key] = node.id
+        for node in self.nodes:
+            ancestor_ids = _graph_reachable(reverse_edges[node.id], reverse_edges)
+            available_keys = input_name_set | {
+                output_key
+                for output_key, producer in output_sources.items()
+                if producer in ancestor_ids
+            }
+            if not set(node.input_keys) <= available_keys:
+                raise ValueError("DemoNode input_keys must reference DemoInput or upstream output_keys")
+        return self
+
+
+def _graph_reachable(start_ids: list[str], edges: dict[str, list[str]]) -> set[str]:
+    visited: set[str] = set()
+    pending = list(start_ids)
+    while pending:
+        node_id = pending.pop()
+        if node_id in visited:
+            continue
+        visited.add(node_id)
+        pending.extend(edges[node_id])
+    return visited
+
+
 class SolutionAsset(StrictModel):
     schema_version: Literal["1.0"] = "1.0"
     asset_id: str
