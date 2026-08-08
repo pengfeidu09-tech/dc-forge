@@ -124,6 +124,87 @@ class FitEngine:
             evidence_refs=_asset_evidence_refs(asset),
         )
 
+    def reassess_affected(
+        self,
+        process: ProcessSpec,
+        asset: SolutionAsset,
+        previous: FitAssessment,
+        affected_constraint_types: set[str],
+    ) -> FitAssessment:
+        """Recompute only constraint-derived gates and dimensions; never call assess()."""
+        categories = {
+            "approval": {"rule"},
+            "security": {"security", "deployment"},
+            "data": {"data"},
+            "budget": {"budget"},
+            "time": {"time"},
+            "risk": {"risk"},
+        }
+        affected_categories = set().union(
+            *(categories[item] for item in affected_constraint_types if item in categories)
+        ) if affected_constraint_types else set()
+        scoped_gaps: list[str] = []
+        recomputed_gates: list[HardGateResult] = []
+        for constraint in process.constraints:
+            if not constraint.hard or constraint.type not in affected_constraint_types:
+                continue
+            if constraint.type == "security":
+                recomputed_gates.append(self._deployment_gate(constraint.id, constraint.statement, asset, scoped_gaps))
+            elif constraint.type == "data":
+                recomputed_gates.append(self._data_gate(constraint.id, constraint.statement, asset, scoped_gaps))
+            elif constraint.type == "approval":
+                recomputed_gates.append(self._approval_gate(constraint.id, asset, scoped_gaps))
+            else:
+                recomputed_gates.append(self._unknown_gate(constraint.id, constraint.type, scoped_gaps))
+        hard_gates = [gate for gate in previous.hard_gates if gate.category not in affected_categories]
+        hard_gates.extend(recomputed_gates)
+
+        dimensions = list(previous.dimensions)
+        if "approval" in affected_constraint_types:
+            customer_rules = [constraint.statement for constraint in process.constraints]
+            score, explanation, _ = self._rules_dimension(process, customer_rules, asset)
+            dimensions = [
+                item.model_copy(update={"score": score, "explanation": explanation})
+                if item.name == "rules" else item
+                for item in dimensions
+            ]
+        if "data" in affected_constraint_types:
+            asset_data = list(asset.supported_data) + list(asset.supported_knowledge) + _module_values(asset, "required_data") + _module_values(asset, "required_knowledge")
+            score, explanation, _ = _coverage_score(process.available_data, asset_data, "data and knowledge")
+            dimensions = [
+                item.model_copy(update={"score": score, "explanation": explanation})
+                if item.name == "data_knowledge" else item
+                for item in dimensions
+            ]
+
+        raw_fit_score = round(sum(item.score * item.weight for item in dimensions), 2)
+        hard_blockers = [gate.reason for gate in hard_gates if not gate.passed]
+        eligible = not hard_blockers
+        soft_gaps = _unique(list(previous.soft_gaps) + scoped_gaps)
+        difficulty_score = self._difficulty(
+            process, asset, previous.matched_action_ids, hard_gates, soft_gaps
+        )
+        update = {
+            "hard_gates": hard_gates,
+            "dimensions": dimensions,
+            "raw_fit_score": raw_fit_score,
+            "eligible": eligible,
+            "effective_fit_score": raw_fit_score if eligible else None,
+            "implementation_difficulty_score": difficulty_score,
+            "quadrant": self._quadrant(previous.business_value_score, difficulty_score),
+            "hard_blockers": hard_blockers,
+            "soft_gaps": soft_gaps,
+        }
+        candidate = previous.model_copy(update=update)
+        if candidate.model_dump() == previous.model_dump():
+            return previous
+        return candidate.model_copy(update={
+            "explanation": (
+                f"{asset.asset_id}: incremental {', '.join(sorted(affected_constraint_types))} scope recomputed; "
+                f"hard gates {'passed' if eligible else 'blocked'}"
+            )
+        })
+
     def _evaluate_hard_gates(
         self, process: ProcessSpec, asset: SolutionAsset, soft_gaps: list[str]
     ) -> list[HardGateResult]:

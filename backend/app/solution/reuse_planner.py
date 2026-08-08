@@ -97,6 +97,24 @@ class ReusePlanner:
             unavailable_ratio=counts["unavailable"] / total,
         )
 
+    def reassess_decision(
+        self,
+        process: ProcessSpec,
+        asset: SolutionAsset,
+        fit: FitAssessment,
+        previous: ReuseDecision,
+    ) -> ReuseDecision | None:
+        """Reapply the existing module decision rule to one affected module only."""
+        module = next((item for item in asset.modules if item.module_id == previous.module_id), None)
+        if module is None:
+            raise ValueError("reuse decision module must exist in the supplied asset")
+        global_blockers = [
+            gate.reason
+            for gate in fit.hard_gates
+            if not gate.passed and gate.category in {"security", "deployment"}
+        ]
+        return self._decide_module(process, asset, module, fit, global_blockers)
+
     def _participates(
         self, process: ProcessSpec, genes: list[AIGene], module: SolutionAssetModule
     ) -> bool:

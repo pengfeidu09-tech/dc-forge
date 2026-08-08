@@ -18,7 +18,12 @@ from backend.app.solution.llm_provider import LLMProvider
 from backend.app.solution.reviewer import SolutionReviewResult
 from backend.app.solution.service import compile_solution, recompile_solution
 from backend.app.solution.service import compile_solution_v2
-from backend.app.contracts.solution_intelligence import SolutionBundleV2
+from backend.app.solution.service import recompile_solution_v2
+from backend.app.contracts.solution_intelligence import (
+    RecompileSolutionV2Request,
+    RecompileSolutionV2Result,
+    SolutionBundleV2,
+)
 
 router = APIRouter(tags=["solution"])
 
@@ -54,6 +59,20 @@ def compile_endpoint(request: CompileRequest) -> SolutionBundle:
 @router.post("/compile-solution-v2", response_model=SolutionBundleV2)
 def compile_v2_endpoint(process: ProcessSpec) -> SolutionBundleV2:
     return compile_solution_v2(process)
+
+
+@router.post("/recompile-solution-v2", response_model=RecompileSolutionV2Result)
+def recompile_v2_endpoint(request: RecompileSolutionV2Request) -> RecompileSolutionV2Result:
+    try:
+        return recompile_solution_v2(
+            request.process,
+            request.selected_solution,
+            request.selected_blueprint,
+            request.new_constraints,
+        )
+    except ValueError as error:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail=str(error)) from error
 
 
 @router.post("/recompile-solution", response_model=RecompileResult)

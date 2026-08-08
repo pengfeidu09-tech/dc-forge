@@ -4,6 +4,7 @@ from pydantic import Field, model_validator
 
 from backend.app.contracts.common import StrictModel
 from backend.app.contracts.common import BusinessConstraint
+from backend.app.contracts.process import ProcessSpec
 from backend.app.contracts.solution import ComponentRef, WorkflowNode
 
 
@@ -472,6 +473,61 @@ class DemoBlueprint(StrictModel):
             }
             if not set(node.input_keys) <= available_keys:
                 raise ValueError("DemoNode input_keys must reference DemoInput or upstream output_keys")
+        return self
+
+
+class SolutionIntelligenceDiff(StrictModel):
+    changed_asset_ids: list[str] = Field(default_factory=list)
+    changed_fit_asset_ids: list[str] = Field(default_factory=list)
+    changed_module_ids: list[str] = Field(default_factory=list)
+    reuse_mode_changes: dict[str, str] = Field(default_factory=dict)
+    added_demo_node_ids: list[str] = Field(default_factory=list)
+    removed_demo_node_ids: list[str] = Field(default_factory=list)
+    changed_demo_node_ids: list[str] = Field(default_factory=list)
+    value_claim_changes: list[str] = Field(default_factory=list)
+    explanations: list[str] = Field(default_factory=list)
+
+
+class RecompileSolutionV2Request(StrictModel):
+    process: ProcessSpec
+    selected_solution: SolutionPlanV2
+    selected_blueprint: DemoBlueprint
+    new_constraints: list[BusinessConstraint]
+
+    @model_validator(mode="after")
+    def validate_cross_object_closure(self) -> "RecompileSolutionV2Request":
+        if self.process.project_id != self.selected_solution.source_project_id:
+            raise ValueError("process.project_id must match selected_solution.source_project_id")
+        if self.selected_blueprint.project_id != self.process.project_id:
+            raise ValueError("selected_blueprint.project_id must match process.project_id")
+        if self.selected_blueprint.solution_id != self.selected_solution.solution_id:
+            raise ValueError("selected_blueprint.solution_id must match selected_solution.solution_id")
+        expected_assets = list(dict.fromkeys(
+            self.selected_solution.primary_asset_ids + self.selected_solution.supporting_asset_ids
+        ))
+        if self.selected_blueprint.source_asset_ids != expected_assets:
+            raise ValueError("selected_blueprint.source_asset_ids must match selected solution assets")
+        return self
+
+
+class RecompileSolutionV2Result(StrictModel):
+    previous_solution_id: str
+    previous_demo_id: str
+    new_solution: SolutionPlanV2
+    new_blueprint: DemoBlueprint
+    diff: SolutionIntelligenceDiff
+
+    @model_validator(mode="after")
+    def validate_cross_object_closure(self) -> "RecompileSolutionV2Result":
+        if self.new_solution.source_project_id != self.new_blueprint.project_id:
+            raise ValueError("new solution and Blueprint project_id must match")
+        if self.new_blueprint.solution_id != self.new_solution.solution_id:
+            raise ValueError("new Blueprint solution_id must match new solution")
+        expected_assets = list(dict.fromkeys(
+            self.new_solution.primary_asset_ids + self.new_solution.supporting_asset_ids
+        ))
+        if self.new_blueprint.source_asset_ids != expected_assets:
+            raise ValueError("new Blueprint source_asset_ids must match new solution assets")
         return self
 
 
