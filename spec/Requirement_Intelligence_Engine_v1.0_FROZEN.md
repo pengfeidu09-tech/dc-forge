@@ -1,25 +1,25 @@
 # Requirement Intelligence Engine 技术规格 v1.0（FROZEN）
 
-> **状态：FROZEN / 正式冻结版；15 项产品与架构审计决策已收敛；R-M1 Foundation 已通过实现与 Pre-Commit Quality Audit。**
+> **状态：FROZEN / 正式冻结版；15 项产品与架构审计决策已收敛；R-M1 Requirement Foundation = CLOSED。**
 > **项目：DCForge**
 > **模块：Customer Context & Requirement Intelligence Engine**
 > **模块负责人：B（Requirement Intelligence + Solution Intelligence）**
 > **Draft 日期：2026-08-10**
-> **RC 修订日期：2026-08-10**
-> **代码基线：`main@b6b5855487a7fc8b4dc9303c4f4ecdba4f3068ca`**
+> **RC 审计修订日期（历史）：2026-08-10**
+> **Requirement Intelligence 正式实现基线：`main@0ca49c7d53f738234d42a63392f5cb17b797f25f`**
 > **既有正式回归基线：259 passed, 1 warning**
 > **正式工作区：`D:\ai_project\dc-forge`**
-> **下游正式冻结模块：`B-M8 Solution Intelligence Engine v1.0`**
+> **下游 B-M8 Solution Intelligence 冻结基线：`main@b6b5855487a7fc8b4dc9303c4f4ecdba4f3068ca`**
 
-> **Freeze Notice：本文档现为 FROZEN / 正式冻结版。15 项产品与架构审计决策已收敛，R-M1 Foundation 已通过实现与 Pre-Commit Quality Audit。文中 RC / Pre-Freeze 叙述仅保留为审计历史，不改变当前冻结状态。后续 R-M2 ~ R-M5 必须保持既有多源 Customer Context、动态 `ext:<domain>:<key>`、Process/Pain Typed Detail、Provenance、Confirmation、ContextEvidence、Repository、RequirementDiffRouter、customer-confirmed Baseline 与 Automotive Golden 语义。**
+> **Freeze Notice：本文档现为 FROZEN / 正式冻结版。15 项产品与架构审计决策已收敛，R-M1 Requirement Foundation = CLOSED。文中 RC / Pre-Freeze 叙述仅保留为审计历史，不改变当前冻结状态。后续 R-M2 ~ R-M5 必须保持既有多源 Customer Context、动态 `ext:<domain>:<key>`、Process/Pain Typed Detail、Provenance、Confirmation、ContextEvidence、Repository、RequirementDiffRouter、customer-confirmed Baseline 与 Automotive Golden 语义。**
 
 ---
 
 # 0. 本规格的地位
 
-本文件是 DCForge 新增 **Requirement Intelligence Engine v1.0** 的技术规格 Release Candidate（RC）。
+本文件是 DCForge **Requirement Intelligence Engine v1.0** 的正式冻结技术规格。
 
-它用于在正式开发前冻结：
+它冻结以下已确认的产品与工程语义：
 
 - 产品边界；
 - 客户上下文输入模型；
@@ -34,14 +34,13 @@
 - Requirement Diff 与既有 B-M8.7 Recompile V2 的衔接；
 - Golden Case 与测试策略。
 
-**本文件当前仍不是 FROZEN 版本；但 15 项产品/架构审计决策已经全部收敛，可进入最终 Contract / Truth / Readiness / Golden Audit。**
+**本文档当前状态为 FROZEN；15 项产品/架构审计决策已收敛，R-M1 Requirement Foundation = CLOSED。**
 
-在人工审计并明确冻结以前：
+文中 Draft / RC / Pre-Freeze 仅为历史审计记录：
 
-- 不应将本文作为已承诺实现；
+- 后续 R-M2 ~ R-M5 不得擅自修改本文冻结语义；
 - 不应修改已冻结 B-M8 核心语义；
-- 不应直接大规模开发；
-- 不应为了匹配 Draft 而破坏既有 259 个回归测试。
+- 不应为了后续实现而破坏既有回归测试。
 
 ---
 
@@ -2460,7 +2459,7 @@ Requirement Intelligence Engine v1.0 完成必须同时满足：
 
 ---
 
-# 43. Pre-Freeze 产品审计决策（15/15 已收敛）
+# 43. 冻结产品审计决策（15/15 已收敛）
 
 以下 15 项产品/架构问题已经人工确认，不再作为开放问题。
 
@@ -2482,9 +2481,9 @@ Requirement Intelligence Engine v1.0 完成必须同时满足：
 | 14 | 客户 vs 内部确认 | 必须区分；正式 Baseline 需要 customer-level confirmation |
 | 15 | Automotive Golden 来源 | 使用神州数码/甲方材料 + 已筛选公开汽车/AI 招采案例 |
 
-因此本 RC 不再存在重大产品决策悬空项。
+因此本冻结规格不存在重大产品决策悬空项。
 
-正式 Freeze 前只剩最终验证型审计：
+冻结前完成的最终验证型审计：
 
 1. Contract field closure；
 2. Dynamic category validator；
@@ -2497,7 +2496,7 @@ Requirement Intelligence Engine v1.0 完成必须同时满足：
 9. Automotive Golden provenance；
 10. full regression compatibility。
 
-这些属于 Pre-Freeze Verification，不再改变产品核心逻辑；若发现无法满足，需回到 RC 修正后再 Freeze。
+这些验证均不改变产品核心逻辑；后续实现若发现与冻结语义冲突，必须形成新版本 Spec 后再调整。
 
 ---
 
@@ -2510,25 +2509,18 @@ B-M8 Solution Intelligence Engine v1.0
 b6b5855487a7fc8b4dc9303c4f4ecdba4f3068ca
 
 Requirement Intelligence Engine v1.0
-状态：RELEASE CANDIDATE / PRE-FREEZE
-15 项产品审计决策已收敛
-当前不得破坏 B-M8 冻结行为
+状态：FROZEN / 正式冻结版
+15 项产品与架构审计决策已收敛
+R-M1 Requirement Foundation = CLOSED
+后续 R-M2 ~ R-M5 不得破坏 B-M8 冻结行为或本文冻结语义
 ```
 
 后续建议流程：
 
 ```text
-Spec Draft
+Requirement Intelligence Engine v1.0 FROZEN
     ↓
-15 项产品/架构审计（已完成）
-    ↓
-Release Candidate
-    ↓
-Contract / Truth / Readiness / Golden Verification
-    ↓
-v1.0 FROZEN
-    ↓
-R-M1
+R-M1 Requirement Foundation（CLOSED）
     ↓
 R-M2
     ↓
