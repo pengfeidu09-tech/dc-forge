@@ -469,3 +469,252 @@ class RequirementChange(StrictModel):
     before_value: str | None = None
     after_value: str | None = None
     explanation: str
+
+
+class NextQuestion(StrictModel):
+    question_id: str
+    text: str
+    target_category: RequirementCategory
+    priority: Literal["critical", "high", "medium", "low"]
+    blocking: bool
+    reason: str
+    related_gap_ids: list[str] = Field(default_factory=list)
+    related_conflict_ids: list[str] = Field(default_factory=list)
+
+    _validate_question_id = field_validator("question_id")(
+        lambda value: _non_empty(value, "question_id")
+    )
+    _validate_text = field_validator("text")(lambda value: _non_empty(value, "text"))
+    _validate_target_category = field_validator("target_category")(_validate_requirement_category)
+    _validate_reason = field_validator("reason")(lambda value: _non_empty(value, "reason"))
+
+    @model_validator(mode="after")
+    def validate_references(self) -> "NextQuestion":
+        for field_name, values in (
+            ("related_gap_ids", self.related_gap_ids),
+            ("related_conflict_ids", self.related_conflict_ids),
+        ):
+            if len(values) != len(set(values)):
+                raise ValueError(f"{field_name} values must be unique")
+        if not self.related_gap_ids and not self.related_conflict_ids:
+            raise ValueError("NextQuestion requires a related gap or conflict")
+        return self
+
+
+class QuestionHistoryEntry(StrictModel):
+    question_id: str
+    asked_state_version: int = Field(ge=1)
+    status: Literal["asked", "answered", "dismissed"]
+    answer_source_ids: list[str] = Field(default_factory=list)
+
+    _validate_question_id = field_validator("question_id")(
+        lambda value: _non_empty(value, "question_id")
+    )
+
+    @field_validator("answer_source_ids")
+    @classmethod
+    def validate_answer_sources(cls, values: list[str]) -> list[str]:
+        if len(values) != len(set(values)):
+            raise ValueError("answer_source_ids values must be unique")
+        return [_non_empty(value, "answer_source_id") for value in values]
+
+
+class RequirementModification(StrictModel):
+    target_requirement_id: str
+    new_subject: str | None = None
+    new_value: str | None = None
+    new_parameters: dict[str, Any] | None = None
+    process_detail: ProcessObservation | None = None
+    pain_point_detail: PainPointObservation | None = None
+    reason: str
+
+    _validate_target = field_validator("target_requirement_id")(
+        lambda value: _non_empty(value, "target_requirement_id")
+    )
+    _validate_reason = field_validator("reason")(lambda value: _non_empty(value, "reason"))
+
+    @model_validator(mode="after")
+    def validate_has_change(self) -> "RequirementModification":
+        if all(
+            value is None
+            for value in (
+                self.new_subject,
+                self.new_value,
+                self.new_parameters,
+                self.process_detail,
+                self.pain_point_detail,
+            )
+        ):
+            raise ValueError("RequirementModification must modify at least one field")
+        if self.new_subject is not None:
+            _non_empty(self.new_subject, "new_subject")
+        if self.new_value is not None:
+            _non_empty(self.new_value, "new_value")
+        return self
+
+
+def _validate_confirmation_actions(
+    confirmed_requirement_ids: list[str],
+    rejected_requirement_ids: list[str],
+    modifications: list[RequirementModification],
+) -> None:
+    if not confirmed_requirement_ids and not rejected_requirement_ids and not modifications:
+        raise ValueError("confirmation requires at least one action")
+    for field_name, values in (
+        ("confirmed_requirement_ids", confirmed_requirement_ids),
+        ("rejected_requirement_ids", rejected_requirement_ids),
+    ):
+        if len(values) != len(set(values)):
+            raise ValueError(f"{field_name} values must be unique")
+    modified_ids = [modification.target_requirement_id for modification in modifications]
+    if len(modified_ids) != len(set(modified_ids)):
+        raise ValueError("modification target_requirement_id values must be unique")
+    confirmed = set(confirmed_requirement_ids)
+    rejected = set(rejected_requirement_ids)
+    modified = set(modified_ids)
+    if confirmed & rejected or confirmed & modified or rejected & modified:
+        raise ValueError("confirmed, rejected, and modified requirement IDs must not overlap")
+
+
+class RequirementConfirmation(StrictModel):
+    project_id: str
+    state_version: int = Field(ge=1)
+    confirmation_level: Literal["internal", "customer"]
+    confirmed_requirement_ids: list[str] = Field(default_factory=list)
+    rejected_requirement_ids: list[str] = Field(default_factory=list)
+    modifications: list[RequirementModification] = Field(default_factory=list)
+    confirmed_by: str
+    note: str | None = None
+
+    _validate_project_id = field_validator("project_id")(
+        lambda value: _non_empty(value, "project_id")
+    )
+    _validate_confirmed_by = field_validator("confirmed_by")(
+        lambda value: _non_empty(value, "confirmed_by")
+    )
+
+    @model_validator(mode="after")
+    def validate_actions(self) -> "RequirementConfirmation":
+        _validate_confirmation_actions(
+            self.confirmed_requirement_ids,
+            self.rejected_requirement_ids,
+            self.modifications,
+        )
+        return self
+
+
+class RequirementConfirmationRecord(StrictModel):
+    confirmation_id: str
+    project_id: str
+    source_state_version: int = Field(ge=1)
+    result_state_version: int = Field(ge=2)
+    confirmation_level: Literal["internal", "customer"]
+    confirmed_requirement_ids: list[str] = Field(default_factory=list)
+    rejected_requirement_ids: list[str] = Field(default_factory=list)
+    modifications: list[RequirementModification] = Field(default_factory=list)
+    confirmed_by: str
+    note: str | None = None
+    recorded_at: str | None = None
+
+    _validate_confirmation_id = field_validator("confirmation_id")(
+        lambda value: _non_empty(value, "confirmation_id")
+    )
+    _validate_project_id = field_validator("project_id")(
+        lambda value: _non_empty(value, "project_id")
+    )
+    _validate_confirmed_by = field_validator("confirmed_by")(
+        lambda value: _non_empty(value, "confirmed_by")
+    )
+
+    @model_validator(mode="after")
+    def validate_record(self) -> "RequirementConfirmationRecord":
+        if self.result_state_version != self.source_state_version + 1:
+            raise ValueError("confirmation result_state_version must equal source_state_version + 1")
+        _validate_confirmation_actions(
+            self.confirmed_requirement_ids,
+            self.rejected_requirement_ids,
+            self.modifications,
+        )
+        return self
+
+
+class RequirementBaseline(StrictModel):
+    baseline_id: str
+    project_id: str
+    baseline_version: int = Field(ge=1)
+    source_state_version: int = Field(ge=1)
+    confirmed_items: list[RequirementItem]
+    non_blocking_gaps: list[RequirementGap] = Field(default_factory=list)
+    assumptions: list[str] = Field(default_factory=list)
+    confirmation_level: Literal["customer"] = "customer"
+    confirmed_by: str
+    confirmation_summary: str
+
+    _validate_baseline_id = field_validator("baseline_id")(
+        lambda value: _non_empty(value, "baseline_id")
+    )
+    _validate_project_id = field_validator("project_id")(
+        lambda value: _non_empty(value, "project_id")
+    )
+    _validate_confirmed_by = field_validator("confirmed_by")(
+        lambda value: _non_empty(value, "confirmed_by")
+    )
+    _validate_summary = field_validator("confirmation_summary")(
+        lambda value: _non_empty(value, "confirmation_summary")
+    )
+
+    @model_validator(mode="after")
+    def validate_customer_truth(self) -> "RequirementBaseline":
+        if not self.confirmed_items:
+            raise ValueError("RequirementBaseline requires confirmed_items")
+        item_ids = [item.requirement_id for item in self.confirmed_items]
+        if len(item_ids) != len(set(item_ids)):
+            raise ValueError("RequirementBaseline requirement_id values must be unique")
+        if any(
+            item.status != "confirmed" or item.confirmation_level != "customer"
+            for item in self.confirmed_items
+        ):
+            raise ValueError("RequirementBaseline items must be confirmed at customer level")
+        if any(gap.blocking for gap in self.non_blocking_gaps):
+            raise ValueError("RequirementBaseline cannot contain blocking gaps")
+        if len(self.assumptions) != len(set(self.assumptions)):
+            raise ValueError("RequirementBaseline assumptions must be unique")
+        return self
+
+
+class RequirementAnalysis(StrictModel):
+    project_id: str
+    previous_state_version: int | None = Field(default=None, ge=1)
+    current_state: RequirementState
+    changes: list[RequirementChange] = Field(default_factory=list)
+    readiness: ReadinessAssessment
+    next_questions: list[NextQuestion] = Field(default_factory=list, max_length=3)
+    customer_confirmation_summary: str
+
+    _validate_project_id = field_validator("project_id")(
+        lambda value: _non_empty(value, "project_id")
+    )
+    _validate_summary = field_validator("customer_confirmation_summary")(
+        lambda value: _non_empty(value, "customer_confirmation_summary")
+    )
+
+    @model_validator(mode="after")
+    def validate_analysis_closure(self) -> "RequirementAnalysis":
+        if self.current_state.project_id != self.project_id:
+            raise ValueError("RequirementAnalysis project_id must match current_state")
+        if (
+            self.previous_state_version is not None
+            and self.previous_state_version >= self.current_state.state_version
+        ):
+            raise ValueError("previous_state_version must be earlier than current state")
+        item_ids = {item.requirement_id for item in self.current_state.items}
+        if not {change.requirement_id for change in self.changes} <= item_ids:
+            raise ValueError("RequirementAnalysis changes must reference current_state items")
+        gap_ids = {gap.gap_id for gap in self.current_state.gaps}
+        conflict_ids = {conflict.conflict_id for conflict in self.current_state.conflicts}
+        for question in self.next_questions:
+            if not set(question.related_gap_ids) <= gap_ids:
+                raise ValueError("NextQuestion gap references must exist in current_state")
+            if not set(question.related_conflict_ids) <= conflict_ids:
+                raise ValueError("NextQuestion conflict references must exist in current_state")
+        return self
