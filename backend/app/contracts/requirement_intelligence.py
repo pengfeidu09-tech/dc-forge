@@ -285,6 +285,98 @@ class RequirementExtractionResult(StrictModel):
     warnings: list[RequirementExtractionWarning] = Field(default_factory=list)
 
 
+class SkillRequirementRule(StrictModel):
+    rule_id: str
+    category: RequirementCategory
+    requirement_level: Literal["preliminary_required", "formal_required", "recommended"]
+    missing_blocks_preliminary: bool
+    unconfirmed_blocks_formal: bool
+    requires_customer_confirmation: bool
+    hard_constraint: bool
+    question_template: str
+    description: str
+
+    _validate_rule_id = field_validator("rule_id")(lambda value: _non_empty(value, "rule_id"))
+    _validate_category = field_validator("category")(_validate_requirement_category)
+    _validate_question = field_validator("question_template")(
+        lambda value: _non_empty(value, "question_template")
+    )
+    _validate_description = field_validator("description")(
+        lambda value: _non_empty(value, "description")
+    )
+
+
+class CompletenessDimension(StrictModel):
+    dimension_id: str
+    categories: list[RequirementCategory]
+    weight: float = Field(gt=0, le=100)
+
+    _validate_dimension_id = field_validator("dimension_id")(
+        lambda value: _non_empty(value, "dimension_id")
+    )
+
+    @field_validator("categories")
+    @classmethod
+    def validate_categories(cls, values: list[str]) -> list[str]:
+        if not values:
+            raise ValueError("categories must not be empty")
+        if len(values) != len(set(values)):
+            raise ValueError("categories must be unique")
+        return [_validate_requirement_category(value) for value in values]
+
+
+class RequirementSkill(StrictModel):
+    skill_id: str
+    version: str
+    domain: str
+    extends_skill_id: str | None = None
+    rules: list[SkillRequirementRule] = Field(default_factory=list)
+    completeness_dimensions: list[CompletenessDimension] = Field(default_factory=list)
+    procurement_stages: list[str] = Field(default_factory=list)
+    probes: list[str] = Field(default_factory=list)
+
+    _validate_skill_id = field_validator("skill_id")(lambda value: _non_empty(value, "skill_id"))
+    _validate_version = field_validator("version")(lambda value: _non_empty(value, "version"))
+    _validate_domain = field_validator("domain")(lambda value: _non_empty(value, "domain"))
+
+    @model_validator(mode="after")
+    def validate_skill_closure(self) -> "RequirementSkill":
+        rule_ids = [rule.rule_id for rule in self.rules]
+        if len(rule_ids) != len(set(rule_ids)):
+            raise ValueError("RequirementSkill rule_id values must be unique")
+        dimension_ids = [dimension.dimension_id for dimension in self.completeness_dimensions]
+        if len(dimension_ids) != len(set(dimension_ids)):
+            raise ValueError("RequirementSkill dimension_id values must be unique")
+        if len(self.procurement_stages) != len(set(self.procurement_stages)):
+            raise ValueError("RequirementSkill procurement_stages must be unique")
+        if len(self.probes) != len(set(self.probes)):
+            raise ValueError("RequirementSkill probes must be unique")
+        return self
+
+
+class ReadinessAssessment(StrictModel):
+    stage: Literal["DISCOVERY", "PRELIMINARY_READY", "CONFIRMED_READY"]
+    completeness_score: float = Field(ge=0, le=100)
+    blocking_gap_ids: list[str] = Field(default_factory=list)
+    non_blocking_gap_ids: list[str] = Field(default_factory=list)
+    open_conflict_ids: list[str] = Field(default_factory=list)
+    can_generate_preliminary_solution: bool
+    can_generate_formal_solution: bool
+    reasons: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_stage_flags(self) -> "ReadinessAssessment":
+        expected = {
+            "DISCOVERY": (False, False),
+            "PRELIMINARY_READY": (True, False),
+            "CONFIRMED_READY": (True, True),
+        }[self.stage]
+        actual = (self.can_generate_preliminary_solution, self.can_generate_formal_solution)
+        if actual != expected:
+            raise ValueError("readiness capability flags must match stage")
+        return self
+
+
 class RequirementGap(StrictModel):
     gap_id: str
     category: RequirementCategory

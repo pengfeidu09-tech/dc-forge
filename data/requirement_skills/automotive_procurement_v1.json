@@ -1,0 +1,96 @@
+{
+  "skill_id": "automotive-procurement-v1",
+  "version": "1.0",
+  "domain": "automotive-procurement",
+  "extends_skill_id": "procurement-core-v1",
+  "rules": [
+    {
+      "rule_id": "automotive-multi-site-process",
+      "category": "ext:automotive:multi_site_process",
+      "requirement_level": "recommended",
+      "missing_blocks_preliminary": false,
+      "unconfirmed_blocks_formal": false,
+      "requires_customer_confirmation": false,
+      "hard_constraint": false,
+      "question_template": "多组织或多基地采购流程是否统一？",
+      "description": "多组织与多基地采购流程一致性值得确认"
+    },
+    {
+      "rule_id": "automotive-supplier-entry",
+      "category": "ext:procurement:supplier_entry_policy",
+      "requirement_level": "recommended",
+      "missing_blocks_preliminary": false,
+      "unconfirmed_blocks_formal": false,
+      "requires_customer_confirmation": false,
+      "hard_constraint": false,
+      "question_template": "供应商准入、分层和退出规则是什么？",
+      "description": "供应商准入与分层规则值得确认"
+    },
+    {
+      "rule_id": "automotive-procurement-category",
+      "category": "ext:automotive:procurement_category",
+      "requirement_level": "recommended",
+      "missing_blocks_preliminary": false,
+      "unconfirmed_blocks_formal": false,
+      "requires_customer_confirmation": false,
+      "hard_constraint": false,
+      "question_template": "零部件、非生产和 IT 采购是否采用不同流程？",
+      "description": "不同采购类别的流程差异值得确认"
+    },
+    {
+      "rule_id": "automotive-group-approval",
+      "category": "ext:automotive:group_approval_level",
+      "requirement_level": "recommended",
+      "missing_blocks_preliminary": false,
+      "unconfirmed_blocks_formal": false,
+      "requires_customer_confirmation": false,
+      "hard_constraint": false,
+      "question_template": "集团采购审批层级如何设置？",
+      "description": "集团审批层级值得确认"
+    },
+    {
+      "rule_id": "automotive-system-boundary",
+      "category": "ext:automotive:system_boundary",
+      "requirement_level": "recommended",
+      "missing_blocks_preliminary": false,
+      "unconfirmed_blocks_formal": false,
+      "requires_customer_confirmation": false,
+      "hard_constraint": false,
+      "question_template": "采购平台与 OA、SRM、ERP 的系统边界是什么？",
+      "description": "采购平台与 OA、SRM、ERP 的系统边界值得确认"
+    },
+    {
+      "rule_id": "automotive-quality-compliance",
+      "category": "ext:automotive:quality_compliance",
+      "requirement_level": "recommended",
+      "missing_blocks_preliminary": false,
+      "unconfirmed_blocks_formal": false,
+      "requires_customer_confirmation": false,
+      "hard_constraint": false,
+      "question_template": "汽车行业质量与采购合规边界有哪些？",
+      "description": "汽车行业质量与合规边界值得确认"
+    },
+    {
+      "rule_id": "automotive-data-boundary",
+      "category": "ext:security:data_classification",
+      "requirement_level": "recommended",
+      "missing_blocks_preliminary": false,
+      "unconfirmed_blocks_formal": false,
+      "requires_customer_confirmation": false,
+      "hard_constraint": false,
+      "question_template": "汽车采购数据如何分类并限定使用边界？",
+      "description": "汽车采购数据分类与边界值得确认"
+    }
+  ],
+  "completeness_dimensions": [],
+  "procurement_stages": [],
+  "probes": [
+    "多组织与多基地流程一致性",
+    "供应商准入与分层",
+    "零部件、非生产与 IT 采购类别",
+    "集团审批层级",
+    "OA、SRM、ERP 系统边界",
+    "汽车行业质量与合规",
+    "汽车采购数据边界"
+  ]
+}

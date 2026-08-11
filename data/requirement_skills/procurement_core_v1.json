@@ -1,0 +1,112 @@
+{
+  "skill_id": "procurement-core-v1",
+  "version": "1.0",
+  "domain": "procurement",
+  "extends_skill_id": null,
+  "rules": [
+    {
+      "rule_id": "procurement-security",
+      "category": "security",
+      "requirement_level": "preliminary_required",
+      "missing_blocks_preliminary": true,
+      "unconfirmed_blocks_formal": true,
+      "requires_customer_confirmation": true,
+      "hard_constraint": true,
+      "question_template": "采购资料的数据与部署安全边界是什么？",
+      "description": "采购资料的数据安全与部署边界必须明确"
+    },
+    {
+      "rule_id": "procurement-approval",
+      "category": "approval",
+      "requirement_level": "preliminary_required",
+      "missing_blocks_preliminary": true,
+      "unconfirmed_blocks_formal": true,
+      "requires_customer_confirmation": true,
+      "hard_constraint": true,
+      "question_template": "采购项目有哪些人工审批规则和阈值？",
+      "description": "采购审批规则必须明确"
+    },
+    {
+      "rule_id": "procurement-available-data",
+      "category": "available_data",
+      "requirement_level": "preliminary_required",
+      "missing_blocks_preliminary": true,
+      "unconfirmed_blocks_formal": true,
+      "requires_customer_confirmation": true,
+      "hard_constraint": true,
+      "question_template": "目前有哪些采购数据和制度材料可用？",
+      "description": "采购可用数据必须明确"
+    },
+    {
+      "rule_id": "procurement-business-rule",
+      "category": "business_rule",
+      "requirement_level": "recommended",
+      "missing_blocks_preliminary": false,
+      "unconfirmed_blocks_formal": false,
+      "requires_customer_confirmation": false,
+      "hard_constraint": false,
+      "question_template": "当前采购政策和业务规则有哪些？",
+      "description": "采购政策和业务规则值得确认"
+    },
+    {
+      "rule_id": "procurement-risk",
+      "category": "risk",
+      "requirement_level": "recommended",
+      "missing_blocks_preliminary": false,
+      "unconfirmed_blocks_formal": false,
+      "requires_customer_confirmation": false,
+      "hard_constraint": false,
+      "question_template": "采购执行与合同履约有哪些风险关注点？",
+      "description": "采购执行和合同履约风险值得确认"
+    },
+    {
+      "rule_id": "procurement-integration",
+      "category": "integration",
+      "requirement_level": "recommended",
+      "missing_blocks_preliminary": false,
+      "unconfirmed_blocks_formal": false,
+      "requires_customer_confirmation": false,
+      "hard_constraint": false,
+      "question_template": "采购平台与现有系统的集成边界是什么？",
+      "description": "采购执行系统集成边界值得确认"
+    }
+  ],
+  "completeness_dimensions": [
+    {"dimension_id": "business-goal", "categories": ["business_goal"], "weight": 15},
+    {"dimension_id": "current-process", "categories": ["current_process"], "weight": 10},
+    {"dimension_id": "pain-point", "categories": ["pain_point"], "weight": 10},
+    {"dimension_id": "data", "categories": ["available_data", "data"], "weight": 10},
+    {"dimension_id": "systems", "categories": ["existing_system"], "weight": 10},
+    {"dimension_id": "business-rule", "categories": ["business_rule"], "weight": 5},
+    {"dimension_id": "security", "categories": ["security"], "weight": 5},
+    {"dimension_id": "approval", "categories": ["approval"], "weight": 5},
+    {"dimension_id": "risk", "categories": ["risk"], "weight": 5},
+    {"dimension_id": "target-metric", "categories": ["target_metric"], "weight": 10},
+    {"dimension_id": "scope", "categories": ["scope"], "weight": 5},
+    {"dimension_id": "deliverable", "categories": ["deliverable"], "weight": 5},
+    {"dimension_id": "budget", "categories": ["budget"], "weight": 2.5},
+    {"dimension_id": "time", "categories": ["time"], "weight": 2.5}
+  ],
+  "procurement_stages": [
+    "采购需求",
+    "采购计划",
+    "采购立项",
+    "采购方案",
+    "采购执行",
+    "采购合同",
+    "合同履约",
+    "供应商管理",
+    "统计分析"
+  ],
+  "probes": [
+    "采购政策",
+    "采购方案",
+    "采购执行",
+    "供应商管理",
+    "合同",
+    "效率",
+    "合规",
+    "人工审批",
+    "数据安全"
+  ]
+}
