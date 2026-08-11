@@ -12,6 +12,7 @@ from typing import Protocol
 from backend.app.contracts.requirement_intelligence import (
     RequirementBaseline,
     RequirementConfirmationRecord,
+    RequirementDiff,
     RequirementState,
 )
 
@@ -38,6 +39,14 @@ class RequirementRepository(Protocol):
     ) -> list[RequirementConfirmationRecord]: ...
 
     def save_confirmation_record(self, record: RequirementConfirmationRecord) -> None: ...
+
+    def save_diff(self, diff: RequirementDiff) -> None: ...
+
+    def load_diff(
+        self, project_id: str, previous_baseline_id: str, current_baseline_id: str
+    ) -> RequirementDiff: ...
+
+    def list_diff_pairs(self, project_id: str) -> list[tuple[str, str]]: ...
 
 
 class FileRequirementRepository:
@@ -69,6 +78,15 @@ class FileRequirementRepository:
         ):
             raise ValueError("confirmation_id must be a deterministic confirmation hash")
         return self._project_dir(project_id) / f"{confirmation_id}.json"
+
+    def _diff_path(
+        self, project_id: str, previous_baseline_id: str, current_baseline_id: str
+    ) -> Path:
+        if not previous_baseline_id.strip() or not current_baseline_id.strip():
+            raise ValueError("baseline IDs must not be blank")
+        material = f"{previous_baseline_id}|{current_baseline_id}"
+        digest = sha256(material.encode("utf-8")).hexdigest()[:20]
+        return self._project_dir(project_id) / f"diff-{digest}.json"
 
     def list_versions(self, project_id: str) -> list[int]:
         directory = self._project_dir(project_id)
@@ -220,6 +238,59 @@ class FileRequirementRepository:
                 record.confirmation_id,
             ),
         )
+
+    def save_diff(self, diff: RequirementDiff) -> None:
+        path = self._diff_path(
+            diff.project_id, diff.previous_baseline_id, diff.current_baseline_id
+        )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if path.exists():
+            raise FileExistsError(
+                "RequirementDiff pair already exists: "
+                f"{diff.previous_baseline_id}/{diff.current_baseline_id}"
+            )
+        self._atomic_write(path, diff.model_dump(mode="json"))
+
+    def load_diff(
+        self, project_id: str, previous_baseline_id: str, current_baseline_id: str
+    ) -> RequirementDiff:
+        path = self._diff_path(project_id, previous_baseline_id, current_baseline_id)
+        if not path.exists():
+            raise FileNotFoundError(
+                f"RequirementDiff pair does not exist: {previous_baseline_id}/{current_baseline_id}"
+            )
+        try:
+            diff = RequirementDiff.model_validate(json.loads(path.read_text(encoding="utf-8")))
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            raise ValueError(f"invalid RequirementDiff repository data: {path}") from exc
+        if diff.project_id != project_id:
+            raise ValueError("repository diff project_id does not match requested project")
+        if (
+            diff.previous_baseline_id != previous_baseline_id
+            or diff.current_baseline_id != current_baseline_id
+        ):
+            raise ValueError("repository diff baseline pair does not match requested pair")
+        return diff
+
+    def list_diff_pairs(self, project_id: str) -> list[tuple[str, str]]:
+        directory = self._project_dir(project_id)
+        if not directory.exists():
+            return []
+        pairs = []
+        for path in sorted(directory.glob("diff-*.json"), key=lambda item: item.name):
+            try:
+                diff = RequirementDiff.model_validate(json.loads(path.read_text(encoding="utf-8")))
+            except (OSError, ValueError, json.JSONDecodeError) as exc:
+                raise ValueError(f"invalid RequirementDiff repository data: {path}") from exc
+            if diff.project_id != project_id:
+                raise ValueError("repository diff project_id does not match requested project")
+            expected = self._diff_path(
+                project_id, diff.previous_baseline_id, diff.current_baseline_id
+            )
+            if expected != path:
+                raise ValueError("repository diff baseline pair does not match filename")
+            pairs.append((diff.previous_baseline_id, diff.current_baseline_id))
+        return sorted(pairs)
 
     @staticmethod
     def _atomic_write(path: Path, payload: dict[str, object]) -> None:

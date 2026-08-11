@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 
+from backend.app.process.api import router as requirement_router
 from backend.app.solution.api import router as solution_router
 
 app = FastAPI(
@@ -10,3 +11,4 @@ app = FastAPI(
 )
 
 app.include_router(solution_router)
+app.include_router(requirement_router)

@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from backend.app.contracts.common import StrictModel
+from backend.app.contracts.common import BusinessConstraint, StrictModel
 
 
 CORE_REQUIREMENT_CATEGORIES = {
@@ -717,4 +717,79 @@ class RequirementAnalysis(StrictModel):
                 raise ValueError("NextQuestion gap references must exist in current_state")
             if not set(question.related_conflict_ids) <= conflict_ids:
                 raise ValueError("NextQuestion conflict references must exist in current_state")
+        return self
+
+
+class RequirementDiff(StrictModel):
+    project_id: str
+    previous_baseline_id: str
+    current_baseline_id: str
+    added_requirement_ids: list[str] = Field(default_factory=list)
+    removed_requirement_ids: list[str] = Field(default_factory=list)
+    changed_requirement_ids: list[str] = Field(default_factory=list)
+    changes: list[RequirementChange] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_diff(self) -> "RequirementDiff":
+        for field_name in (
+            "project_id", "previous_baseline_id", "current_baseline_id"
+        ):
+            _non_empty(getattr(self, field_name), field_name)
+        for field_name in (
+            "added_requirement_ids", "removed_requirement_ids", "changed_requirement_ids"
+        ):
+            values = getattr(self, field_name)
+            if len(values) != len(set(values)):
+                raise ValueError(f"{field_name} values must be unique")
+        if self.previous_baseline_id == self.current_baseline_id:
+            raise ValueError("previous and current baseline IDs must differ")
+        added = set(self.added_requirement_ids)
+        removed = set(self.removed_requirement_ids)
+        changed = set(self.changed_requirement_ids)
+        if added & removed or added & changed or removed & changed:
+            raise ValueError("RequirementDiff ID sets must not overlap")
+        change_ids = [change.requirement_id for change in self.changes]
+        if len(change_ids) != len(set(change_ids)):
+            raise ValueError("RequirementDiff changes must have unique requirement IDs")
+        if set(change_ids) != added | removed | changed:
+            raise ValueError("RequirementDiff changes must exactly close over its ID sets")
+        return self
+
+
+class RequirementDiffRoute(StrictModel):
+    decision: Literal[
+        "no_op",
+        "incremental_constraint_recompile",
+        "full_solution_recompile",
+    ]
+    changed_categories: list[RequirementCategory] = Field(default_factory=list)
+    explanation: str
+    new_constraints: list[BusinessConstraint] = Field(default_factory=list)
+
+    _validate_explanation = field_validator("explanation")(
+        lambda value: _non_empty(value, "explanation")
+    )
+
+    @field_validator("changed_categories")
+    @classmethod
+    def validate_changed_categories(cls, values: list[str]) -> list[str]:
+        if len(values) != len(set(values)):
+            raise ValueError("changed_categories values must be unique")
+        if values != sorted(values):
+            raise ValueError("changed_categories values must be sorted")
+        return [_validate_requirement_category(value) for value in values]
+
+    @model_validator(mode="after")
+    def validate_route_payload(self) -> "RequirementDiffRoute":
+        if self.decision == "no_op" and self.changed_categories:
+            raise ValueError("no_op route requires empty changed_categories")
+        if self.decision != "no_op" and not self.changed_categories:
+            raise ValueError("non-no-op route requires changed_categories")
+        if self.decision == "incremental_constraint_recompile" and not self.new_constraints:
+            raise ValueError("incremental route requires non-empty new_constraints")
+        if self.decision != "incremental_constraint_recompile" and self.new_constraints:
+            raise ValueError("new_constraints are only valid for incremental routing")
+        constraint_ids = [constraint.id for constraint in self.new_constraints]
+        if len(constraint_ids) != len(set(constraint_ids)):
+            raise ValueError("new_constraints IDs must be unique")
         return self
