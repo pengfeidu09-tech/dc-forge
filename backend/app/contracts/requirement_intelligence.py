@@ -232,6 +232,59 @@ class RequirementItem(StrictModel):
         return self
 
 
+class ExtractedRequirementCandidate(StrictModel):
+    """Narrow, untrusted LLM extraction payload; it is not Requirement Truth."""
+
+    category: RequirementCategory
+    subject: str
+    value: str
+    parameters: dict[str, Any] = Field(default_factory=dict)
+    confidence: float = Field(ge=0, le=1)
+    candidate_kind: Literal["extracted", "inferred"]
+    evidence_quote: str
+    process_detail: ProcessObservation | None = None
+    pain_point_detail: PainPointObservation | None = None
+
+    _validate_category = field_validator("category")(_validate_requirement_category)
+    _validate_subject = field_validator("subject")(lambda value: _non_empty(value, "subject"))
+    _validate_value = field_validator("value")(lambda value: _non_empty(value, "value"))
+    _validate_quote = field_validator("evidence_quote")(lambda value: _non_empty(value, "evidence_quote"))
+
+    @model_validator(mode="after")
+    def validate_typed_details(self) -> "ExtractedRequirementCandidate":
+        if self.category == "current_process":
+            if self.process_detail is None or self.pain_point_detail is not None:
+                raise ValueError("current_process requires process_detail only")
+        elif self.category == "pain_point":
+            if self.pain_point_detail is None or self.process_detail is not None:
+                raise ValueError("pain_point requires pain_point_detail only")
+        elif self.process_detail is not None or self.pain_point_detail is not None:
+            raise ValueError("process_detail and pain_point_detail are only valid for typed categories")
+        return self
+
+
+class RequirementExtractionWarning(StrictModel):
+    code: Literal[
+        "document_text_unavailable",
+        "empty_response",
+        "evidence_not_found",
+        "invalid_candidate",
+        "invalid_json",
+        "provider_warning",
+    ]
+    message: str
+    source_id: str
+    locator: str | None = None
+
+    _validate_message = field_validator("message")(lambda value: _non_empty(value, "message"))
+    _validate_source_id = field_validator("source_id")(lambda value: _non_empty(value, "source_id"))
+
+
+class RequirementExtractionResult(StrictModel):
+    candidates: list[RequirementItem] = Field(default_factory=list)
+    warnings: list[RequirementExtractionWarning] = Field(default_factory=list)
+
+
 class RequirementGap(StrictModel):
     gap_id: str
     category: RequirementCategory
