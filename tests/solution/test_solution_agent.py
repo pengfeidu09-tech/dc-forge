@@ -222,3 +222,22 @@ def test_agent_request_rejects_extra_fields() -> None:
             "message": "test",
             "extra_field": "bad",
         })
+
+
+def test_default_solution_agent_provider_does_not_inherit_extraction_profile(monkeypatch) -> None:
+    from backend.app.solution import llm_provider
+
+    constructor_calls: list[dict] = []
+
+    class DefaultAgentProvider:
+        def __init__(self, **kwargs) -> None:
+            constructor_calls.append(kwargs)
+
+        def complete(self, messages, tools=None):
+            return LLMResponse(content=_COMPILE_RESP)
+
+    monkeypatch.setattr(llm_provider, "OpenAICompatibleProvider", DefaultAgentProvider)
+    result = run_solution_agent(_make_request("compile"))
+
+    assert result.intent == "compile"
+    assert constructor_calls == [{}]

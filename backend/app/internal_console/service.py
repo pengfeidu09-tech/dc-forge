@@ -36,7 +36,33 @@ class InternalConsoleService:
         self.skill_loader = skill_loader or RequirementSkillLoader(
             repository_root / "data" / "requirement_skills"
         )
-        self.provider = provider or OpenAICompatibleProvider()
+        self.provider = provider or self._extraction_provider()
+
+    @staticmethod
+    def _extraction_provider() -> OpenAICompatibleProvider:
+        timeout_raw = os.getenv("EXTRACTION_LLM_TIMEOUT_SECONDS", "90").strip()
+        try:
+            timeout = float(timeout_raw)
+        except ValueError as error:
+            raise RuntimeError("EXTRACTION_LLM_TIMEOUT_SECONDS must be a positive number") from error
+        if timeout <= 0:
+            raise RuntimeError("EXTRACTION_LLM_TIMEOUT_SECONDS must be a positive number")
+
+        thinking_raw = os.getenv("EXTRACTION_LLM_ENABLE_THINKING", "false").strip().casefold()
+        if thinking_raw not in {"true", "false"}:
+            raise RuntimeError("EXTRACTION_LLM_ENABLE_THINKING must be true or false")
+
+        response_format = os.getenv("EXTRACTION_LLM_RESPONSE_FORMAT", "json_object").strip()
+        if response_format != "json_object":
+            raise RuntimeError("EXTRACTION_LLM_RESPONSE_FORMAT must be json_object")
+
+        return OpenAICompatibleProvider(
+            timeout=timeout,
+            request_options={
+                "enable_thinking": thinking_raw == "true",
+                "response_format": {"type": response_format},
+            },
+        )
 
     @staticmethod
     def _configured_repository(repository_root: Path) -> FileRequirementRepository:

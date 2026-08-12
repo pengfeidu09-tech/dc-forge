@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Protocol
+from typing import Any, Protocol
 
 import httpx
 from pydantic import BaseModel, ConfigDict
@@ -46,11 +46,21 @@ class OpenAICompatibleProvider:
         base_url: str | None = None,
         model: str | None = None,
         timeout: float = 30.0,
+        request_options: dict[str, Any] | None = None,
     ) -> None:
+        reserved_options = {"model", "messages", "temperature"}
+        supplied_options = request_options or {}
+        forbidden_options = reserved_options & set(supplied_options)
+        if forbidden_options:
+            raise ValueError(
+                "request_options cannot override core payload fields: "
+                + ", ".join(sorted(forbidden_options))
+            )
         self._api_key = api_key or os.environ.get("LLM_API_KEY", "")
         self._base_url = base_url or os.environ.get("LLM_BASE_URL", "")
         self._model = model or os.environ.get("LLM_MODEL", "")
         self._timeout = timeout
+        self._request_options = dict(supplied_options)
 
     def complete(self, messages: list[dict], tools: list[dict] | None = None) -> LLMResponse:
         """调用 Chat Completions API。"""
@@ -68,6 +78,7 @@ class OpenAICompatibleProvider:
         }
         if tools:
             payload["tools"] = tools
+        payload.update(self._request_options)
 
         try:
             with httpx.Client(timeout=self._timeout) as client:

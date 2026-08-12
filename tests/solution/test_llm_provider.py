@@ -1,10 +1,38 @@
 """B-M6 LLM Provider 测试。"""
 
+import pytest
+
 from backend.app.solution.llm_provider import (
     FakeLLMProvider,
     LLMResponse,
     OpenAICompatibleProvider,
 )
+
+
+class _CapturedResponse:
+    status_code = 200
+
+    def json(self):
+        return {"choices": [{"message": {"content": "OK"}}]}
+
+
+class _CapturedClient:
+    instances: list["_CapturedClient"] = []
+
+    def __init__(self, *, timeout):
+        self.timeout = timeout
+        self.calls: list[dict] = []
+        self.__class__.instances.append(self)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+    def post(self, url, *, json, headers):
+        self.calls.append({"url": url, "json": json, "headers": headers})
+        return _CapturedResponse()
 
 
 def test_fake_provider_returns_preset_response() -> None:
@@ -51,3 +79,55 @@ def test_llm_response_validates_against_model() -> None:
     resp = LLMResponse(content="hello", role="assistant", warnings=[])
     LLMResponse.model_validate(resp.model_dump())
     assert resp.content == "hello"
+
+
+def test_openai_provider_default_payload_omits_optional_request_options(monkeypatch) -> None:
+    from backend.app.solution import llm_provider
+
+    _CapturedClient.instances.clear()
+    monkeypatch.setattr(llm_provider.httpx, "Client", _CapturedClient)
+    provider = OpenAICompatibleProvider(
+        api_key="test-key", base_url="https://example.test/v1", model="test-model"
+    )
+
+    assert provider.complete([{"role": "user", "content": "test"}]).content == "OK"
+    client = _CapturedClient.instances[-1]
+    assert client.timeout == 30.0
+    assert client.calls[-1]["json"] == {
+        "model": "test-model",
+        "messages": [{"role": "user", "content": "test"}],
+        "temperature": 0,
+    }
+
+
+def test_openai_provider_merges_extraction_request_options_without_core_overrides(monkeypatch) -> None:
+    from backend.app.solution import llm_provider
+
+    _CapturedClient.instances.clear()
+    monkeypatch.setattr(llm_provider.httpx, "Client", _CapturedClient)
+    provider = OpenAICompatibleProvider(
+        api_key="test-key",
+        base_url="https://example.test/v1",
+        model="test-model",
+        timeout=90,
+        request_options={
+            "enable_thinking": False,
+            "response_format": {"type": "json_object"},
+        },
+    )
+
+    provider.complete([{"role": "user", "content": "test"}])
+    client = _CapturedClient.instances[-1]
+    assert client.timeout == 90
+    payload = client.calls[-1]["json"]
+    assert payload["enable_thinking"] is False
+    assert payload["response_format"] == {"type": "json_object"}
+    assert payload["model"] == "test-model"
+    assert payload["messages"] == [{"role": "user", "content": "test"}]
+    assert payload["temperature"] == 0
+
+
+@pytest.mark.parametrize("reserved", ["model", "messages", "temperature"])
+def test_openai_provider_rejects_core_payload_overrides(reserved: str) -> None:
+    with pytest.raises(ValueError, match=reserved):
+        OpenAICompatibleProvider(request_options={reserved: "forbidden"})
