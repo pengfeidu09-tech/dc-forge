@@ -1,6 +1,12 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { consoleApi } from './api'
+import {
+  approvalThresholdAmount,
+  buildRecompilePayload,
+  capturePreviousSolutionSnapshot,
+  hasCompletePreviousSolutionSnapshot,
+} from './session_state'
 
 const STORAGE_KEY = 'dcforge-intelligence-console-v1'
 const tabs = ['Requirement', 'Solution', 'Feedback & Diff']
@@ -87,6 +93,9 @@ const emptySession = () => ({
   extractionWarnings: [],
   baseline: null,
   previousBaseline: null,
+  previousProcessSpec: null,
+  previousRecommendedSolution: null,
+  previousBlueprint: null,
   processSpec: null,
   solutionBundle: null,
   recommendedSolution: null,
@@ -132,8 +141,9 @@ const oldApproval = computed(() => session.previousBaseline?.confirmed_items?.fi
 const processApproval = computed(() => session.processSpec?.constraints?.find((item) => item.type === 'approval'))
 const solutionApproval = computed(() => session.recommendedSolution?.applied_constraints?.find((item) => item.type === 'approval'))
 const gateNode = computed(() => session.blueprint?.nodes?.find((item) => item.id === 'hard-approval-gate'))
-const feedbackCandidate = computed(() => currentState.value?.items?.find((item) => item.category === 'approval' && item.parameters?.threshold === 800000))
+const feedbackCandidate = computed(() => currentState.value?.items?.find((item) => item.category === 'approval' && approvalThresholdAmount(item) === 800000))
 const openApprovalConflict = computed(() => currentState.value?.conflicts?.find((item) => item.category === 'approval' && item.status === 'open'))
+const canRecompile = computed(() => hasCompletePreviousSolutionSnapshot(session))
 const rawArtifacts = computed(() => ({
   RequirementAnalysis: session.analysis,
   RequirementBaseline: session.baseline,
@@ -257,7 +267,7 @@ async function compileSolution() {
 
 async function analyzeFeedback() {
   await withTask('feedback', async () => {
-    session.previousBaseline = session.baseline
+    capturePreviousSolutionSnapshot(session)
     const result = await consoleApi.analyze({
       project_id: session.projectId,
       sources: [{
@@ -273,7 +283,7 @@ async function analyzeFeedback() {
     session.analysis = result.analysis
     session.extractionWarnings = result.extraction_warnings
     const candidate = result.analysis.current_state.items.find(
-      (item) => item.category === 'approval' && item.parameters?.threshold === 800000,
+      (item) => item.category === 'approval' && approvalThresholdAmount(item) === 800000,
     )
     selectedIds.value = candidate ? [candidate.requirement_id] : []
   })
@@ -293,14 +303,7 @@ async function buildDiff() {
 
 async function recompileSolution() {
   await withTask('recompile', async () => {
-    session.recompileResult = await consoleApi.recompile({
-      project_id: session.projectId,
-      previous_baseline_version: session.previousBaseline.baseline_version,
-      current_baseline_version: session.baseline.baseline_version,
-      previous_process: session.processSpec,
-      selected_solution: session.recommendedSolution,
-      selected_blueprint: session.blueprint,
-    })
+    session.recompileResult = await consoleApi.recompile(buildRecompilePayload(session))
   })
 }
 
@@ -448,7 +451,7 @@ onMounted(async () => {
 
         <section v-if="session.blueprint" class="panel">
           <div class="panel-heading"><div><small>需求到方案追溯</small><h2>审批金额阈值闭环</h2></div></div>
-          <div class="trace"><div><small>客户需求</small><strong>{{ approvalRequirement?.value }}</strong><span>{{ approvalRequirement?.requirement_id }}</span></div><i>→</i><div><small>流程约束</small><strong>{{ formatMoney(processApproval?.parameters?.threshold) }}</strong><code>{{ processApproval?.parameters?.threshold }}</code><span>{{ processApproval?.id }}</span></div><i>→</i><div><small>方案能力</small><strong>{{ formatMoney(solutionApproval?.parameters?.threshold) }}</strong><code>{{ solutionApproval?.parameters?.threshold }}</code><span>{{ session.recommendedSolution?.solution_id }}</span></div><i>→</i><div><small>演示流程节点</small><strong>人工审批节点</strong><code>{{ gateNode?.id }}</code><span>{{ gateNode?.gate_reason }}</span></div></div>
+          <div class="trace"><div><small>客户需求</small><strong>{{ approvalRequirement?.value }}</strong><span>{{ approvalRequirement?.requirement_id }}</span></div><i>→</i><div><small>流程约束</small><strong>{{ formatMoney(processApproval?.parameters?.threshold_amount) }}</strong><code>{{ processApproval?.parameters?.threshold_amount }}</code><span>{{ processApproval?.id }}</span></div><i>→</i><div><small>方案能力</small><strong>{{ formatMoney(solutionApproval?.parameters?.threshold_amount) }}</strong><code>{{ solutionApproval?.parameters?.threshold_amount }}</code><span>{{ session.recommendedSolution?.solution_id }}</span></div><i>→</i><div><small>演示流程节点</small><strong>人工审批节点</strong><code>{{ gateNode?.id }}</code><span>{{ gateNode?.gate_reason }}</span></div></div>
         </section>
       </section>
 
@@ -472,21 +475,21 @@ onMounted(async () => {
         <section v-if="session.requirementDiff" class="panel">
           <p v-if="session.route.decision === 'no_op'" class="success">未检测到有效业务变化，无需重新生成方案</p>
           <div class="metric-grid">
-            <div><small>原审批阈值</small><strong>{{ formatMoney(oldApproval?.parameters?.threshold) }}</strong><code>{{ oldApproval?.parameters?.threshold }}</code></div>
-            <div><small>新审批阈值</small><strong>{{ formatMoney(approvalRequirement?.parameters?.threshold) }}</strong><code>{{ approvalRequirement?.parameters?.threshold }}</code></div>
+            <div><small>原审批阈值</small><strong>{{ formatMoney(oldApproval?.parameters?.threshold_amount) }}</strong><code>{{ oldApproval?.parameters?.threshold_amount }}</code></div>
+            <div><small>新审批阈值</small><strong>{{ formatMoney(approvalRequirement?.parameters?.threshold_amount) }}</strong><code>{{ approvalRequirement?.parameters?.threshold_amount }}</code></div>
             <div><small>更新策略</small><strong>{{ routeLabels[session.route.decision] || session.route.decision }}</strong><code>{{ session.route.decision }}</code></div>
             <div><small>受影响需求</small><strong>{{ session.route.changed_categories.map(categoryLabel).join('、') || '无' }}</strong><code>{{ session.route.changed_categories.join(', ') }}</code></div>
           </div>
           <div class="change-summary"><article v-for="change in session.requirementDiff.changes" :key="change.requirement_id"><b>{{ changeTypeLabels[change.change_type] || change.change_type }}</b><code>{{ change.change_type }}</code><span>{{ change.requirement_id }}</span></article></div>
           <div class="detail-columns"><div><h3>需求变化 · RequirementDiff</h3><pre>{{ JSON.stringify(session.requirementDiff, null, 2) }}</pre></div><div><h3>新增 / 更新约束</h3><pre>{{ JSON.stringify(session.route.new_constraints, null, 2) }}</pre></div></div>
-          <button class="button" :disabled="loading || !session.route" @click="recompileSolution">{{ loading === 'recompile' ? '正在更新解决方案…' : '更新解决方案' }}</button>
+          <button class="button" :disabled="loading || !session.route || !canRecompile" @click="recompileSolution">{{ loading === 'recompile' ? '正在更新解决方案…' : '更新解决方案' }}</button>
         </section>
 
         <section v-if="session.recompileResult" class="panel">
           <div class="panel-heading"><div><small>方案智能差异</small><h2>解决方案更新结果</h2></div><span class="success">{{ routeLabels[session.recompileResult.decision] || session.recompileResult.decision }}<code>{{ session.recompileResult.decision }}</code></span></div>
           <div class="metric-grid">
-            <div><small>原审批阈值</small><strong>{{ formatMoney(oldApproval?.parameters?.threshold) }}</strong><code>{{ oldApproval?.parameters?.threshold }}</code></div>
-            <div><small>新审批阈值</small><strong>{{ formatMoney(approvalRequirement?.parameters?.threshold) }}</strong><code>{{ approvalRequirement?.parameters?.threshold }}</code></div>
+            <div><small>原审批阈值</small><strong>{{ formatMoney(oldApproval?.parameters?.threshold_amount) }}</strong><code>{{ oldApproval?.parameters?.threshold_amount }}</code></div>
+            <div><small>新审批阈值</small><strong>{{ formatMoney(approvalRequirement?.parameters?.threshold_amount) }}</strong><code>{{ approvalRequirement?.parameters?.threshold_amount }}</code></div>
             <div><small>约束 ID</small><strong>{{ processApproval?.id === session.recompileResult.solution.applied_constraints.find(c => c.type === 'approval')?.id ? '保持不变' : '发生变化' }}</strong></div>
             <div><small>旧 50 万规则残留</small><strong>{{ residue500k }}</strong></div>
           </div>
