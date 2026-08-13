@@ -6,6 +6,7 @@ import {
   buildRecompilePayload,
   capturePreviousSolutionSnapshot,
   hasCompletePreviousSolutionSnapshot,
+  processOrSolutionThreshold,
 } from '../src/session_state.js'
 
 function sessionV1() {
@@ -84,4 +85,10 @@ test('approval threshold reads only threshold_amount', () => {
   assert.equal(approvalThresholdAmount({ parameters: { threshold_amount: 800000 } }), 800000)
   assert.equal(approvalThresholdAmount({ parameters: { threshold: 500000 } }), undefined)
   assert.equal(approvalThresholdAmount(null), undefined)
+})
+
+test('process and solution artifacts read only canonical threshold', () => {
+  assert.equal(processOrSolutionThreshold({ parameters: { threshold: 500000 } }), 500000)
+  assert.equal(processOrSolutionThreshold({ parameters: { threshold_amount: 500000 } }), undefined)
+  assert.equal(processOrSolutionThreshold(null), undefined)
 })

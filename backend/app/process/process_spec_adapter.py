@@ -37,6 +37,29 @@ def _canonical_parameter(value):
     return value
 
 
+def _normalize_constraint_parameters(item: RequirementItem) -> dict[str, object]:
+    """Normalize only the frozen Requirement -> ProcessSpec approval boundary."""
+    parameters = {
+        key: _canonical_parameter(value)
+        for key, value in item.parameters.items()
+        if key not in {"hard", "not_applicable"}
+    }
+    if item.category != "approval":
+        return {key: parameters[key] for key in sorted(parameters)}
+
+    threshold_amount = parameters.pop("threshold_amount", None)
+    legacy_threshold = parameters.pop("threshold", None)
+    if threshold_amount is not None and legacy_threshold is not None:
+        if threshold_amount != legacy_threshold:
+            raise ValueError("approval threshold alias conflict")
+        parameters["threshold"] = threshold_amount
+    elif threshold_amount is not None:
+        parameters["threshold"] = threshold_amount
+    elif legacy_threshold is not None:
+        parameters["threshold"] = legacy_threshold
+    return {key: parameters[key] for key in sorted(parameters)}
+
+
 def stable_constraint_id(project_id: str, category: str, subject: str) -> str:
     material = "|".join((project_id, category, normalize_text(subject)))
     return f"constraint-{sha256(material.encode('utf-8')).hexdigest()[:16]}"
@@ -223,12 +246,7 @@ class ProcessSpecAdapter:
         skill_hard = any(
             rule.category == item.category and rule.hard_constraint for rule in skill.rules
         )
-        parameters = {
-            key: _canonical_parameter(value)
-            for key, value in item.parameters.items()
-            if key not in {"hard", "not_applicable"}
-        }
-        parameters = {key: parameters[key] for key in sorted(parameters)}
+        parameters = _normalize_constraint_parameters(item)
         return BusinessConstraint(
             id=stable_constraint_id(project_id, item.category, item.subject),
             type=item.category,

@@ -51,8 +51,10 @@ def test_fake_provider_defaults_when_empty() -> None:
     assert "compile" in r.content
 
 
-def test_openai_provider_no_config_returns_warning() -> None:
+def test_openai_provider_no_config_returns_warning(monkeypatch) -> None:
     """未配置环境变量时返回 warning 而非崩溃。"""
+    for name in ("LLM_API_KEY", "LLM_BASE_URL", "LLM_MODEL"):
+        monkeypatch.delenv(name, raising=False)
     provider = OpenAICompatibleProvider(api_key="", base_url="", model="")
     r = provider.complete([{"role": "user", "content": "test"}])
     assert r.content == ""

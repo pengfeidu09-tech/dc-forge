@@ -33,3 +33,4 @@ export function buildRecompilePayload(session) {
 }
 
 export const approvalThresholdAmount = (item) => item?.parameters?.threshold_amount
+export const processOrSolutionThreshold = (item) => item?.parameters?.threshold

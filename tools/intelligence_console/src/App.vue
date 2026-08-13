@@ -6,6 +6,7 @@ import {
   buildRecompilePayload,
   capturePreviousSolutionSnapshot,
   hasCompletePreviousSolutionSnapshot,
+  processOrSolutionThreshold,
 } from './session_state'
 
 const STORAGE_KEY = 'dcforge-intelligence-console-v1'
@@ -451,7 +452,7 @@ onMounted(async () => {
 
         <section v-if="session.blueprint" class="panel">
           <div class="panel-heading"><div><small>需求到方案追溯</small><h2>审批金额阈值闭环</h2></div></div>
-          <div class="trace"><div><small>客户需求</small><strong>{{ approvalRequirement?.value }}</strong><span>{{ approvalRequirement?.requirement_id }}</span></div><i>→</i><div><small>流程约束</small><strong>{{ formatMoney(processApproval?.parameters?.threshold_amount) }}</strong><code>{{ processApproval?.parameters?.threshold_amount }}</code><span>{{ processApproval?.id }}</span></div><i>→</i><div><small>方案能力</small><strong>{{ formatMoney(solutionApproval?.parameters?.threshold_amount) }}</strong><code>{{ solutionApproval?.parameters?.threshold_amount }}</code><span>{{ session.recommendedSolution?.solution_id }}</span></div><i>→</i><div><small>演示流程节点</small><strong>人工审批节点</strong><code>{{ gateNode?.id }}</code><span>{{ gateNode?.gate_reason }}</span></div></div>
+          <div class="trace"><div><small>客户需求</small><strong>{{ approvalRequirement?.value }}</strong><span>{{ approvalRequirement?.requirement_id }}</span></div><i>→</i><div><small>流程约束</small><strong>{{ formatMoney(processOrSolutionThreshold(processApproval)) }}</strong><code>{{ processOrSolutionThreshold(processApproval) }}</code><span>{{ processApproval?.id }}</span></div><i>→</i><div><small>方案能力</small><strong>{{ formatMoney(processOrSolutionThreshold(solutionApproval)) }}</strong><code>{{ processOrSolutionThreshold(solutionApproval) }}</code><span>{{ session.recommendedSolution?.solution_id }}</span></div><i>→</i><div><small>演示流程节点</small><strong>人工审批节点</strong><code>{{ gateNode?.id }}</code><span>{{ gateNode?.gate_reason }}</span></div></div>
         </section>
       </section>
 
