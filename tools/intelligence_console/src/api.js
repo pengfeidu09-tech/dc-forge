@@ -21,4 +21,6 @@ export const consoleApi = {
   compile: (body) => post('/internal-console/compile', body),
   diff: (body) => post('/internal-console/diff', body),
   recompile: (body) => post('/internal-console/recompile', body),
+  changeSet: (body) => post('/internal-console/change-set', body),
+  reviewChangeSet: (body) => post('/internal-console/change-set/review', body),
 }

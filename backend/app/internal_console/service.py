@@ -21,6 +21,16 @@ from backend.app.process.requirement_reducer import RequirementReducer
 from backend.app.process.requirement_repository import FileRequirementRepository
 from backend.app.process.requirement_skill import RequirementSkillLoader
 from backend.app.process.service import RequirementIntelligenceService
+from backend.app.requirement_change.change_set import (
+    ChangeSetReviewAction,
+    MultiChangeConfirmationOrchestrator,
+    RequirementChangeSet,
+    RequirementChangeSetBuilder,
+)
+from backend.app.requirement_change.formal_removal import (
+    FileRemovalAuditRepository,
+    FormalRemovalService,
+)
 from backend.app.solution.llm_provider import LLMProvider, OpenAICompatibleProvider
 
 
@@ -182,6 +192,66 @@ class InternalConsoleService:
         current = self._baseline(project_id, current_baseline_version)
         service = self.requirement_service()
         return service.diff(previous, current), service.route_diff(previous, current)
+
+    def change_set(
+        self, project_id: str, previous_baseline_version: int, state_version: int
+    ) -> RequirementChangeSet:
+        previous = self._baseline(project_id, previous_baseline_version)
+        state = self.repository.load_state(project_id, state_version)
+        if state is None:
+            raise FileNotFoundError("RequirementState does not exist")
+        return RequirementChangeSetBuilder().build(previous, state)
+
+    def review_change_set(
+        self,
+        project_id: str,
+        previous_baseline_version: int,
+        state_version: int,
+        feedback_sources: list[CustomerSourceRecord],
+        actions: list[ChangeSetReviewAction],
+        *,
+        confirmation_level: str,
+        confirmed_by: str,
+        note: str | None,
+    ):
+        previous = self._baseline(project_id, previous_baseline_version)
+        state = self.repository.load_state(project_id, state_version)
+        if state is None:
+            raise FileNotFoundError("RequirementState does not exist")
+        audit_root = self.repository._root / "requirement-change-audits"
+        orchestrator = MultiChangeConfirmationOrchestrator(
+            FormalRemovalService(FileRemovalAuditRepository(audit_root))
+        )
+        reviewed = orchestrator.apply(
+            previous, state, feedback_sources, actions,
+            confirmation_level=confirmation_level, confirmed_by=confirmed_by, note=note,
+        )
+        if reviewed.state.state_version == state.state_version:
+            analysis = RequirementAnalysisBuilder().build(
+                state, self.skill_loader.resolve(state.selected_skill_id), changes=[],
+                previous_state_version=state.state_version - 1,
+                customer_confirmation_complete=False,
+            )
+            return analysis, None, None, None, reviewed.formal_removal_audits
+        skill = self.skill_loader.resolve(reviewed.state.selected_skill_id)
+        analysis = RequirementAnalysisBuilder().build(
+            reviewed.state, skill, previous_state_version=state.state_version,
+            customer_confirmation_complete=confirmation_level == "customer",
+        )
+        self.repository.save_state(analysis.current_state)
+        for record in reviewed.confirmation_records:
+            self.repository.save_confirmation_record(record)
+        baseline = diff = route = None
+        if analysis.readiness.stage == "CONFIRMED_READY":
+            finalized = MultiChangeConfirmationOrchestrator.finalize_baseline_diff_route(
+                previous, analysis.current_state, skill,
+                confirmed_by=confirmed_by,
+                confirmation_summary=analysis.customer_confirmation_summary,
+            )
+            baseline, diff, route = finalized.baseline, finalized.diff, finalized.route
+            self.repository.save_baseline(baseline)
+            self.repository.save_diff(diff)
+        return analysis, baseline, diff, route, reviewed.formal_removal_audits
 
     def recompile(
         self,

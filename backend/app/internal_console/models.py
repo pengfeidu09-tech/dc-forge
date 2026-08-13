@@ -23,6 +23,10 @@ from backend.app.contracts.solution_intelligence import (
     SolutionBundleV2,
     SolutionPlanV2,
 )
+from backend.app.requirement_change.change_set import (
+    ChangeSetReviewAction,
+    RequirementChangeSet,
+)
 
 
 class ConsoleAnalyzeRequest(StrictModel):
@@ -91,3 +95,32 @@ class ConsoleRecompileResponse(StrictModel):
     demo_blueprint: DemoBlueprint
     solution_bundle: SolutionBundleV2 | None = None
     recompile_result: RecompileSolutionV2Result | None = None
+
+
+class ConsoleChangeSetRequest(StrictModel):
+    project_id: str
+    previous_baseline_version: int = Field(ge=1)
+    state_version: int = Field(ge=1)
+
+
+class ConsoleChangeSetResponse(StrictModel):
+    change_set: RequirementChangeSet
+
+
+class ConsoleChangeSetReviewRequest(StrictModel):
+    project_id: str
+    previous_baseline_version: int = Field(ge=1)
+    state_version: int = Field(ge=1)
+    feedback_sources: list[CustomerSourceRecord] = Field(min_length=1)
+    actions: list[ChangeSetReviewAction] = Field(default_factory=list)
+    confirmation_level: Literal["internal", "customer"]
+    confirmed_by: str
+    note: str | None = None
+
+
+class ConsoleChangeSetReviewResponse(StrictModel):
+    analysis: RequirementAnalysis
+    baseline: RequirementBaseline | None = None
+    requirement_diff: RequirementDiff | None = None
+    route: RequirementDiffRoute | None = None
+    formal_removal_audit_ids: list[str] = Field(default_factory=list)

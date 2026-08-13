@@ -17,6 +17,10 @@ from backend.app.internal_console.models import (
     ConsoleDiffResponse,
     ConsoleRecompileRequest,
     ConsoleRecompileResponse,
+    ConsoleChangeSetRequest,
+    ConsoleChangeSetResponse,
+    ConsoleChangeSetReviewRequest,
+    ConsoleChangeSetReviewResponse,
 )
 from backend.app.internal_console.service import InternalConsoleService
 
@@ -101,6 +105,42 @@ def diff_endpoint(
         )
         return ConsoleDiffResponse(requirement_diff=diff, route=route)
     except (ValueError, KeyError, FileNotFoundError) as error:
+        raise _http_error(error) from error
+
+
+@router.post("/change-set", response_model=ConsoleChangeSetResponse)
+def change_set_endpoint(
+    request: ConsoleChangeSetRequest,
+    service: InternalConsoleService = Depends(get_internal_console_service),
+) -> ConsoleChangeSetResponse:
+    try:
+        return ConsoleChangeSetResponse(
+            change_set=service.change_set(
+                request.project_id, request.previous_baseline_version, request.state_version
+            )
+        )
+    except (ValueError, KeyError, FileNotFoundError) as error:
+        raise _http_error(error) from error
+
+
+@router.post("/change-set/review", response_model=ConsoleChangeSetReviewResponse)
+def review_change_set_endpoint(
+    request: ConsoleChangeSetReviewRequest,
+    service: InternalConsoleService = Depends(get_internal_console_service),
+) -> ConsoleChangeSetReviewResponse:
+    try:
+        analysis, baseline, diff, route, audits = service.review_change_set(
+            request.project_id, request.previous_baseline_version, request.state_version,
+            request.feedback_sources, request.actions,
+            confirmation_level=request.confirmation_level,
+            confirmed_by=request.confirmed_by,
+            note=request.note,
+        )
+        return ConsoleChangeSetReviewResponse(
+            analysis=analysis, baseline=baseline, requirement_diff=diff, route=route,
+            formal_removal_audit_ids=[audit.audit_id for audit in audits],
+        )
+    except (ValueError, KeyError, FileNotFoundError, FileExistsError) as error:
         raise _http_error(error) from error
 
 

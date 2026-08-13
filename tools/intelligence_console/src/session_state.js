@@ -9,6 +9,14 @@ export function capturePreviousSolutionSnapshot(session) {
   return session
 }
 
+export function captureFeedbackCycleSnapshot(session) {
+  session.previousBaseline = cloneArtifact(session.baseline)
+  session.previousProcessSpec = cloneArtifact(session.processSpec)
+  session.previousRecommendedSolution = cloneArtifact(session.recommendedSolution)
+  session.previousBlueprint = cloneArtifact(session.blueprint)
+  return session
+}
+
 export function hasCompletePreviousSolutionSnapshot(session) {
   return Boolean(
     session.previousBaseline &&

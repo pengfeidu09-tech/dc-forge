@@ -4,6 +4,7 @@ import test from 'node:test'
 import {
   approvalThresholdAmount,
   buildRecompilePayload,
+  captureFeedbackCycleSnapshot,
   capturePreviousSolutionSnapshot,
   hasCompletePreviousSolutionSnapshot,
   processOrSolutionThreshold,
@@ -91,4 +92,20 @@ test('process and solution artifacts read only canonical threshold', () => {
   assert.equal(processOrSolutionThreshold({ parameters: { threshold: 500000 } }), 500000)
   assert.equal(processOrSolutionThreshold({ parameters: { threshold_amount: 500000 } }), undefined)
   assert.equal(processOrSolutionThreshold(null), undefined)
+})
+
+test('each feedback cycle captures the immediately preceding formal solution artifacts', () => {
+  const session = sessionV1()
+  captureFeedbackCycleSnapshot(session)
+  session.baseline = { baseline_version: 2 }
+  session.processSpec = { constraints: [{ type: 'approval', parameters: { threshold: 800000 } }] }
+  session.recommendedSolution = { solution_id: 'solution-v2' }
+  session.blueprint = { blueprint_id: 'blueprint-v2' }
+
+  captureFeedbackCycleSnapshot(session)
+
+  assert.equal(session.previousBaseline.baseline_version, 2)
+  assert.equal(session.previousProcessSpec.constraints[0].parameters.threshold, 800000)
+  assert.equal(session.previousRecommendedSolution.solution_id, 'solution-v2')
+  assert.equal(session.previousBlueprint.blueprint_id, 'blueprint-v2')
 })

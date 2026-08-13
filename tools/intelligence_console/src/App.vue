@@ -2,8 +2,8 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { consoleApi } from './api'
 import {
-  approvalThresholdAmount,
   buildRecompilePayload,
+  captureFeedbackCycleSnapshot,
   capturePreviousSolutionSnapshot,
   hasCompletePreviousSolutionSnapshot,
   processOrSolutionThreshold,
@@ -14,7 +14,7 @@ const tabs = ['Requirement', 'Solution', 'Feedback & Diff']
 const tabLabels = {
   Requirement: '需求分析',
   Solution: '方案生成',
-  'Feedback & Diff': '客户反馈与差异',
+  'Feedback & Diff': '客户需求变更',
 }
 
 const statusLabels = {
@@ -101,7 +101,9 @@ const emptySession = () => ({
   solutionBundle: null,
   recommendedSolution: null,
   blueprint: null,
-  feedback: '审批规则调整，现在超过80万元才必须人工审批。',
+  feedback: '',
+  feedbackSources: [],
+  changeSet: null,
   requirementDiff: null,
   route: null,
   recompileResult: null,
@@ -138,12 +140,9 @@ const currentPlan = computed(() => {
   return plans.find((plan) => plan.solution_id === selectedPlanId.value) || session.recommendedSolution || plans[0]
 })
 const approvalRequirement = computed(() => session.baseline?.confirmed_items?.find((item) => item.category === 'approval'))
-const oldApproval = computed(() => session.previousBaseline?.confirmed_items?.find((item) => item.category === 'approval'))
 const processApproval = computed(() => session.processSpec?.constraints?.find((item) => item.type === 'approval'))
 const solutionApproval = computed(() => session.recommendedSolution?.applied_constraints?.find((item) => item.type === 'approval'))
 const gateNode = computed(() => session.blueprint?.nodes?.find((item) => item.id === 'hard-approval-gate'))
-const feedbackCandidate = computed(() => currentState.value?.items?.find((item) => item.category === 'approval' && approvalThresholdAmount(item) === 800000))
-const openApprovalConflict = computed(() => currentState.value?.conflicts?.find((item) => item.category === 'approval' && item.status === 'open'))
 const canRecompile = computed(() => hasCompletePreviousSolutionSnapshot(session))
 const rawArtifacts = computed(() => ({
   RequirementAnalysis: session.analysis,
@@ -156,14 +155,6 @@ const rawArtifacts = computed(() => ({
   RecompileResult: session.recompileResult,
 }))
 const rawValue = computed(() => rawArtifacts.value[rawKey.value])
-const residue500k = computed(() => {
-  if (!session.recompileResult) return null
-  const payload = JSON.stringify([
-    session.recompileResult.solution,
-    session.recompileResult.demo_blueprint,
-  ])
-  return (payload.match(/500000/g) || []).length
-})
 
 async function withTask(name, task) {
   loading.value = name
@@ -268,25 +259,62 @@ async function compileSolution() {
 
 async function analyzeFeedback() {
   await withTask('feedback', async () => {
-    capturePreviousSolutionSnapshot(session)
+    captureFeedbackCycleSnapshot(session)
+    const sources = [{
+      source_id: `feedback-state-${currentState.value.state_version + 1}`,
+      project_id: session.projectId,
+      source_type: 'conversation',
+      title: '客户最新反馈',
+      inline_content: session.feedback,
+    }]
     const result = await consoleApi.analyze({
       project_id: session.projectId,
-      sources: [{
-        source_id: `feedback-state-${currentState.value.state_version + 1}`,
-        project_id: session.projectId,
-        source_type: 'conversation',
-        title: '客户审批规则反馈',
-        inline_content: session.feedback,
-      }],
+      sources,
       previous_state_version: currentState.value.state_version,
       skill_id: 'automotive-procurement-v1',
     })
     session.analysis = result.analysis
     session.extractionWarnings = result.extraction_warnings
-    const candidate = result.analysis.current_state.items.find(
-      (item) => item.category === 'approval' && approvalThresholdAmount(item) === 800000,
-    )
-    selectedIds.value = candidate ? [candidate.requirement_id] : []
+    session.feedbackSources = sources
+    session.changeSet = (await consoleApi.changeSet({
+      project_id: session.projectId,
+      previous_baseline_version: session.previousBaseline.baseline_version,
+      state_version: result.analysis.current_state.state_version,
+    })).change_set
+  })
+}
+
+async function reviewChangeSet() {
+  if (!session.changeSet) return
+  await withTask('confirm', async () => {
+    const result = await consoleApi.reviewChangeSet({
+      project_id: session.projectId,
+      previous_baseline_version: session.previousBaseline.baseline_version,
+      state_version: currentState.value.state_version,
+      feedback_sources: session.feedbackSources,
+      actions: session.changeSet.items.map((item) => ({
+        target_requirement_id: ['REMOVE', 'NOT_APPLICABLE'].includes(item.review_disposition)
+          ? item.matched_baseline_requirement_id
+          : item.candidate_requirement_id,
+        disposition: item.review_disposition,
+        ...(['REMOVE', 'NOT_APPLICABLE'].includes(item.review_disposition) ? {
+          evidence: item.source_refs[0] && {
+            source_id: item.source_refs[0].source_id,
+            excerpt: item.source_refs[0].excerpt,
+            locator: item.source_refs[0].locator,
+          },
+        } : {}),
+      })),
+      confirmation_level: confirmationLevel.value,
+      confirmed_by: confirmedBy.value,
+      note: confirmationNote.value,
+    })
+    session.analysis = result.analysis
+    if (result.baseline) {
+      session.baseline = result.baseline
+      session.requirementDiff = result.requirement_diff
+      session.route = result.route
+    }
   })
 }
 
@@ -458,43 +486,45 @@ onMounted(async () => {
 
       <section v-else class="content-stack">
         <section class="panel action-panel">
-          <div><small>客户最新反馈</small><h2>客户反馈分析</h2><p>当前需求基线 v{{ session.baseline?.baseline_version || '—' }}</p></div>
+          <div><small>客户最新反馈</small><h2>客户需求变更</h2><p>当前需求基线 v{{ session.baseline?.baseline_version || '—' }}；一段反馈可识别 0..N 条独立变化。</p></div>
           <textarea v-model="session.feedback" rows="3" />
           <button class="button" :disabled="loading || !session.baseline || !session.analysis" @click="analyzeFeedback">{{ loading === 'feedback' ? '正在分析客户反馈…' : '分析客户反馈' }}</button>
         </section>
 
-        <section v-if="feedbackCandidate" class="panel">
-          <div class="feedback-compare"><div><small>原需求</small><strong>{{ oldApproval?.value }}</strong><span>{{ oldApproval?.requirement_id }}</span></div><div><small>新需求</small><strong>{{ feedbackCandidate.value }}</strong><span :class="['status', `status--${feedbackCandidate.status}`]">{{ statusLabels[feedbackCandidate.status] || feedbackCandidate.status }}</span><code>{{ feedbackCandidate.status }}</code></div><div><small>检测到需求冲突</small><strong>{{ openApprovalConflict?.conflict_id }}</strong><span>{{ session.analysis.next_questions?.[0]?.text }}</span></div></div>
-          <div class="button-row"><span>新需求必须经过客户显式确认后才能进入需求基线。</span><button class="button" :disabled="loading || !selectedIds.length" @click="confirmationLevel='customer'; confirmSelected()">{{ loading === 'confirm' ? '正在确认需求…' : '确认新需求' }}</button></div>
-        </section>
-
-        <section v-if="session.previousBaseline && session.baseline?.baseline_version === 2" class="panel action-panel">
-          <div><small>需求基线版本变化</small><h2>需求变化与更新策略</h2><p>v{{ session.previousBaseline.baseline_version }} → v{{ session.baseline.baseline_version }}</p></div>
-          <button class="button" :disabled="Boolean(loading)" @click="buildDiff">{{ loading === 'diff' ? '正在计算需求变化…' : '计算差异' }}</button>
+        <section v-if="session.changeSet" class="panel">
+          <div class="panel-heading"><div><small>Generic RequirementChangeSet</small><h2>AI 识别的需求变化</h2></div><span>{{ session.changeSet.items.length }} 条独立变化</span></div>
+          <p v-if="!session.changeSet.items.length" class="empty">未检测到实质需求变化；不会生成新的 Baseline 或重编译方案。</p>
+          <div v-else class="table-wrap"><table><thead><tr><th>变化</th><th>类别 / 主题</th><th>旧值 → 新值</th><th>参数</th><th>证据 / 置信度</th><th>冲突</th><th>审核操作</th></tr></thead><tbody>
+            <tr v-for="item in session.changeSet.items" :key="item.candidate_requirement_id">
+              <td><b>{{ item.suggested_change_type }}</b><code>{{ item.suggested_change_type }}</code></td>
+              <td><b>{{ categoryLabel(item.category) }}</b><code>{{ item.category }}</code><span>{{ item.subject }}</span></td>
+              <td><span>{{ item.previous_value || '—' }}</span><i>→</i><strong>{{ item.proposed_value }}</strong></td>
+              <td><details><summary>旧 / 新 parameters</summary><pre>{{ JSON.stringify({ previous: item.previous_parameters, proposed: item.proposed_parameters }, null, 2) }}</pre></details></td>
+              <td><span v-for="source in item.source_refs" :key="`${item.candidate_requirement_id}-${source.source_id}`">{{ source.source_id }}：{{ source.excerpt }}</span><code>{{ item.confidence }}</code></td>
+              <td><span>{{ item.conflict_status }}</span></td>
+              <td><select v-model="item.review_disposition"><option value="ACCEPT">ACCEPT</option><option value="REJECT">REJECT</option><option value="MODIFY">MODIFY</option><option value="PENDING_CLARIFICATION">PENDING_CLARIFICATION</option><option value="REMOVE" :disabled="!item.matched_baseline_requirement_id">REMOVE</option><option value="NOT_APPLICABLE" :disabled="!item.matched_baseline_requirement_id">NOT_APPLICABLE</option></select></td>
+            </tr>
+          </tbody></table></div>
+          <div class="button-row"><label>确认级别<select v-model="confirmationLevel"><option value="internal">内部确认</option><option value="customer">客户确认</option></select></label><label>确认人<input v-model="confirmedBy" /></label><button class="button" :disabled="loading || !session.changeSet.items.length" @click="reviewChangeSet">{{ loading === 'confirm' ? '正在提交审核…' : '提交变化审核' }}</button><span>REJECT 只拒绝候选；REMOVE / NOT_APPLICABLE 仅对旧正式需求生效并须通过证据 guard。</span></div>
         </section>
 
         <section v-if="session.requirementDiff" class="panel">
+          <div class="panel-heading"><div><small>方案影响</small><h2>Baseline v{{ session.previousBaseline?.baseline_version }} → v{{ session.baseline?.baseline_version }}</h2></div><code>{{ session.route?.decision }}</code></div>
           <p v-if="session.route.decision === 'no_op'" class="success">未检测到有效业务变化，无需重新生成方案</p>
           <div class="metric-grid">
-            <div><small>原审批阈值</small><strong>{{ formatMoney(oldApproval?.parameters?.threshold_amount) }}</strong><code>{{ oldApproval?.parameters?.threshold_amount }}</code></div>
-            <div><small>新审批阈值</small><strong>{{ formatMoney(approvalRequirement?.parameters?.threshold_amount) }}</strong><code>{{ approvalRequirement?.parameters?.threshold_amount }}</code></div>
             <div><small>更新策略</small><strong>{{ routeLabels[session.route.decision] || session.route.decision }}</strong><code>{{ session.route.decision }}</code></div>
             <div><small>受影响需求</small><strong>{{ session.route.changed_categories.map(categoryLabel).join('、') || '无' }}</strong><code>{{ session.route.changed_categories.join(', ') }}</code></div>
+            <div><small>新增 / 更新 / 移除</small><strong>{{ session.requirementDiff.added_requirement_ids.length }} / {{ session.requirementDiff.changed_requirement_ids.length }} / {{ session.requirementDiff.removed_requirement_ids.length }}</strong></div>
           </div>
           <div class="change-summary"><article v-for="change in session.requirementDiff.changes" :key="change.requirement_id"><b>{{ changeTypeLabels[change.change_type] || change.change_type }}</b><code>{{ change.change_type }}</code><span>{{ change.requirement_id }}</span></article></div>
-          <div class="detail-columns"><div><h3>需求变化 · RequirementDiff</h3><pre>{{ JSON.stringify(session.requirementDiff, null, 2) }}</pre></div><div><h3>新增 / 更新约束</h3><pre>{{ JSON.stringify(session.route.new_constraints, null, 2) }}</pre></div></div>
+          <div class="detail-columns"><div><h3>需求变化 · RequirementDiff</h3><pre>{{ JSON.stringify(session.requirementDiff, null, 2) }}</pre></div><div><h3>ProcessSpec / constraints change</h3><pre>{{ JSON.stringify(session.route.new_constraints, null, 2) }}</pre></div><div><h3>方案影响</h3><pre>{{ JSON.stringify({ assets: session.recompileResult?.recompile_result?.diff?.changed_asset_ids || [], modules: session.recompileResult?.recompile_result?.diff?.changed_module_ids || [], blueprint: session.recompileResult?.recompile_result?.diff?.changed_demo_node_ids || [], value_claims: session.recompileResult?.recompile_result?.diff?.value_claim_changes || [] }, null, 2) }}</pre></div></div>
           <button class="button" :disabled="loading || !session.route || !canRecompile" @click="recompileSolution">{{ loading === 'recompile' ? '正在更新解决方案…' : '更新解决方案' }}</button>
         </section>
 
         <section v-if="session.recompileResult" class="panel">
           <div class="panel-heading"><div><small>方案智能差异</small><h2>解决方案更新结果</h2></div><span class="success">{{ routeLabels[session.recompileResult.decision] || session.recompileResult.decision }}<code>{{ session.recompileResult.decision }}</code></span></div>
-          <div class="metric-grid">
-            <div><small>原审批阈值</small><strong>{{ formatMoney(oldApproval?.parameters?.threshold_amount) }}</strong><code>{{ oldApproval?.parameters?.threshold_amount }}</code></div>
-            <div><small>新审批阈值</small><strong>{{ formatMoney(approvalRequirement?.parameters?.threshold_amount) }}</strong><code>{{ approvalRequirement?.parameters?.threshold_amount }}</code></div>
-            <div><small>约束 ID</small><strong>{{ processApproval?.id === session.recompileResult.solution.applied_constraints.find(c => c.type === 'approval')?.id ? '保持不变' : '发生变化' }}</strong></div>
-            <div><small>旧 50 万规则残留</small><strong>{{ residue500k }}</strong></div>
-          </div>
-          <div v-if="session.recompileResult.decision !== 'no_op'" class="impact-summary"><span><b>更新方式：</b>{{ routeLabels[session.recompileResult.decision] }}</span><span><b>影响范围：</b>人工审批节点</span><span><b>未发生变化：</b>资产检索、方案模块、能力复用结构</span></div>
+          <div class="metric-grid"><div><small>更新方式</small><strong>{{ routeLabels[session.recompileResult.decision] }}</strong></div><div><small>影响类别</small><strong>{{ session.recompileResult.route.changed_categories.map(categoryLabel).join('、') || '无' }}</strong></div><div><small>DemoBlueprint 变化</small><strong>{{ session.recompileResult.recompile_result?.diff?.changed_demo_node_ids?.length || 0 }}</strong></div></div>
+          <div v-if="session.recompileResult.decision !== 'no_op'" class="impact-summary"><span><b>更新方式：</b>{{ routeLabels[session.recompileResult.decision] }}</span><span><b>方案影响：</b>以结构化 Diff 为准</span><span><b>未变化项：</b>见下方 Diff</span></div>
           <p v-else class="success">未检测到有效业务变化，无需重新生成方案</p>
           <dl class="definition-grid diff-grid">
             <div v-for="field in ['changed_asset_ids','changed_fit_asset_ids','changed_module_ids','reuse_mode_changes','added_demo_node_ids','removed_demo_node_ids','changed_demo_node_ids','value_claim_changes','explanations']" :key="field"><dt>{{ diffFieldLabels[field] }}<code>{{ field }}</code></dt><dd>{{ field === 'reuse_mode_changes' ? localizedReuseJson(session.recompileResult.recompile_result?.diff?.[field] ?? {}) : JSON.stringify(session.recompileResult.recompile_result?.diff?.[field] ?? []) }}</dd></div>

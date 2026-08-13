@@ -17,6 +17,7 @@ from backend.app.contracts.requirement_intelligence import (
     CustomerSourceRecord,
     RequirementBaseline,
     RequirementConfirmation,
+    RequirementConfirmationRecord,
     RequirementItem,
     RequirementState,
 )
@@ -124,6 +125,7 @@ class RemovalResult:
     disposition: Literal["FORMAL_REMOVAL", "REJECTED_CANDIDATE"]
     state: RequirementState
     audit_record: RequirementChangeAuditRecord | None
+    confirmation_record: RequirementConfirmationRecord
 
 
 class FormalRemovalService:
@@ -146,8 +148,8 @@ class FormalRemovalService:
             confirmed_by=confirmed_by,
             note="R-CHANGE1 candidate rejection",
         )
-        result, _, _ = RequirementConfirmationApplier().apply(state, confirmation)
-        return RemovalResult("REJECTED_CANDIDATE", result, None)
+        result, _, record = RequirementConfirmationApplier().apply(state, confirmation)
+        return RemovalResult("REJECTED_CANDIDATE", result, None, record)
 
     def list_formal_removals(
         self,
@@ -217,7 +219,7 @@ class FormalRemovalService:
             confirmation_id=confirmation_record.confirmation_id,
         )
         self._audit_repository.save(audit)
-        return RemovalResult("FORMAL_REMOVAL", result, audit)
+        return RemovalResult("FORMAL_REMOVAL", result, audit, confirmation_record)
 
     @staticmethod
     def _require_item(state: RequirementState, requirement_id: str) -> RequirementItem:
