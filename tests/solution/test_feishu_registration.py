@@ -233,4 +233,9 @@ def test_persist_credentials_preserves_env_and_uses_private_permissions(
     assert 'FEISHU_APP_SECRET="created-secret-value"' in content
     assert 'FEISHU_ALLOWED_OPEN_ID="ou_owner"' in content
     assert 'FEISHU_API_BASE_URL="https://open.feishu.cn"' in content
-    assert os.stat(env_path).st_mode & 0o777 == 0o600
+    if os.name == "nt":
+        # Windows does not expose ACLs through POSIX mode bits. Successful
+        # persistence exercises the icacls-backed private-permission path.
+        assert os.access(env_path, os.R_OK | os.W_OK)
+    else:
+        assert os.stat(env_path).st_mode & 0o777 == 0o600

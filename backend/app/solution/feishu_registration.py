@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import re
+import subprocess
 import tempfile
 import time
 from dataclasses import dataclass
@@ -28,6 +29,34 @@ _REGISTRATION_PATH = "/oauth/v1/app/registration"
 _ENV_ASSIGNMENT = re.compile(
     r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*="
 )
+
+
+def _set_private_file_permissions(path: Path) -> None:
+    """Restrict a credential file to the current user on the host platform."""
+    if os.name != "nt":
+        os.chmod(path, 0o600)
+        return
+
+    identity = subprocess.run(
+        ["whoami"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    if not identity:
+        raise OSError("unable to determine the current Windows identity")
+    subprocess.run(
+        [
+            "icacls.exe",
+            str(path),
+            "/inheritance:r",
+            "/grant:r",
+            f"{identity}:(F)",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
 
 class FeishuRegistrationError(RuntimeError):
@@ -308,13 +337,17 @@ def persist_feishu_credentials(
         prefix=f".{path.name}.", dir=str(path.parent), text=True
     )
     try:
-        os.fchmod(descriptor, 0o600)
+        if hasattr(os, "fchmod"):
+            os.fchmod(descriptor, 0o600)
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
             handle.write(content)
             handle.flush()
             os.fsync(handle.fileno())
+        if os.name == "nt":
+            _set_private_file_permissions(Path(temporary_name))
         os.replace(temporary_name, path)
-        os.chmod(path, 0o600)
+        if os.name != "nt":
+            _set_private_file_permissions(path)
     except Exception:
         try:
             os.close(descriptor)
