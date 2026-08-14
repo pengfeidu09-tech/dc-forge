@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "scenario_id": "ADV-TENDER-001",
+  "base_project_id": "PRJ-TENDER-001",
+  "data_classification": "synthetic_adversarial",
+  "isolated_from_golden": true,
+  "simulation_note": "本文件故意植入不一致，仅用于负向测试，不得并入黄金业务统计。",
+  "payload": {
+    "email_claim": {
+      "quantity": 12000,
+      "sop_date": "2027-03-15"
+    },
+    "meeting_claim": {
+      "quantity": 10500,
+      "sop_date": "2027-04-01"
+    },
+    "conflict_status": "open"
+  },
+  "expected_findings": [
+    {
+      "finding_id": "ADV-F-001",
+      "type": "requirement_conflict",
+      "severity": "critical",
+      "evidence": [
+        "邮件称年需求12,000套、SOP 2027-03-15",
+        "会议称年需求10,500套、SOP 2027-04-01"
+      ],
+      "expected_action": "冻结方案生成并请求客户确认"
+    }
+  ]
+}
+

@@ -1,0 +1,161 @@
+{
+  "schema_version": "1.0.0",
+  "rule_set_id": "RULESET-TENDER-002",
+  "version": "2.0",
+  "effective_from": "2026-08-21T09:00:00+08:00",
+  "effective_to": null,
+  "applicable_scope": [
+    "动力电池招标文件",
+    "投标响应",
+    "采购合同",
+    "审查报告"
+  ],
+  "source_ids": [
+    "SRC-TENDER-011",
+    "SRC-TENDER-012"
+  ],
+  "rules": [
+    {
+      "rule_id": "RULE-GEO-001",
+      "name": "禁止无关地域或所有制歧视",
+      "applicable_documents": [
+        "bid_document"
+      ],
+      "severity": "high",
+      "description": "招标资格条件不得设置与履约无关的地域、所有制排斥条件",
+      "locator_method": "章节标题+原文短语",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "RULE-CERT-002",
+      "name": "资质有效期检查",
+      "applicable_documents": [
+        "bid_document"
+      ],
+      "severity": "critical",
+      "description": "证书须在投标截止日及适用期间有效",
+      "locator_method": "章节标题+原文短语",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "RULE-DATE-003",
+      "name": "招标时间顺序一致",
+      "applicable_documents": [
+        "bid_document"
+      ],
+      "severity": "high",
+      "description": "发标、答疑、投标截止、开标日期顺序必须合理",
+      "locator_method": "章节标题+原文短语",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "RULE-WARRANTY-004",
+      "name": "质保条款承接需求",
+      "applicable_documents": [
+        "bid_document",
+        "contract"
+      ],
+      "severity": "high",
+      "description": "质保不得低于8年或240,000公里",
+      "locator_method": "章节标题+原文短语",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "RULE-PAYMENT-005",
+      "name": "付款条款跨文档一致",
+      "applicable_documents": [
+        "bid_response",
+        "contract"
+      ],
+      "severity": "high",
+      "description": "合同付款条件必须承接澄清结果",
+      "locator_method": "章节标题+原文短语",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "RULE-QUANTITY-006",
+      "name": "采购数量承接基线",
+      "applicable_documents": [
+        "bid_document",
+        "contract"
+      ],
+      "severity": "critical",
+      "description": "数量应为V3确认的12,000套及批准分配",
+      "locator_method": "章节标题+原文短语",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "RULE-TECH-007",
+      "name": "关键技术参数一致",
+      "applicable_documents": [
+        "bid_document",
+        "bid_response",
+        "contract"
+      ],
+      "severity": "critical",
+      "description": "75kWh、400V、IP68、快充与循环寿命不得静默降低",
+      "locator_method": "章节标题+原文短语",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "RULE-AUTO-008",
+      "name": "禁止模型自动判废",
+      "applicable_documents": [
+        "bid_document",
+        "review_report"
+      ],
+      "severity": "critical",
+      "description": "高风险偏差必须人工复核",
+      "locator_method": "章节标题+原文短语",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "RULE-APPROVAL-009",
+      "name": "重大事项人工审批",
+      "applicable_documents": [
+        "contract",
+        "award_notice"
+      ],
+      "severity": "critical",
+      "description": "超10亿元采购及定标必须保留授权审批",
+      "locator_method": "章节标题+原文短语",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "RULE-TRACE-010",
+      "name": "序列号追溯条款",
+      "applicable_documents": [
+        "contract"
+      ],
+      "severity": "high",
+      "description": "电芯批次须追溯至整包序列号",
+      "locator_method": "章节标题+原文短语",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "RULE-CROSS-011",
+      "name": "招标响应合同跨文档一致",
+      "applicable_documents": [
+        "bid_document",
+        "bid_response",
+        "contract"
+      ],
+      "severity": "high",
+      "description": "同一事项出现不一致时应提示并定位",
+      "locator_method": "章节标题+原文短语",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "RULE-BUDGET-012",
+      "name": "合同金额不得超预算",
+      "applicable_documents": [
+        "contract"
+      ],
+      "severity": "critical",
+      "description": "合同总额不得超过1,248,000,000元，超预算需重新审批",
+      "locator_method": "章节标题+原文短语",
+      "human_review_required": true
+    }
+  ]
+}
+

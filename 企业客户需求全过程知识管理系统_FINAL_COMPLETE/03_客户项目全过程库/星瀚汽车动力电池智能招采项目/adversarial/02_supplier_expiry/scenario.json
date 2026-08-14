@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0.0",
+  "scenario_id": "ADV-TENDER-002",
+  "base_project_id": "PRJ-TENDER-001",
+  "data_classification": "synthetic_adversarial",
+  "isolated_from_golden": true,
+  "simulation_note": "本文件故意植入不一致，仅用于负向测试，不得并入黄金业务统计。",
+  "payload": {
+    "supplier_id": "SUP-BAT-003",
+    "quote_valid_to": "2026-09-10",
+    "reviewed_at": "2026-09-20",
+    "certificate_valid_to": "2026-07-31"
+  },
+  "expected_findings": [
+    {
+      "finding_id": "ADV-F-002",
+      "type": "expired_quote",
+      "severity": "high",
+      "evidence": [
+        "报价有效期至2026-09-10",
+        "评审时间2026-09-20"
+      ],
+      "expected_action": "要求供应商重新报价"
+    },
+    {
+      "finding_id": "ADV-F-003",
+      "type": "expired_certificate",
+      "severity": "critical",
+      "evidence": [
+        "ISO 14001有效期至2026-07-31"
+      ],
+      "expected_action": "转资格审查人工复核"
+    }
+  ]
+}
+

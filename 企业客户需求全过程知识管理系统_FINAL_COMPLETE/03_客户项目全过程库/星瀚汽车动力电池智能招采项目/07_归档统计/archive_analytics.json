@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0.0",
+  "data_classification": "synthetic_demo",
+  "project_id": "PRJ-TENDER-001",
+  "archive": {
+    "archive_id": "ARCH-TENDER-001",
+    "classification_scheme": [
+      "预算计划",
+      "立项需求",
+      "招标答疑",
+      "投标响应",
+      "评审审批",
+      "合同履约",
+      "供应商整改",
+      "统计复盘"
+    ],
+    "required_metadata": [
+      "source_id",
+      "business_version",
+      "owner",
+      "security_label",
+      "acl_id",
+      "recorded_at",
+      "retention"
+    ],
+    "retention_years": 15,
+    "archive_status": "complete_simulation",
+    "missing_documents": []
+  },
+  "statistics": {
+    "as_of": "2027-04-15T23:59:59+08:00",
+    "procurement": {
+      "planned_quantity": 12000,
+      "contracted_quantity": 12000,
+      "q1_planned": 1500,
+      "q1_delivered": 1490
+    },
+    "supplier": {
+      "active_contract_suppliers": 2,
+      "qualified_candidates": 4,
+      "expired_or_invalid_candidates": 1,
+      "open_corrective_actions": 1
+    },
+    "document_review": {
+      "samples": 10,
+      "control_samples": 4,
+      "defective_samples": 6,
+      "human_review_required_findings": 8
+    },
+    "truthfulness_note": "上述均为验收集中的模拟统计，不是PPT营销指标或真实经营成果。"
+  }
+}
+

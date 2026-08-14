@@ -1,0 +1,108 @@
+{
+  "schema_version": "2.0.0",
+  "data_classification": "synthetic_demo",
+  "description": "企业客户全过程知识包RAG索引元数据。知识块按真实来源语义分块并去重，不使用重复正文制造数量。",
+  "indexes": [
+    {
+      "name": "knowledge_chunks.jsonl",
+      "project_id": "PRJ-KM-001",
+      "purpose": "华东新程软件项目的需求、会议、正式文档、能力与演示知识",
+      "fields": [
+        "chunk_id",
+        "data_classification",
+        "timeline_classification",
+        "source_type",
+        "customer",
+        "project",
+        "project_id",
+        "source_id",
+        "source_path",
+        "related",
+        "tags",
+        "content"
+      ]
+    },
+    {
+      "name": "communication_chunks.jsonl",
+      "project_id": "PRJ-KM-001",
+      "purpose": "华东新程项目已授权企微与正式邮件的沟通知识",
+      "fields": [
+        "chunk_id",
+        "data_classification",
+        "timeline_classification",
+        "source",
+        "source_id",
+        "source_path",
+        "project",
+        "project_id",
+        "occurred_at",
+        "related",
+        "content"
+      ]
+    },
+    {
+      "name": "customer_requirement_lifecycle_chunks.jsonl",
+      "project_id": "PRJ-AUTO-001",
+      "purpose": "车辆采购项目按生命周期阶段组织的结构化知识",
+      "fields": [
+        "chunk_id",
+        "data_classification",
+        "source_type",
+        "customer",
+        "project",
+        "project_id",
+        "requirement_id",
+        "requirement_version_id",
+        "lifecycle_stage",
+        "source_object_ids",
+        "content"
+      ]
+    },
+    {
+      "name": "presentation_ocr_chunks.jsonl",
+      "project_id": null,
+      "purpose": "24页图片版智能招采方案PPT的页级OCR参考索引；不作为项目事实或已验证成果",
+      "authority": "reference_only",
+      "claim_status": "unverified_marketing_claim",
+      "fields": [
+        "chunk_id",
+        "data_classification",
+        "source_type",
+        "source_id",
+        "source_path",
+        "page",
+        "title",
+        "ocr_status",
+        "ocr_engine",
+        "authority",
+        "claim_status",
+        "related",
+        "content"
+      ]
+    }
+  ],
+  "chunking_rules": [
+    "按章节、会议议题或独立业务事件分块",
+    "每块内容可独立理解并保留来源ID和路径",
+    "表格分块保留表头语义",
+    "讨论、建议、正式决定和模拟结果使用不同状态语义"
+  ],
+  "deduplication_rules": [
+    "完全相同正文只保留权威来源知识块",
+    "同一文档不同版本保留但标识业务版本",
+    "复制文件用内容哈希发现，不以路径数量计算知识规模"
+  ],
+  "retrieval_rules": [
+    "检索前执行用户、部门、项目、ACL和密级过滤",
+    "当前问题默认优先已确认版本和正式文档",
+    "沟通与正式文件冲突时展示冲突并优先当前正式基线",
+    "没有可靠证据时返回insufficient_evidence",
+    "图片版PPT只回答材料声称内容，正式需求、合同、规格和验收优先，营销指标必须同时返回未经验证提示"
+  ],
+  "honesty_rules": [
+    "synthetic_demo不得描述为真实客户成果",
+    "simulated_future_scenario不得描述为已经发生",
+    "指标引用必须包含样本、分母、版本和时间范围"
+  ]
+}
+

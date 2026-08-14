@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.0.0",
+  "data_classification": "synthetic_demo",
+  "project_id": "PRJ-AUTO-001",
+  "sales_contract_id": "SC-AUTO-001",
+  "customer_invoices": [
+    {
+      "invoice_id": "CINV-AUTO-001",
+      "invoice_type": "13%增值税专用发票",
+      "invoice_number": "FAKE-CINV-0001",
+      "title": "东辰出行服务有限公司（模拟）",
+      "amount_cny": 4314000,
+      "issued_at": "2026-08-31T11:00:00+08:00",
+      "related_sales_order_ids": ["SO-AUTO-001"],
+      "status": "issued_simulation"
+    },
+    {
+      "invoice_id": "CINV-AUTO-002",
+      "invoice_type": "13%增值税专用发票",
+      "invoice_number": "FAKE-CINV-0002",
+      "title": "东辰出行服务有限公司（模拟）",
+      "amount_cny": 4314000,
+      "issued_at": "2026-09-19T10:00:00+08:00",
+      "related_sales_order_ids": ["SO-AUTO-002"],
+      "status": "issued_simulation"
+    },
+    {
+      "invoice_id": "CINV-AUTO-003",
+      "invoice_type": "13%增值税专用发票",
+      "invoice_number": "FAKE-CINV-0003",
+      "title": "东辰出行服务有限公司（模拟）",
+      "amount_cny": 5752000,
+      "issued_at": "2026-09-29T10:00:00+08:00",
+      "related_sales_order_ids": ["SO-AUTO-003"],
+      "status": "issued_simulation"
+    }
+  ],
+  "customer_receivables": [
+    {"receivable_id": "AR-AUTO-001", "milestone": "30%预付款", "amount_cny": 4314000, "due_date": "2026-08-31", "received_cny": 4314000, "outstanding_cny": 0, "status": "settled"},
+    {"receivable_id": "AR-AUTO-002", "milestone": "70%尾款", "amount_cny": 10066000, "due_date": "2026-10-29", "received_cny": 10066000, "outstanding_cny": 0, "status": "settled"}
+  ],
+  "customer_receipts": [
+    {"receipt_id": "RCPT-AUTO-001", "receivable_id": "AR-AUTO-001", "amount_cny": 4314000, "received_at": "2026-08-31T14:30:00+08:00", "bank_reference": "FAKE-BANK-R001"},
+    {"receipt_id": "RCPT-AUTO-002", "receivable_id": "AR-AUTO-002", "amount_cny": 10066000, "received_at": "2026-10-28T15:00:00+08:00", "bank_reference": "FAKE-BANK-R002"}
+  ],
+  "supplier_invoices": [
+    {"invoice_id": "SINV-AUTO-001", "supplier_id": "SUP-AUTO-001", "purchase_contract_id": "PC-AUTO-001", "invoice_number": "FAKE-SINV-0001", "amount_cny": 7920000, "issued_at": "2026-09-03T10:00:00+08:00", "status": "verified_simulation"},
+    {"invoice_id": "SINV-AUTO-002", "supplier_id": "SUP-AUTO-002", "purchase_contract_id": "PC-AUTO-002", "invoice_number": "FAKE-SINV-0002", "amount_cny": 5340000, "issued_at": "2026-09-20T10:00:00+08:00", "status": "verified_simulation"}
+  ],
+  "supplier_payables": [
+    {"payable_id": "AP-AUTO-001", "supplier_id": "SUP-AUTO-001", "amount_cny": 7920000, "paid_cny": 7920000, "outstanding_cny": 0, "status": "settled"},
+    {"payable_id": "AP-AUTO-002", "supplier_id": "SUP-AUTO-002", "amount_cny": 5340000, "paid_cny": 5340000, "outstanding_cny": 0, "status": "settled"}
+  ],
+  "supplier_payments": [
+    {"payment_id": "PAY-AUTO-001", "payable_id": "AP-AUTO-001", "purchase_order_id": "PO-AUTO-001", "amount_cny": 3168000, "paid_at": "2026-09-01T15:00:00+08:00", "purpose": "40%订金"},
+    {"payment_id": "PAY-AUTO-002", "payable_id": "AP-AUTO-001", "purchase_order_id": "PO-AUTO-001", "amount_cny": 4752000, "paid_at": "2026-09-14T14:00:00+08:00", "purpose": "提车尾款"},
+    {"payment_id": "PAY-AUTO-003", "payable_id": "AP-AUTO-002", "purchase_order_id": "PO-AUTO-002", "amount_cny": 2136000, "paid_at": "2026-09-01T15:30:00+08:00", "purpose": "40%订金"},
+    {"payment_id": "PAY-AUTO-004", "payable_id": "AP-AUTO-002", "purchase_order_id": "PO-AUTO-002", "amount_cny": 3204000, "paid_at": "2026-09-23T14:00:00+08:00", "purpose": "提车尾款"}
+  ],
+  "profit_calculation": {
+    "profit_calculation_id": "PROFIT-AUTO-001",
+    "calculation_type": "final_simulation",
+    "calculated_at": "2026-10-31T18:00:00+08:00",
+    "sales_revenue_cny": 14380000,
+    "cost_items": [
+      {"cost_type": "vehicle_purchase", "amount_cny": 13260000, "evidence_ids": ["PC-AUTO-001", "PC-AUTO-002"]},
+      {"cost_type": "logistics", "amount_cny": 200000, "evidence_ids": ["SHIP-AUTO-001", "SHIP-AUTO-002", "SHIP-AUTO-003"]},
+      {"cost_type": "financing", "amount_cny": 150000, "evidence_ids": ["FEAS-AUTO-001"]},
+      {"cost_type": "delivery_and_service", "amount_cny": 80000, "evidence_ids": ["DEL-AUTO-001", "DEL-AUTO-002", "DEL-AUTO-003"]},
+      {"cost_type": "sales_commission", "amount_cny": 40000, "evidence_ids": ["SC-AUTO-001"]},
+      {"cost_type": "after_sales", "amount_cny": 5000, "evidence_ids": ["AST-AUTO-001"]}
+    ],
+    "total_cost_cny": 13735000,
+    "project_profit_cny": 645000,
+    "profit_margin": 0.0449,
+    "note": "以上为可复算的模拟项目结算结果，不代表真实业务成果。"
+  }
+}

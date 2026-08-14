@@ -1,0 +1,642 @@
+{
+  "schema_version": "1.0.0",
+  "project_id": "PRJ-TENDER-001",
+  "data_classification": "synthetic_demo",
+  "evaluation_weights": [
+    {
+      "dimension": "quality",
+      "weight": 0.25
+    },
+    {
+      "dimension": "delivery",
+      "weight": 0.2
+    },
+    {
+      "dimension": "technology",
+      "weight": 0.15
+    },
+    {
+      "dimension": "price",
+      "weight": 0.15
+    },
+    {
+      "dimension": "capacity",
+      "weight": 0.1
+    },
+    {
+      "dimension": "credit",
+      "weight": 0.1
+    },
+    {
+      "dimension": "compliance",
+      "weight": 0.05
+    }
+  ],
+  "suppliers": [
+    {
+      "supplier_id": "SUP-BAT-001",
+      "source_ids": [
+        "SRC-TENDER-017",
+        "SRC-TENDER-021",
+        "SRC-TENDER-022"
+      ],
+      "supplier_name": "辰岳新能源（模拟）",
+      "data_classification": "synthetic_demo",
+      "categories": [
+        "动力电池包",
+        "磷酸铁锂Pack"
+      ],
+      "factory_coverage": [
+        "合肥Pack工厂"
+      ],
+      "certificates": [
+        {
+          "certificate_type": "IATF 16949",
+          "certificate_no": "IATF-001",
+          "valid_from": "2025-07-01",
+          "valid_to": "2028-06-30",
+          "factory": "合肥Pack工厂",
+          "status": "valid",
+          "verified_at": "2026-09-24T12:00:00+08:00"
+        },
+        {
+          "certificate_type": "ISO 14001",
+          "certificate_no": "EMS-001",
+          "valid_from": "2025-01-01",
+          "valid_to": "2027-12-31",
+          "factory": "合肥Pack工厂",
+          "status": "valid",
+          "verified_at": "2026-09-24T12:00:00+08:00"
+        }
+      ],
+      "performance_records": [
+        {
+          "period": "2025年度",
+          "factory": "合肥Pack工厂",
+          "category": "动力电池包",
+          "delivery_on_time_rate": 0.986,
+          "quality_ppm": 420,
+          "complaints": 1,
+          "corrective_action_status": "closed"
+        },
+        {
+          "period": "2026上半年",
+          "factory": "合肥Pack工厂",
+          "category": "动力电池包",
+          "delivery_on_time_rate": 0.981,
+          "quality_ppm": 390,
+          "complaints": 1,
+          "corrective_action_status": "closed"
+        }
+      ],
+      "historical_quotes": [
+        {
+          "quote_id": "SQ-001-V1",
+          "quoted_at": "2026-09-10",
+          "unit_price_cny": 103600,
+          "currency": "CNY",
+          "valid_to": "2026-09-17",
+          "quantity_basis": 12000
+        },
+        {
+          "quote_id": "SQ-001-V2",
+          "quoted_at": "2026-10-02",
+          "unit_price_cny": 102800,
+          "currency": "CNY",
+          "valid_to": "2026-10-09",
+          "quantity_basis": 12000
+        }
+      ],
+      "financial_credit": {
+        "rating": "AA-",
+        "debt_risk": "low",
+        "cash_flow_risk": "low",
+        "source_type": "synthetic_credit_assessment"
+      },
+      "risk_records": [
+        {
+          "risk_id": "RISK-S1-Q1",
+          "type": "quality",
+          "level": "low",
+          "status": "closed",
+          "description": "2026年冷却板渗漏投诉已完成8D并关闭"
+        }
+      ],
+      "score_detail": {
+        "evaluation_scope": {
+          "as_of": "2026-09-25T18:00:00+08:00",
+          "factories": [
+            "合肥Pack工厂"
+          ],
+          "categories": [
+            "动力电池包"
+          ]
+        },
+        "raw_score": 88.6,
+        "missing_value_handling": "无缺失；交付和质量均使用合肥Pack工厂同品类记录",
+        "manual_adjustments": [],
+        "final_score": 88.6,
+        "weight_version": "SUP-EVAL-WEIGHT-V2"
+      },
+      "occurred_at": "2026-09-25T09:00:00+08:00",
+      "recorded_at": "2026-09-25T18:00:00+08:00",
+      "valid_from": "2026-09-25T18:00:00+08:00",
+      "valid_to": null,
+      "source_version": "SUPPLIER-EVAL-V1"
+    },
+    {
+      "supplier_id": "SUP-BAT-002",
+      "source_ids": [
+        "SRC-TENDER-018",
+        "SRC-TENDER-021",
+        "SRC-TENDER-022",
+        "SRC-TENDER-023"
+      ],
+      "supplier_name": "江汉电源（模拟）",
+      "data_classification": "synthetic_demo",
+      "categories": [
+        "动力电池包",
+        "磷酸铁锂Pack"
+      ],
+      "factory_coverage": [
+        "武汉Pack工厂"
+      ],
+      "certificates": [
+        {
+          "certificate_type": "IATF 16949",
+          "certificate_no": "IATF-002",
+          "valid_from": "2024-01-01",
+          "valid_to": "2027-12-31",
+          "factory": "武汉Pack工厂",
+          "status": "valid",
+          "verified_at": "2026-09-24T12:00:00+08:00"
+        },
+        {
+          "certificate_type": "ISO 14001",
+          "certificate_no": "EMS-002",
+          "valid_from": "2025-02-01",
+          "valid_to": "2028-01-31",
+          "factory": "武汉Pack工厂",
+          "status": "valid",
+          "verified_at": "2026-09-24T12:00:00+08:00"
+        }
+      ],
+      "performance_records": [
+        {
+          "period": "2025年度",
+          "factory": "武汉Pack工厂",
+          "category": "动力电池包",
+          "delivery_on_time_rate": 0.968,
+          "quality_ppm": 610,
+          "complaints": 2,
+          "corrective_action_status": "closed"
+        },
+        {
+          "period": "2026上半年",
+          "factory": "武汉Pack工厂",
+          "category": "动力电池包",
+          "delivery_on_time_rate": 0.974,
+          "quality_ppm": 540,
+          "complaints": 1,
+          "corrective_action_status": "conditionally_closed"
+        }
+      ],
+      "historical_quotes": [
+        {
+          "quote_id": "SQ-002-V1",
+          "quoted_at": "2026-09-10",
+          "unit_price_cny": 102500,
+          "currency": "CNY",
+          "valid_to": "2026-09-17",
+          "quantity_basis": 12000
+        },
+        {
+          "quote_id": "SQ-002-V2",
+          "quoted_at": "2026-10-02",
+          "unit_price_cny": 101900,
+          "currency": "CNY",
+          "valid_to": "2026-10-09",
+          "quantity_basis": 12000
+        }
+      ],
+      "financial_credit": {
+        "rating": "A-",
+        "debt_risk": "medium",
+        "cash_flow_risk": "medium",
+        "source_type": "synthetic_credit_assessment"
+      },
+      "risk_records": [
+        {
+          "risk_id": "RISK-S2-D1",
+          "type": "delivery",
+          "level": "medium",
+          "status": "monitoring",
+          "description": "原材料波动可能影响爬坡交付"
+        },
+        {
+          "risk_id": "RISK-S2-C1",
+          "type": "credit",
+          "level": "medium",
+          "status": "monitoring",
+          "description": "现金流压力需按季度复核"
+        }
+      ],
+      "score_detail": {
+        "evaluation_scope": {
+          "as_of": "2026-09-25T18:00:00+08:00",
+          "factories": [
+            "武汉Pack工厂"
+          ],
+          "categories": [
+            "动力电池包"
+          ]
+        },
+        "raw_score": 85.9,
+        "missing_value_handling": "投诉严重度历史字段缺失时按中性分处理，并保留缺失标记",
+        "manual_adjustments": [
+          {
+            "adjustment_id": "ADJ-S2-001",
+            "points": 1,
+            "reason": "武汉近场供应降低量产初期运输中断风险",
+            "approved_by": "采购委员会（模拟）"
+          }
+        ],
+        "final_score": 86.9,
+        "weight_version": "SUP-EVAL-WEIGHT-V2"
+      },
+      "occurred_at": "2026-09-25T09:00:00+08:00",
+      "recorded_at": "2026-09-25T18:00:00+08:00",
+      "valid_from": "2026-09-25T18:00:00+08:00",
+      "valid_to": null,
+      "source_version": "SUPPLIER-EVAL-V1"
+    },
+    {
+      "supplier_id": "SUP-BAT-003",
+      "source_ids": [
+        "SRC-TENDER-019",
+        "SRC-TENDER-021"
+      ],
+      "supplier_name": "海卓储能（模拟）",
+      "data_classification": "synthetic_demo",
+      "categories": [
+        "动力电池包",
+        "磷酸铁锂Pack"
+      ],
+      "factory_coverage": [
+        "宁波Pack工厂"
+      ],
+      "certificates": [
+        {
+          "certificate_type": "IATF 16949",
+          "certificate_no": "IATF-003",
+          "valid_from": "2025-01-01",
+          "valid_to": "2028-12-31",
+          "factory": "宁波Pack工厂",
+          "status": "valid",
+          "verified_at": "2026-09-24T12:00:00+08:00"
+        },
+        {
+          "certificate_type": "ISO 14001",
+          "certificate_no": "EMS-003",
+          "valid_from": "2023-08-01",
+          "valid_to": "2026-07-31",
+          "factory": "宁波Pack工厂",
+          "status": "expired",
+          "verified_at": "2026-09-24T12:00:00+08:00"
+        }
+      ],
+      "performance_records": [
+        {
+          "period": "2025年度",
+          "factory": "宁波Pack工厂",
+          "category": "动力电池包",
+          "delivery_on_time_rate": 0.952,
+          "quality_ppm": 720,
+          "complaints": 3,
+          "corrective_action_status": "closed"
+        },
+        {
+          "period": "2026上半年",
+          "factory": "宁波Pack工厂",
+          "category": "动力电池包",
+          "delivery_on_time_rate": 0.944,
+          "quality_ppm": 810,
+          "complaints": 4,
+          "corrective_action_status": "open"
+        }
+      ],
+      "historical_quotes": [
+        {
+          "quote_id": "SQ-003-V1",
+          "quoted_at": "2026-09-08",
+          "unit_price_cny": 100800,
+          "currency": "CNY",
+          "valid_to": "2026-09-15",
+          "quantity_basis": 12000
+        },
+        {
+          "quote_id": "SQ-003-V2",
+          "quoted_at": "2026-09-16",
+          "unit_price_cny": 100300,
+          "currency": "CNY",
+          "valid_to": "2026-09-23",
+          "quantity_basis": 12000
+        }
+      ],
+      "financial_credit": {
+        "rating": "BBB",
+        "debt_risk": "medium",
+        "cash_flow_risk": "medium",
+        "source_type": "synthetic_credit_assessment"
+      },
+      "risk_records": [
+        {
+          "risk_id": "RISK-S3-E1",
+          "type": "expired_certificate",
+          "level": "critical",
+          "status": "open",
+          "description": "ISO 14001在投标截止日前已过期"
+        },
+        {
+          "risk_id": "RISK-S3-Q1",
+          "type": "quality",
+          "level": "high",
+          "status": "open",
+          "description": "2026上半年质量PPM恶化且整改未关闭"
+        }
+      ],
+      "score_detail": {
+        "evaluation_scope": {
+          "as_of": "2026-09-25T18:00:00+08:00",
+          "factories": [
+            "宁波Pack工厂"
+          ],
+          "categories": [
+            "动力电池包"
+          ]
+        },
+        "raw_score": 72.4,
+        "missing_value_handling": "海外材料追溯字段缺失按最低可接受分计入，不做推断",
+        "manual_adjustments": [
+          {
+            "adjustment_id": "ADJ-S3-001",
+            "points": -8,
+            "reason": "关键资质过期，人工资格复核调整",
+            "approved_by": "资格审查组（模拟）"
+          }
+        ],
+        "final_score": 64.4,
+        "weight_version": "SUP-EVAL-WEIGHT-V2"
+      },
+      "occurred_at": "2026-09-25T09:00:00+08:00",
+      "recorded_at": "2026-09-25T18:00:00+08:00",
+      "valid_from": "2026-09-25T18:00:00+08:00",
+      "valid_to": null,
+      "source_version": "SUPPLIER-EVAL-V1"
+    },
+    {
+      "supplier_id": "SUP-BAT-004",
+      "source_ids": [
+        "SRC-TENDER-025"
+      ],
+      "supplier_name": "北辰动力（模拟）",
+      "data_classification": "synthetic_demo",
+      "categories": [
+        "动力电池包",
+        "磷酸铁锂Pack"
+      ],
+      "factory_coverage": [
+        "天津Pack工厂"
+      ],
+      "certificates": [
+        {
+          "certificate_type": "IATF 16949",
+          "certificate_no": "IATF-004",
+          "valid_from": "2024-06-01",
+          "valid_to": "2027-05-31",
+          "factory": "天津Pack工厂",
+          "status": "valid",
+          "verified_at": "2026-09-24T12:00:00+08:00"
+        },
+        {
+          "certificate_type": "ISO 14001",
+          "certificate_no": "EMS-004",
+          "valid_from": "2024-06-01",
+          "valid_to": "2027-05-31",
+          "factory": "天津Pack工厂",
+          "status": "valid",
+          "verified_at": "2026-09-24T12:00:00+08:00"
+        }
+      ],
+      "performance_records": [
+        {
+          "period": "2025年度",
+          "factory": "天津Pack工厂",
+          "category": "动力电池包",
+          "delivery_on_time_rate": 0.978,
+          "quality_ppm": 500,
+          "complaints": 1,
+          "corrective_action_status": "closed"
+        },
+        {
+          "period": "2026上半年",
+          "factory": "天津Pack工厂",
+          "category": "动力电池包",
+          "delivery_on_time_rate": 0.962,
+          "quality_ppm": 580,
+          "complaints": 2,
+          "corrective_action_status": "closed"
+        }
+      ],
+      "historical_quotes": [
+        {
+          "quote_id": "SQ-004-V1",
+          "quoted_at": "2026-09-10",
+          "unit_price_cny": 103100,
+          "currency": "CNY",
+          "valid_to": "2026-09-17",
+          "quantity_basis": 12000
+        },
+        {
+          "quote_id": "SQ-004-V2",
+          "quoted_at": "2026-09-18",
+          "unit_price_cny": 102600,
+          "currency": "CNY",
+          "valid_to": "2026-09-25",
+          "quantity_basis": 12000
+        }
+      ],
+      "financial_credit": {
+        "rating": "A",
+        "debt_risk": "low",
+        "cash_flow_risk": "low",
+        "source_type": "synthetic_credit_assessment"
+      },
+      "risk_records": [
+        {
+          "risk_id": "RISK-S4-L1",
+          "type": "litigation",
+          "level": "medium",
+          "status": "monitoring",
+          "description": "存在一项模拟设备采购合同诉讼，尚未判决，不等于失信"
+        },
+        {
+          "risk_id": "RISK-S4-D1",
+          "type": "delivery",
+          "level": "medium",
+          "status": "monitoring",
+          "description": "天津至武汉运输半径较长"
+        }
+      ],
+      "score_detail": {
+        "evaluation_scope": {
+          "as_of": "2026-09-25T18:00:00+08:00",
+          "factories": [
+            "天津Pack工厂"
+          ],
+          "categories": [
+            "动力电池包"
+          ]
+        },
+        "raw_score": 83.1,
+        "missing_value_handling": "诉讼结果未知，不按败诉处理；只作为待人工复核风险",
+        "manual_adjustments": [],
+        "final_score": 83.1,
+        "weight_version": "SUP-EVAL-WEIGHT-V2"
+      },
+      "occurred_at": "2026-09-25T09:00:00+08:00",
+      "recorded_at": "2026-09-25T18:00:00+08:00",
+      "valid_from": "2026-09-25T18:00:00+08:00",
+      "valid_to": null,
+      "source_version": "SUPPLIER-EVAL-V1"
+    },
+    {
+      "supplier_id": "SUP-BAT-005",
+      "source_ids": [
+        "SRC-TENDER-026"
+      ],
+      "supplier_name": "西陆电池（模拟）",
+      "data_classification": "synthetic_demo",
+      "categories": [
+        "动力电池包",
+        "磷酸铁锂Pack"
+      ],
+      "factory_coverage": [
+        "成都Pack工厂"
+      ],
+      "certificates": [
+        {
+          "certificate_type": "IATF 16949",
+          "certificate_no": "IATF-005",
+          "valid_from": "2025-03-01",
+          "valid_to": "2028-02-29",
+          "factory": "成都Pack工厂",
+          "status": "valid",
+          "verified_at": "2026-09-24T12:00:00+08:00"
+        },
+        {
+          "certificate_type": "ISO 14001",
+          "certificate_no": "EMS-005",
+          "valid_from": "2025-03-01",
+          "valid_to": "2028-02-29",
+          "factory": "成都Pack工厂",
+          "status": "valid",
+          "verified_at": "2026-09-24T12:00:00+08:00"
+        }
+      ],
+      "performance_records": [
+        {
+          "period": "2025年度",
+          "factory": "成都Pack工厂",
+          "category": "动力电池包",
+          "delivery_on_time_rate": 0.938,
+          "quality_ppm": 650,
+          "complaints": 3,
+          "corrective_action_status": "closed"
+        },
+        {
+          "period": "2026上半年",
+          "factory": "成都Pack工厂",
+          "category": "动力电池包",
+          "delivery_on_time_rate": 0.921,
+          "quality_ppm": 690,
+          "complaints": 5,
+          "corrective_action_status": "open"
+        }
+      ],
+      "historical_quotes": [
+        {
+          "quote_id": "SQ-005-V1",
+          "quoted_at": "2026-09-09",
+          "unit_price_cny": 101600,
+          "currency": "CNY",
+          "valid_to": "2026-09-16",
+          "quantity_basis": 12000
+        },
+        {
+          "quote_id": "SQ-005-V2",
+          "quoted_at": "2026-09-17",
+          "unit_price_cny": 101200,
+          "currency": "CNY",
+          "valid_to": "2026-09-24",
+          "quantity_basis": 12000
+        }
+      ],
+      "financial_credit": {
+        "rating": "BB+",
+        "debt_risk": "high",
+        "cash_flow_risk": "high",
+        "source_type": "synthetic_credit_assessment"
+      },
+      "risk_records": [
+        {
+          "risk_id": "RISK-S5-C1",
+          "type": "credit",
+          "level": "high",
+          "status": "open",
+          "description": "模拟短期偿债和现金流风险较高"
+        },
+        {
+          "risk_id": "RISK-S5-D1",
+          "type": "delivery",
+          "level": "high",
+          "status": "open",
+          "description": "连续两个周期交付及时率下降"
+        }
+      ],
+      "score_detail": {
+        "evaluation_scope": {
+          "as_of": "2026-09-25T18:00:00+08:00",
+          "factories": [
+            "成都Pack工厂"
+          ],
+          "categories": [
+            "动力电池包"
+          ]
+        },
+        "raw_score": 74.8,
+        "missing_value_handling": "2024年工厂级PPM缺失，不以集团均值替代；对应周期权重置为缺失并披露",
+        "manual_adjustments": [
+          {
+            "adjustment_id": "ADJ-S5-001",
+            "points": -2,
+            "reason": "连续交付下降且整改未关闭",
+            "approved_by": "供应商评审组（模拟）"
+          }
+        ],
+        "final_score": 72.8,
+        "weight_version": "SUP-EVAL-WEIGHT-V2"
+      },
+      "occurred_at": "2026-09-25T09:00:00+08:00",
+      "recorded_at": "2026-09-25T18:00:00+08:00",
+      "valid_from": "2026-09-25T18:00:00+08:00",
+      "valid_to": null,
+      "source_version": "SUPPLIER-EVAL-V1"
+    }
+  ],
+  "governance": {
+    "ranking_is_decision_input_only": true,
+    "automatic_award_forbidden": true,
+    "scope_rule": "评分必须限定时间、工厂和品类，缺失值及人工调整均需披露。"
+  }
+}

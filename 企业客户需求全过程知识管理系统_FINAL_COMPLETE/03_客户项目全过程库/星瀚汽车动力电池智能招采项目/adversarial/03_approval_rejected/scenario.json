@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0.0",
+  "scenario_id": "ADV-TENDER-003",
+  "base_project_id": "PRJ-TENDER-001",
+  "data_classification": "synthetic_adversarial",
+  "isolated_from_golden": true,
+  "simulation_note": "本文件故意植入不一致，仅用于负向测试，不得并入黄金业务统计。",
+  "payload": {
+    "approval_result": "NO_GO",
+    "rejected_at": "2026-08-20T18:00:00+08:00",
+    "contract_draft_exists": true,
+    "contract_must_not_execute": true
+  },
+  "expected_findings": [
+    {
+      "finding_id": "ADV-F-004",
+      "type": "approval_rejected",
+      "severity": "critical",
+      "evidence": [
+        "采购委员会结论NO_GO"
+      ],
+      "expected_action": "阻止合同和采购执行对象生效"
+    }
+  ]
+}
+

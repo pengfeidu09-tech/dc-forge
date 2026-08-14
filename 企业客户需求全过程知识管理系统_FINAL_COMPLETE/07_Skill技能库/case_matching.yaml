@@ -1,0 +1,96 @@
+{
+  "name": "case_matching",
+  "version": "2.0.0",
+  "description": "查找与当前需求在行业、场景、对象和约束上相似的历史案例，并解释可复用与不可复用部分。",
+  "applicable_scenarios": [
+    "需求分析辅助",
+    "方案复用",
+    "风险预警",
+    "项目复盘检索"
+  ],
+  "inputs": [
+    {
+      "name": "project_id",
+      "required": true
+    },
+    {
+      "name": "requirement_context",
+      "required": true
+    },
+    {
+      "name": "case_library",
+      "required": true
+    },
+    {
+      "name": "filters",
+      "required": true
+    },
+    {
+      "name": "as_of",
+      "required": true
+    }
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "action": "执行权限与时间点过滤"
+    },
+    {
+      "step": 2,
+      "action": "提取行业、场景、对象、规模、约束和结果特征"
+    },
+    {
+      "step": 3,
+      "action": "分别计算结构化匹配和语义相关性"
+    },
+    {
+      "step": 4,
+      "action": "排除无来源、旧版或适用范围冲突案例"
+    },
+    {
+      "step": 5,
+      "action": "解释匹配原因、差异和可复用资产"
+    },
+    {
+      "step": 6,
+      "action": "返回证据而非只返回相似度"
+    }
+  ],
+  "evidence_requirements": [
+    "案例包含项目、来源、版本和数据性质",
+    "匹配理由引用双方字段",
+    "结果指标说明样本和真实性"
+  ],
+  "guardrails": [
+    "不得因行业名称相同就判定可复用",
+    "不得泄露无权限历史项目",
+    "不得把模拟案例描述为真实客户成功"
+  ],
+  "outputs": [
+    {
+      "name": "matched_cases",
+      "required": true
+    },
+    {
+      "name": "match_reasons",
+      "required": true
+    },
+    {
+      "name": "differences",
+      "required": true
+    },
+    {
+      "name": "reusable_assets",
+      "required": true
+    },
+    {
+      "name": "non_reusable_parts",
+      "required": true
+    },
+    {
+      "name": "evidence",
+      "required": true
+    }
+  ]
+}
+

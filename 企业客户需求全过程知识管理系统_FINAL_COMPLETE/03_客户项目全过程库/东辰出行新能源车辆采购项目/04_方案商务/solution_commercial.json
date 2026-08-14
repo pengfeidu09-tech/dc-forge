@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0.0",
+  "data_classification": "synthetic_demo",
+  "project_id": "PRJ-AUTO-001",
+  "customer_solutions": [
+    {
+      "solution_id": "SOL-AUTO-001",
+      "requirement_version_id": "REQ-AUTO-001-V3",
+      "name": "双供应源分批交付方案",
+      "status": "selected",
+      "vehicle_offer": {"sku_id": "SKU-AUTO-QIN510-WHITE-DARK", "quantity": 100},
+      "services": ["两地运输", "逐车VIN台账", "随车资料核验", "上牌资料协助", "交付异常闭环", "厂家标准质保对接"],
+      "delivery_plan": ["上海首批30台", "上海第二批30台", "苏州第三批40台"],
+      "customer_value": "在预算内用双供应源满足分批交付，并保留车辆级追溯。"
+    },
+    {
+      "solution_id": "SOL-AUTO-002",
+      "requirement_version_id": "REQ-AUTO-001-V3",
+      "name": "单一供应源统一交付方案",
+      "status": "not_selected",
+      "vehicle_offer": {"sku_id": "SKU-AUTO-QIN510-WHITE-DARK", "quantity": 100},
+      "services": ["两地运输", "上牌资料协助"],
+      "delivery_plan": ["预计25天后统一交付"],
+      "not_selected_reason": "无法满足首批30台提前交付且付款条件较差。"
+    }
+  ],
+  "customer_quotes": [
+    {
+      "quote_id": "QUOTE-AUTO-001-V1",
+      "version": "V1",
+      "solution_id": "SOL-AUTO-001",
+      "requirement_version_id": "REQ-AUTO-001-V3",
+      "created_at": "2026-08-22T10:00:00+08:00",
+      "created_by": "赵航（模拟）",
+      "unit_price_cny": 145800,
+      "quantity": 100,
+      "total_amount_cny": 14580000,
+      "price_includes": ["车辆", "13%增值税", "运输", "资料核验", "交付服务"],
+      "payment_terms": "30%预付，70%交付后15日",
+      "valid_until": "2026-08-26",
+      "customer_feedback": "价格偏高，希望降低2000元/台并延长尾款账期。",
+      "status": "rejected"
+    },
+    {
+      "quote_id": "QUOTE-AUTO-001-V2",
+      "version": "V2",
+      "solution_id": "SOL-AUTO-001",
+      "requirement_version_id": "REQ-AUTO-001-V3",
+      "created_at": "2026-08-24T15:00:00+08:00",
+      "created_by": "赵航（模拟）",
+      "unit_price_cny": 144500,
+      "quantity": 100,
+      "total_amount_cny": 14450000,
+      "price_includes": ["车辆", "13%增值税", "运输", "资料核验", "交付服务"],
+      "payment_terms": "30%预付，70%交付后20日",
+      "valid_until": "2026-08-28",
+      "customer_feedback": "希望价格再降700元/台，尾款改为交付后30日。",
+      "status": "superseded"
+    },
+    {
+      "quote_id": "QUOTE-AUTO-001-V3",
+      "version": "V3",
+      "solution_id": "SOL-AUTO-001",
+      "requirement_version_id": "REQ-AUTO-001-V3",
+      "created_at": "2026-08-26T11:00:00+08:00",
+      "created_by": "赵航（模拟）",
+      "approved_by": "APR-AUTO-001",
+      "unit_price_cny": 143800,
+      "quantity": 100,
+      "total_amount_cny": 14380000,
+      "price_includes": ["车辆", "13%增值税", "运输", "资料核验", "上牌资料协助", "交付服务"],
+      "payment_terms": "30%预付，70%交付完成后30日",
+      "valid_until": "2026-08-30",
+      "customer_feedback": "接受。",
+      "accepted_at": "2026-08-27T16:00:00+08:00",
+      "status": "accepted"
+    }
+  ],
+  "negotiations": [
+    {
+      "negotiation_id": "NEG-AUTO-001",
+      "occurred_at": "2026-08-23T14:00:00+08:00",
+      "topic": "价格",
+      "customer_request": "在V1基础上降低2000元/台。",
+      "company_response": "可先降低1300元/台，并保持30%预付款。",
+      "result": "形成报价V2。",
+      "related_quote_ids": ["QUOTE-AUTO-001-V1", "QUOTE-AUTO-001-V2"]
+    },
+    {
+      "negotiation_id": "NEG-AUTO-002",
+      "occurred_at": "2026-08-25T10:00:00+08:00",
+      "topic": "价格与账期",
+      "customer_request": "再降低700元/台，尾款账期延长到30日。",
+      "company_response": "在客户按期支付30%预付款、验收标准不扩大且延期责任按批次计算的条件下接受。",
+      "result": "形成并接受报价V3。",
+      "related_quote_ids": ["QUOTE-AUTO-001-V2", "QUOTE-AUTO-001-V3"]
+    }
+  ],
+  "internal_approvals": [
+    {
+      "approval_id": "APR-AUTO-001",
+      "subject": "报价V3及30日尾款账期特批",
+      "related_quote_id": "QUOTE-AUTO-001-V3",
+      "submitted_at": "2026-08-25T14:00:00+08:00",
+      "completed_at": "2026-08-26T09:30:00+08:00",
+      "status": "approved_with_conditions",
+      "steps": [
+        {"sequence": 1, "role": "销售经理", "approver": "赵航（模拟）", "decision": "approved", "comment": "客户需求与价格版本已确认。"},
+        {"sequence": 2, "role": "采购负责人", "approver": "韩启（模拟）", "decision": "approved", "comment": "双供应商资源已预留。"},
+        {"sequence": 3, "role": "财务负责人", "approver": "沈宁（模拟）", "decision": "approved_with_condition", "comment": "30%预付款到账后方可支付供应商订金。"},
+        {"sequence": 4, "role": "风控负责人", "approver": "唐洁（模拟）", "decision": "approved", "comment": "客户模拟评级A-，设置尾款提醒。"},
+        {"sequence": 5, "role": "法务负责人", "approver": "罗谦（模拟）", "decision": "approved_with_condition", "comment": "供应商延期和资料责任需背靠背。"},
+        {"sequence": 6, "role": "总经理", "approver": "顾承（模拟）", "decision": "approved_exception", "comment": "模拟毛利率低于常规5%底线，考虑交期价值特批，实际利润以结算数据为准。"}
+      ],
+      "special_terms": ["接受30日尾款账期", "模拟利润率低于5%常规底线特批", "预付款到账后采购生效"]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "dcforge-enterprise": {
+      "type": "stdio",
+      "command": "/Volumes/DataSSD/HomeFolders/MyProject/dc-forge/.venv/bin/python",
+      "args": [
+        "-m",
+        "backend.app.solution.mcp_server"
+      ],
+      "cwd": "/Volumes/DataSSD/HomeFolders/MyProject/dc-forge",
+      "env": {
+        "PYTHONPATH": "."
+      }
+    }
+  }
+}

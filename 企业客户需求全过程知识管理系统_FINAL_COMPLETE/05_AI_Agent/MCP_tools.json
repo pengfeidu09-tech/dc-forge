@@ -1,0 +1,583 @@
+{
+  "schema_version": "3.0.0",
+  "data_classification": "synthetic_demo",
+  "description": "DCForge企业招采知识MCP工具契约。仓库内已由backend/app/solution/mcp_server.py实现只读stdio与HTTP JSON-RPC服务；是否已部署到具体企业环境需以运行状态为准。",
+  "implementation": {
+    "status": "implemented_locally",
+    "stdio_command": "PYTHONPATH=. python -m backend.app.solution.mcp_server",
+    "http_endpoint": "POST /mcp",
+    "portal_endpoint": "GET /",
+    "permission_source": "03_客户项目全过程库/星瀚汽车动力电池智能招采项目/08_权限与时间/security_model.json",
+    "authoritative_adapter": "backend.app.solution.knowledge_package_adapter.SmartProcurementKnowledgeAdapter"
+  },
+  "tools": [
+    {
+      "name": "list_projects",
+      "version": "3.0.0",
+      "description": "列出企业内部可访问的模拟项目索引。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "as_of": {
+            "type": "string"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "array"
+            ]
+          },
+          "data_classification": {
+            "type": "string"
+          }
+        }
+      },
+      "permission": "project_role_acl_and_as_of",
+      "audit": "记录调用者、项目、as_of、工具参数、来源ID、脱敏字段和权限决定",
+      "guardrails": [
+        "检索或计算前执行用户、角色、部门、字段与撤权过滤",
+        "没有可靠证据时返回insufficient_evidence或明确错误",
+        "所有结果保留synthetic_demo标识",
+        "方案评分和模拟统计不得描述为真实业务成果",
+        "高影响决定必须人工确认"
+      ]
+    },
+    {
+      "name": "get_project_dashboard",
+      "version": "3.0.0",
+      "description": "读取采购九阶段、数据量、需求、供应商、审查与方案驾驶舱。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "as_of": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "user_id",
+          "as_of"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "array"
+            ]
+          },
+          "data_classification": {
+            "type": "string"
+          }
+        }
+      },
+      "permission": "project_role_acl_and_as_of",
+      "audit": "记录调用者、项目、as_of、工具参数、来源ID、脱敏字段和权限决定",
+      "guardrails": [
+        "检索或计算前执行用户、角色、部门、字段与撤权过滤",
+        "没有可靠证据时返回insufficient_evidence或明确错误",
+        "所有结果保留synthetic_demo标识",
+        "方案评分和模拟统计不得描述为真实业务成果",
+        "高影响决定必须人工确认"
+      ]
+    },
+    {
+      "name": "search_knowledge",
+      "version": "3.0.0",
+      "description": "按用户ACL和as_of时间检索知识，并返回来源和脱敏字段。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "as_of": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "project_id",
+          "query",
+          "user_id",
+          "as_of"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array"
+          },
+          "insufficient_evidence": {
+            "type": "boolean"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "permission": "project_member_or_explicit_acl",
+      "audit": "记录用户、项目、查询、过滤条件、命中source_id和权限决定",
+      "guardrails": [
+        "检索前执行权限过滤",
+        "没有可靠证据时返回insufficient_evidence",
+        "模拟数据保留data_classification",
+        "高影响决定必须人工确认"
+      ]
+    },
+    {
+      "name": "get_requirement_history",
+      "version": "3.0.0",
+      "description": "读取需求版本历史和指定时间点适用版本。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "string"
+          },
+          "requirement_id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "as_of": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "requirement_id",
+          "user_id",
+          "as_of"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "requirement": {
+            "type": "object"
+          },
+          "versions": {
+            "type": "array"
+          },
+          "baseline": {
+            "type": "object"
+          },
+          "downstream_links": {
+            "type": "array"
+          }
+        }
+      },
+      "permission": "requirement_acl",
+      "audit": "记录访问者、需求ID、返回版本和脱敏字段",
+      "guardrails": [
+        "检索前执行权限过滤",
+        "没有可靠证据时返回insufficient_evidence",
+        "模拟数据保留data_classification",
+        "高影响决定必须人工确认"
+      ]
+    },
+    {
+      "name": "analyze_suppliers",
+      "version": "3.0.0",
+      "description": "读取限定时间、工厂和品类的供应商画像与风险。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "as_of": {
+            "type": "string"
+          },
+          "supplier_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "user_id",
+          "as_of"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "array"
+            ]
+          },
+          "data_classification": {
+            "type": "string"
+          }
+        }
+      },
+      "permission": "project_role_acl_and_as_of",
+      "audit": "记录调用者、项目、as_of、工具参数、来源ID、脱敏字段和权限决定",
+      "guardrails": [
+        "检索或计算前执行用户、角色、部门、字段与撤权过滤",
+        "没有可靠证据时返回insufficient_evidence或明确错误",
+        "所有结果保留synthetic_demo标识",
+        "方案评分和模拟统计不得描述为真实业务成果",
+        "高影响决定必须人工确认"
+      ]
+    },
+    {
+      "name": "review_tender_document",
+      "version": "3.0.0",
+      "description": "读取文档审查黄金样本的规则命中并要求人工复核。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "string"
+          },
+          "document_id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "as_of": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "document_id",
+          "user_id",
+          "as_of"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "findings": {
+            "type": "array"
+          },
+          "human_review_required": {
+            "type": "boolean"
+          },
+          "rule_version": {
+            "type": "string"
+          },
+          "model_version": {
+            "type": "string"
+          }
+        }
+      },
+      "permission": "procurement_reviewer",
+      "audit": "记录文档版本、规则、模型、命中、人工状态；禁止自动废标",
+      "guardrails": [
+        "检索前执行权限过滤",
+        "没有可靠证据时返回insufficient_evidence",
+        "模拟数据保留data_classification",
+        "高影响决定必须人工确认"
+      ]
+    },
+    {
+      "name": "generate_solution_bundle",
+      "version": "3.0.0",
+      "description": "从客户确认需求真相生成保守、均衡和创新三套方案。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "as_of": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "user_id",
+          "as_of"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "array"
+            ]
+          },
+          "data_classification": {
+            "type": "string"
+          }
+        }
+      },
+      "permission": "project_role_acl_and_as_of",
+      "audit": "记录调用者、项目、as_of、工具参数、来源ID、脱敏字段和权限决定",
+      "guardrails": [
+        "检索或计算前执行用户、角色、部门、字段与撤权过滤",
+        "没有可靠证据时返回insufficient_evidence或明确错误",
+        "所有结果保留synthetic_demo标识",
+        "方案评分和模拟统计不得描述为真实业务成果",
+        "高影响决定必须人工确认"
+      ]
+    },
+    {
+      "name": "get_decision_history",
+      "version": "3.0.0",
+      "description": "沿沟通与来源返回业务决定的时间线和证据。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "string"
+          },
+          "decision_or_object_id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "as_of": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "decision_or_object_id",
+          "user_id",
+          "as_of"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "timeline": {
+            "type": "array"
+          },
+          "current_status": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "array"
+          }
+        }
+      },
+      "permission": "project_member_or_explicit_acl",
+      "audit": "记录查询对象、命中决定、证据和版本冲突",
+      "guardrails": [
+        "检索前执行权限过滤",
+        "没有可靠证据时返回insufficient_evidence",
+        "模拟数据保留data_classification",
+        "高影响决定必须人工确认"
+      ]
+    },
+    {
+      "name": "search_communication",
+      "version": "3.0.0",
+      "description": "在沟通ACL和时间范围内检索电话、会议、邮件和即时消息。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "as_of": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "query",
+          "user_id",
+          "as_of"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "records": {
+            "type": "array"
+          },
+          "evidence": {
+            "type": "array"
+          },
+          "permission_filtered_count": {
+            "type": "integer"
+          }
+        }
+      },
+      "permission": "communication_acl",
+      "audit": "记录用户、渠道、source_id、权限过滤数量和导出动作",
+      "guardrails": [
+        "检索前执行权限过滤",
+        "没有可靠证据时返回insufficient_evidence",
+        "模拟数据保留data_classification",
+        "高影响决定必须人工确认"
+      ]
+    },
+    {
+      "name": "trace_business_object",
+      "version": "3.0.0",
+      "description": "沿需求、招标、合同和供应商稳定ID追踪上下游关系。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "string"
+          },
+          "object_id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "as_of": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string"
+          },
+          "max_depth": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "project_id",
+          "object_id",
+          "user_id",
+          "as_of"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "nodes": {
+            "type": "array"
+          },
+          "edges": {
+            "type": "array"
+          },
+          "hidden_nodes": {
+            "type": "integer"
+          },
+          "warnings": {
+            "type": "array"
+          }
+        }
+      },
+      "permission": "object_level_acl",
+      "audit": "记录起点、遍历深度、返回节点和因权限隐藏节点数量",
+      "guardrails": [
+        "检索前执行权限过滤",
+        "没有可靠证据时返回insufficient_evidence",
+        "模拟数据保留data_classification",
+        "高影响决定必须人工确认"
+      ]
+    },
+    {
+      "name": "get_financial_reconciliation",
+      "version": "3.0.0",
+      "description": "复算合同金额并返回有权限的模拟财务摘要。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "string"
+          },
+          "contract_id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "as_of": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "contract_id",
+          "user_id",
+          "as_of"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "reconciliation": {
+            "type": "object"
+          },
+          "differences": {
+            "type": "array"
+          },
+          "evidence_ids": {
+            "type": "array"
+          }
+        }
+      },
+      "permission": "finance_role_and_project_acl",
+      "audit": "记录访问者、财务字段、证据ID和导出；默认脱敏银行信息",
+      "guardrails": [
+        "检索前执行权限过滤",
+        "没有可靠证据时返回insufficient_evidence",
+        "模拟数据保留data_classification",
+        "高影响决定必须人工确认"
+      ]
+    }
+  ]
+}

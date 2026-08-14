@@ -1,0 +1,137 @@
+{
+  "schema_version": "1.0.0",
+  "data_classification": "synthetic_demo",
+  "project_id": "PRJ-AUTO-001",
+  "sales_contract": {
+    "sales_contract_id": "SC-AUTO-001",
+    "contract_number": "SC-2026-FAKE-001",
+    "customer_id": "CUS-AUTO-001",
+    "requirement_version_id": "REQ-AUTO-001-V3",
+    "accepted_quote_id": "QUOTE-AUTO-001-V3",
+    "signed_at": "2026-08-29T16:00:00+08:00",
+    "effective_condition": "客户30%预付款到账",
+    "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+    "quantity": 100,
+    "unit_price_cny": 143800,
+    "total_amount_cny": 14380000,
+    "deposit_amount_cny": 4314000,
+    "payment_schedule": [
+      {"milestone": "合同生效预付款", "ratio": 0.3, "amount_cny": 4314000, "due_date": "2026-08-31"},
+      {"milestone": "全部交付验收后尾款", "ratio": 0.7, "amount_cny": 10066000, "due_date": "2026-10-29"}
+    ],
+    "delivery_terms": [
+      {"quantity": 30, "location": "上海", "due_date": "2026-09-10"},
+      {"quantity": 30, "location": "上海", "due_date": "2026-09-20"},
+      {"quantity": 40, "location": "苏州", "due_date": "2026-09-30"}
+    ],
+    "acceptance_standard": ["VIN、型号、颜色、配置与清单一致", "外观无影响交付的损伤", "随车资料齐全", "异常车辆复验通过后计入最终验收"],
+    "invoice": "13%增值税专用发票，按付款及交付节点分三期开具",
+    "after_sales": "厂家标准质保，由卖方协助追溯供应商和VIN",
+    "breach_terms": "延期和不符项按批次记录并按合同模拟条款处理",
+    "attachments": ["车辆配置清单（模拟）", "分批交付计划（模拟）", "VIN与随车资料模板（模拟）"],
+    "status": "completed_simulation"
+  },
+  "purchase_contracts": [
+    {
+      "purchase_contract_id": "PC-AUTO-001",
+      "contract_number": "PC-2026-FAKE-001",
+      "supplier_id": "SUP-AUTO-001",
+      "procurement_plan_id": "PP-AUTO-001",
+      "supplier_quote_id": "SQ-AUTO-001-V2",
+      "signed_at": "2026-08-31T15:00:00+08:00",
+      "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+      "quantity": 60,
+      "unit_price_cny": 132000,
+      "total_amount_cny": 7920000,
+      "payment_terms": "40%订金，提车前付清",
+      "back_to_back_terms": ["交期承接销售合同前两批要求", "VIN和资料逐车对应", "供应商原因延期承担相应责任"],
+      "status": "completed_simulation"
+    },
+    {
+      "purchase_contract_id": "PC-AUTO-002",
+      "contract_number": "PC-2026-FAKE-002",
+      "supplier_id": "SUP-AUTO-002",
+      "procurement_plan_id": "PP-AUTO-001",
+      "supplier_quote_id": "SQ-AUTO-002-V1",
+      "signed_at": "2026-08-31T16:00:00+08:00",
+      "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+      "quantity": 40,
+      "unit_price_cny": 133500,
+      "total_amount_cny": 5340000,
+      "payment_terms": "40%订金，提车前付清",
+      "back_to_back_terms": ["交期承接销售合同第三批要求", "VIN和资料逐车对应", "供应商原因延期承担相应责任"],
+      "status": "completed_simulation"
+    }
+  ],
+  "sales_orders": [
+    {
+      "sales_order_id": "SO-AUTO-001",
+      "sales_contract_id": "SC-AUTO-001",
+      "requirement_version_id": "REQ-AUTO-001-V3",
+      "batch_no": 1,
+      "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+      "quantity": 30,
+      "unit_price_cny": 143800,
+      "total_amount_cny": 4314000,
+      "delivery_location": "上海",
+      "required_by": "2026-09-10",
+      "status": "completed"
+    },
+    {
+      "sales_order_id": "SO-AUTO-002",
+      "sales_contract_id": "SC-AUTO-001",
+      "requirement_version_id": "REQ-AUTO-001-V3",
+      "batch_no": 2,
+      "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+      "quantity": 30,
+      "unit_price_cny": 143800,
+      "total_amount_cny": 4314000,
+      "delivery_location": "上海",
+      "required_by": "2026-09-20",
+      "status": "completed"
+    },
+    {
+      "sales_order_id": "SO-AUTO-003",
+      "sales_contract_id": "SC-AUTO-001",
+      "requirement_version_id": "REQ-AUTO-001-V3",
+      "batch_no": 3,
+      "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+      "quantity": 40,
+      "unit_price_cny": 143800,
+      "total_amount_cny": 5752000,
+      "delivery_location": "苏州",
+      "required_by": "2026-09-30",
+      "status": "completed"
+    }
+  ],
+  "purchase_orders": [
+    {
+      "purchase_order_id": "PO-AUTO-001",
+      "purchase_contract_id": "PC-AUTO-001",
+      "supplier_id": "SUP-AUTO-001",
+      "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+      "quantity": 60,
+      "unit_price_cny": 132000,
+      "total_amount_cny": 7920000,
+      "ordered_at": "2026-09-01T10:00:00+08:00",
+      "deposit_paid_at": "2026-09-01T15:00:00+08:00",
+      "vin_lock_status": "locked_60",
+      "inventory_status": "delivered",
+      "status": "completed"
+    },
+    {
+      "purchase_order_id": "PO-AUTO-002",
+      "purchase_contract_id": "PC-AUTO-002",
+      "supplier_id": "SUP-AUTO-002",
+      "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+      "quantity": 40,
+      "unit_price_cny": 133500,
+      "total_amount_cny": 5340000,
+      "ordered_at": "2026-09-01T10:30:00+08:00",
+      "deposit_paid_at": "2026-09-01T15:30:00+08:00",
+      "vin_lock_status": "locked_40",
+      "inventory_status": "delivered",
+      "status": "completed"
+    }
+  ]
+}

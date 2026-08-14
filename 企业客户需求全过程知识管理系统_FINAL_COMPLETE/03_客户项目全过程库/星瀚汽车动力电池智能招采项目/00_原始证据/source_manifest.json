@@ -1,0 +1,841 @@
+{
+  "schema_version": "1.0.0",
+  "data_classification": "synthetic_demo",
+  "project_id": "PRJ-TENDER-001",
+  "manifest_purpose": "原始证据、结构化Requirement Truth与RAG知识块的来源闭包清单",
+  "sources": [
+    {
+      "source_id": "SRC-TENDER-001",
+      "project_id": "PRJ-TENDER-001",
+      "title": "客户组织与项目背景",
+      "source_type": "customer_profile",
+      "source_path": "00_原始证据/01_src_tender_001.txt",
+      "occurred_at": "2026-08-08T09:00:00+08:00",
+      "recorded_at": "2026-08-08T10:00:00+08:00",
+      "valid_from": "2026-08-08T09:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "PROFILE-V1",
+      "security_label": "internal",
+      "acl_id": "ACL-PUBLIC",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {},
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-002",
+      "project_id": "PRJ-TENDER-001",
+      "title": "首次需求电话完整转写",
+      "source_type": "conversation",
+      "source_path": "00_原始证据/02_src_tender_002.txt",
+      "occurred_at": "2026-08-10T10:00:00+08:00",
+      "recorded_at": "2026-08-10T11:00:00+08:00",
+      "valid_from": "2026-08-10T10:00:00+08:00",
+      "valid_to": "2026-08-13T16:00:00+08:00",
+      "supersedes": [],
+      "source_version": "REQ-BAT-001-V1",
+      "security_label": "internal",
+      "acl_id": "ACL-PUBLIC",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {},
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-003",
+      "project_id": "PRJ-TENDER-001",
+      "title": "项目启动会逐字纪要",
+      "source_type": "meeting_minutes",
+      "source_path": "00_原始证据/03_src_tender_003.txt",
+      "occurred_at": "2026-08-10T14:00:00+08:00",
+      "recorded_at": "2026-08-10T17:00:00+08:00",
+      "valid_from": "2026-08-10T14:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "MTG-KICKOFF-V1",
+      "security_label": "internal",
+      "acl_id": "ACL-PUBLIC",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {},
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-004",
+      "project_id": "PRJ-TENDER-001",
+      "title": "V1需求确认邮件线程",
+      "source_type": "email",
+      "source_path": "00_原始证据/04_src_tender_004.txt",
+      "occurred_at": "2026-08-11T09:20:00+08:00",
+      "recorded_at": "2026-08-11T09:30:00+08:00",
+      "valid_from": "2026-08-11T09:20:00+08:00",
+      "valid_to": "2026-08-13T16:00:00+08:00",
+      "supersedes": [],
+      "source_version": "REQ-BAT-001-V1",
+      "security_label": "internal",
+      "acl_id": "ACL-PUBLIC",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {},
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-005",
+      "project_id": "PRJ-TENDER-001",
+      "title": "产量调整专题会逐字纪要",
+      "source_type": "meeting_minutes",
+      "source_path": "00_原始证据/05_src_tender_005.txt",
+      "occurred_at": "2026-08-13T16:00:00+08:00",
+      "recorded_at": "2026-08-13T17:00:00+08:00",
+      "valid_from": "2026-08-13T16:00:00+08:00",
+      "valid_to": "2026-08-18T15:30:00+08:00",
+      "supersedes": [
+        "SRC-TENDER-002",
+        "SRC-TENDER-004"
+      ],
+      "source_version": "REQ-BAT-001-V2",
+      "security_label": "internal",
+      "acl_id": "ACL-PUBLIC",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {},
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-006",
+      "project_id": "PRJ-TENDER-001",
+      "title": "V2跨部门确认邮件",
+      "source_type": "email",
+      "source_path": "00_原始证据/06_src_tender_006.txt",
+      "occurred_at": "2026-08-14T09:00:00+08:00",
+      "recorded_at": "2026-08-14T09:15:00+08:00",
+      "valid_from": "2026-08-14T09:00:00+08:00",
+      "valid_to": "2026-08-18T15:30:00+08:00",
+      "supersedes": [
+        "SRC-TENDER-004"
+      ],
+      "source_version": "REQ-BAT-001-V2",
+      "security_label": "internal",
+      "acl_id": "ACL-PUBLIC",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {},
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-007",
+      "project_id": "PRJ-TENDER-001",
+      "title": "V3已确认需求基线附件",
+      "source_type": "customer_attachment",
+      "source_path": "00_原始证据/07_src_tender_007.txt",
+      "occurred_at": "2026-08-18T15:30:00+08:00",
+      "recorded_at": "2026-08-18T16:00:00+08:00",
+      "valid_from": "2026-08-18T15:30:00+08:00",
+      "valid_to": null,
+      "supersedes": [
+        "SRC-TENDER-005",
+        "SRC-TENDER-006"
+      ],
+      "source_version": "REQ-BAT-001-V3",
+      "security_label": "internal",
+      "acl_id": "ACL-PUBLIC",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {},
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-008",
+      "project_id": "PRJ-TENDER-001",
+      "title": "采购预算批复单",
+      "source_type": "customer_attachment",
+      "source_path": "00_原始证据/08_src_tender_008.txt",
+      "occurred_at": "2026-08-19T11:00:00+08:00",
+      "recorded_at": "2026-08-19T11:30:00+08:00",
+      "valid_from": "2026-08-19T11:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "BUDGET-V2",
+      "security_label": "strictly_restricted",
+      "acl_id": "ACL-STRICT",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部"
+      ],
+      "field_masking": {
+        "legal_finance": [
+          "technical_secret"
+        ],
+        "observer": [
+          "unit_price_cny",
+          "supplier_score",
+          "technical_secret"
+        ]
+      },
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-009",
+      "project_id": "PRJ-TENDER-001",
+      "title": "年度采购计划正式文本",
+      "source_type": "requirement_document",
+      "source_path": "00_原始证据/09_src_tender_009.txt",
+      "occurred_at": "2026-08-19T14:00:00+08:00",
+      "recorded_at": "2026-08-19T15:00:00+08:00",
+      "valid_from": "2026-08-19T14:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "PLAN-V2",
+      "security_label": "internal",
+      "acl_id": "ACL-PUBLIC",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {},
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-010",
+      "project_id": "PRJ-TENDER-001",
+      "title": "采购立项评审逐字纪要",
+      "source_type": "meeting_minutes",
+      "source_path": "00_原始证据/10_src_tender_010.txt",
+      "occurred_at": "2026-08-20T15:00:00+08:00",
+      "recorded_at": "2026-08-20T18:10:00+08:00",
+      "valid_from": "2026-08-20T15:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "INIT-REVIEW-V1",
+      "security_label": "restricted",
+      "acl_id": "ACL-PROCUREMENT",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部"
+      ],
+      "field_masking": {
+        "observer": [
+          "unit_price_cny",
+          "supplier_score"
+        ]
+      },
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-011",
+      "project_id": "PRJ-TENDER-001",
+      "title": "招标文件审查制度",
+      "source_type": "bid_document",
+      "source_path": "00_原始证据/11_src_tender_011.txt",
+      "occurred_at": "2026-08-21T09:00:00+08:00",
+      "recorded_at": "2026-08-21T09:30:00+08:00",
+      "valid_from": "2026-08-21T09:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "POLICY-BID-V2",
+      "security_label": "internal",
+      "acl_id": "ACL-PUBLIC",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {},
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-012",
+      "project_id": "PRJ-TENDER-001",
+      "title": "集团采购审批与权限制度",
+      "source_type": "bid_document",
+      "source_path": "00_原始证据/12_src_tender_012.txt",
+      "occurred_at": "2026-08-21T10:00:00+08:00",
+      "recorded_at": "2026-08-21T10:20:00+08:00",
+      "valid_from": "2026-08-21T10:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "POLICY-APPROVAL-V3",
+      "security_label": "internal",
+      "acl_id": "ACL-PUBLIC",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {},
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-013",
+      "project_id": "PRJ-TENDER-001",
+      "title": "需求基线复核会议",
+      "source_type": "meeting_minutes",
+      "source_path": "00_原始证据/13_src_tender_013.txt",
+      "occurred_at": "2026-08-22T09:30:00+08:00",
+      "recorded_at": "2026-08-22T11:30:00+08:00",
+      "valid_from": "2026-08-22T09:30:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "BASELINE-REVIEW-V1",
+      "security_label": "internal",
+      "acl_id": "ACL-PUBLIC",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {},
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-014",
+      "project_id": "PRJ-TENDER-001",
+      "title": "数据安全与权限工作坊",
+      "source_type": "meeting_minutes",
+      "source_path": "00_原始证据/14_src_tender_014.txt",
+      "occurred_at": "2026-08-23T13:30:00+08:00",
+      "recorded_at": "2026-08-23T16:30:00+08:00",
+      "valid_from": "2026-08-23T13:30:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "SECURITY-WORKSHOP-V1",
+      "security_label": "strictly_restricted",
+      "acl_id": "ACL-STRICT",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部"
+      ],
+      "field_masking": {
+        "legal_finance": [
+          "technical_secret"
+        ],
+        "observer": [
+          "unit_price_cny",
+          "supplier_score",
+          "technical_secret"
+        ]
+      },
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-015",
+      "project_id": "PRJ-TENDER-001",
+      "title": "现有系统与数据工作坊",
+      "source_type": "meeting_minutes",
+      "source_path": "00_原始证据/15_src_tender_015.txt",
+      "occurred_at": "2026-08-24T09:00:00+08:00",
+      "recorded_at": "2026-08-24T12:00:00+08:00",
+      "valid_from": "2026-08-24T09:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "SYSTEM-WORKSHOP-V1",
+      "security_label": "internal",
+      "acl_id": "ACL-PUBLIC",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {},
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-016",
+      "project_id": "PRJ-TENDER-001",
+      "title": "业务流程现状访谈",
+      "source_type": "conversation",
+      "source_path": "00_原始证据/16_src_tender_016.txt",
+      "occurred_at": "2026-08-25T10:00:00+08:00",
+      "recorded_at": "2026-08-25T11:30:00+08:00",
+      "valid_from": "2026-08-25T10:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "PROCESS-ASIS-V1",
+      "security_label": "internal",
+      "acl_id": "ACL-PUBLIC",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {},
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-017",
+      "project_id": "PRJ-TENDER-001",
+      "title": "供应商一质量与产能调查表",
+      "source_type": "customer_attachment",
+      "source_path": "00_原始证据/17_src_tender_017.txt",
+      "occurred_at": "2026-08-28T09:00:00+08:00",
+      "recorded_at": "2026-08-28T10:00:00+08:00",
+      "valid_from": "2026-08-28T09:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "SUP-BAT-001-QA-V1",
+      "security_label": "restricted",
+      "acl_id": "ACL-QUALITY",
+      "allowed_roles": [
+        "procurement_owner",
+        "supplier_quality"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "供应商质量部"
+      ],
+      "field_masking": {
+        "observer": [
+          "supplier_score",
+          "quality_ppm"
+        ]
+      },
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-018",
+      "project_id": "PRJ-TENDER-001",
+      "title": "供应商二履约与信用材料",
+      "source_type": "customer_attachment",
+      "source_path": "00_原始证据/18_src_tender_018.txt",
+      "occurred_at": "2026-08-28T10:30:00+08:00",
+      "recorded_at": "2026-08-28T11:00:00+08:00",
+      "valid_from": "2026-08-28T10:30:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "SUP-BAT-002-PERF-V1",
+      "security_label": "restricted",
+      "acl_id": "ACL-QUALITY",
+      "allowed_roles": [
+        "procurement_owner",
+        "supplier_quality"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "供应商质量部"
+      ],
+      "field_masking": {
+        "observer": [
+          "supplier_score",
+          "quality_ppm"
+        ]
+      },
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-019",
+      "project_id": "PRJ-TENDER-001",
+      "title": "供应商三资质证书OCR文本",
+      "source_type": "customer_attachment",
+      "source_path": "00_原始证据/19_src_tender_019.txt",
+      "occurred_at": "2026-08-29T09:00:00+08:00",
+      "recorded_at": "2026-08-29T13:30:00+08:00",
+      "valid_from": "2026-08-29T09:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "SUP-BAT-003-CERT-V1",
+      "security_label": "restricted",
+      "acl_id": "ACL-QUALITY",
+      "allowed_roles": [
+        "procurement_owner",
+        "supplier_quality"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "供应商质量部"
+      ],
+      "field_masking": {
+        "observer": [
+          "supplier_score",
+          "quality_ppm"
+        ]
+      },
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-020",
+      "project_id": "PRJ-TENDER-001",
+      "title": "动力电池招标文件定稿",
+      "source_type": "bid_document",
+      "source_path": "00_原始证据/20_src_tender_020.txt",
+      "occurred_at": "2026-09-05T09:00:00+08:00",
+      "recorded_at": "2026-09-05T09:10:00+08:00",
+      "valid_from": "2026-09-05T09:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [
+        "SRC-TENDER-011"
+      ],
+      "source_version": "TENDER-V3",
+      "security_label": "internal",
+      "acl_id": "ACL-PUBLIC",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {},
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-021",
+      "project_id": "PRJ-TENDER-001",
+      "title": "供应商综合评审会议纪要",
+      "source_type": "meeting_minutes",
+      "source_path": "00_原始证据/21_src_tender_021.txt",
+      "occurred_at": "2026-09-25T09:00:00+08:00",
+      "recorded_at": "2026-09-25T18:00:00+08:00",
+      "valid_from": "2026-09-25T09:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "SUPPLIER-REVIEW-V1",
+      "security_label": "restricted",
+      "acl_id": "ACL-QUALITY",
+      "allowed_roles": [
+        "procurement_owner",
+        "supplier_quality"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "供应商质量部"
+      ],
+      "field_masking": {
+        "observer": [
+          "supplier_score",
+          "quality_ppm"
+        ]
+      },
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-022",
+      "project_id": "PRJ-TENDER-001",
+      "title": "中标商务澄清与价格邮件",
+      "source_type": "email",
+      "source_path": "00_原始证据/22_src_tender_022.txt",
+      "occurred_at": "2026-10-02T15:00:00+08:00",
+      "recorded_at": "2026-10-02T15:20:00+08:00",
+      "valid_from": "2026-10-02T15:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "COMMERCIAL-CLARIFY-V2",
+      "security_label": "strictly_restricted",
+      "acl_id": "ACL-STRICT",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部"
+      ],
+      "field_masking": {
+        "legal_finance": [
+          "technical_secret"
+        ],
+        "observer": [
+          "unit_price_cny",
+          "supplier_score",
+          "technical_secret"
+        ]
+      },
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-023",
+      "project_id": "PRJ-TENDER-001",
+      "title": "供应商质量整改闭环记录",
+      "source_type": "customer_attachment",
+      "source_path": "00_原始证据/23_src_tender_023.txt",
+      "occurred_at": "2026-09-12T09:00:00+08:00",
+      "recorded_at": "2026-09-12T17:00:00+08:00",
+      "valid_from": "2026-09-12T09:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "QUALITY-CAPA-V1",
+      "security_label": "restricted",
+      "acl_id": "ACL-QUALITY",
+      "allowed_roles": [
+        "procurement_owner",
+        "supplier_quality"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "供应商质量部"
+      ],
+      "field_masking": {
+        "observer": [
+          "supplier_score",
+          "quality_ppm"
+        ]
+      },
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-024",
+      "project_id": "PRJ-TENDER-001",
+      "title": "验收范围与评测口径确认会",
+      "source_type": "meeting_minutes",
+      "source_path": "00_原始证据/24_src_tender_024.txt",
+      "occurred_at": "2026-09-30T14:00:00+08:00",
+      "recorded_at": "2026-09-30T17:00:00+08:00",
+      "valid_from": "2026-09-30T14:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "ACCEPTANCE-SCOPE-V1",
+      "security_label": "internal",
+      "acl_id": "ACL-PUBLIC",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {},
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-025",
+      "project_id": "PRJ-TENDER-001",
+      "title": "供应商四诉讼与交付风险核验",
+      "source_type": "customer_attachment",
+      "source_path": "00_原始证据/25_src_tender_025.txt",
+      "occurred_at": "2026-09-23T09:00:00+08:00",
+      "recorded_at": "2026-09-23T15:00:00+08:00",
+      "valid_from": "2026-09-23T15:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "SUP-BAT-004-RISK-V1",
+      "security_label": "restricted",
+      "acl_id": "ACL-QUALITY",
+      "allowed_roles": [
+        "procurement_owner",
+        "supplier_quality"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "供应商质量部"
+      ],
+      "field_masking": {
+        "observer": [
+          "supplier_score",
+          "quality_ppm"
+        ]
+      },
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    },
+    {
+      "source_id": "SRC-TENDER-026",
+      "project_id": "PRJ-TENDER-001",
+      "title": "供应商五信用与交付调查",
+      "source_type": "customer_attachment",
+      "source_path": "00_原始证据/26_src_tender_026.txt",
+      "occurred_at": "2026-09-23T10:00:00+08:00",
+      "recorded_at": "2026-09-23T16:00:00+08:00",
+      "valid_from": "2026-09-23T16:00:00+08:00",
+      "valid_to": null,
+      "supersedes": [],
+      "source_version": "SUP-BAT-005-RISK-V1",
+      "security_label": "restricted",
+      "acl_id": "ACL-QUALITY",
+      "allowed_roles": [
+        "procurement_owner",
+        "supplier_quality"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "供应商质量部"
+      ],
+      "field_masking": {
+        "observer": [
+          "supplier_score",
+          "quality_ppm"
+        ]
+      },
+      "permission_version": "PV-003",
+      "data_classification": "synthetic_demo"
+    }
+  ]
+}
+

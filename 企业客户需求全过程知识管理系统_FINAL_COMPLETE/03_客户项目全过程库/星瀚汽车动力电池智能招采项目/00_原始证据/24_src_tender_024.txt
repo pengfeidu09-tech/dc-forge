@@ -1,0 +1,12 @@
+# 验收范围与评测口径确认会
+
+来源编号：SRC-TENDER-024
+项目编号：PRJ-TENDER-001
+记录类型：meeting_minutes
+发生时间：2026-09-30T14:00:00+08:00
+记录时间：2026-09-30T17:00:00+08:00
+
+客户确认验收集必须覆盖四类结果：正常回答、失败或冲突识别、证据不足、权限拒绝。机器评测题需保存query、project_id、user_context、as_of、expected_facts、expected_source_ids、forbidden_claims、expected_refusal、expected_masked_fields和grading_rules。文档审查至少包含4份无问题控制样本、6份故意缺陷样本。PPT中的60%、50%、95%、6倍和86%只能标成source_claim，不得作为当前项目成果。
+
+证据使用说明：本材料属于 synthetic_demo，仅用于智能招采系统的需求理解、引用追溯、权限、时间点和审查能力测试。文中企业、人员、金额、资质、风险和结果均为模拟信息；晚于2026-08-14的事项属于 simulated_future_scenario，不代表真实事件或已实现成果。抽取时必须区分原话、人工确认和内部分析，不得用后续版本覆盖历史时间点。
+

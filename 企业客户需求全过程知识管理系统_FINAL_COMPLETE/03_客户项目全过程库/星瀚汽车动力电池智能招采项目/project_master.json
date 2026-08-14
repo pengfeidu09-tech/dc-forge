@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0.0",
+  "data_classification": "synthetic_demo",
+  "timeline_classification": "simulated_future_scenario",
+  "is_real_business_result": false,
+  "disclaimer": "全部组织、人员、供应商、资质、报价、合同、履约、指标和风险为模拟；未来日期为剧本。",
+  "project_id": "PRJ-TENDER-001",
+  "project_name": "星瀚汽车2027款纯电平台动力电池智能招采项目",
+  "customer_id": "CUS-TENDER-001",
+  "customer_name": "星瀚汽车制造集团股份有限公司（模拟）",
+  "industry": "汽车制造",
+  "department": "集团采购中心",
+  "procurement_object": "2027款纯电平台磷酸铁锂动力电池包",
+  "annual_quantity": 12000,
+  "currency": "CNY",
+  "timezone": "Asia/Shanghai",
+  "procurement_stages": [
+    {
+      "code": "procurement_budget",
+      "name": "采购预算",
+      "status": "approved_simulation"
+    },
+    {
+      "code": "procurement_plan",
+      "name": "采购计划",
+      "status": "approved_simulation"
+    },
+    {
+      "code": "project_initiation",
+      "name": "采购立项",
+      "status": "approved_simulation"
+    },
+    {
+      "code": "procurement_scheme",
+      "name": "采购方案",
+      "status": "approved_simulation"
+    },
+    {
+      "code": "procurement_execution",
+      "name": "采购执行",
+      "status": "completed_simulation"
+    },
+    {
+      "code": "procurement_contract",
+      "name": "采购合同",
+      "status": "signed_simulation"
+    },
+    {
+      "code": "document_archive",
+      "name": "文件归档",
+      "status": "completed_simulation"
+    },
+    {
+      "code": "supplier_management",
+      "name": "供应商管理",
+      "status": "active_simulation"
+    },
+    {
+      "code": "statistics_analysis",
+      "name": "统计分析",
+      "status": "completed_simulation"
+    }
+  ],
+  "ai_acceptance_capabilities": [
+    "document_generation",
+    "document_review",
+    "policy_qa",
+    "supplier_portrait",
+    "rag_evidence",
+    "permission_filtering",
+    "as_of_retrieval"
+  ],
+  "confirmed_requirement_version_id": "REQ-BAT-001-V3",
+  "golden_dataset_groups": [
+    "raw_evidence",
+    "structured_objects",
+    "rag_chunks",
+    "acl_temporal",
+    "document_review",
+    "supplier_portrait",
+    "eval_cases"
+  ],
+  "adversarial_isolation": true
+}
+

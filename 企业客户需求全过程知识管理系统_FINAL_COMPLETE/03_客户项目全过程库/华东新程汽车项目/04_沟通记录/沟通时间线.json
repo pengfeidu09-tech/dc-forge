@@ -1,0 +1,247 @@
+[
+  {
+    "event_id": "EVT-KM-001",
+    "date": "2026-08-18",
+    "event": "需求发现",
+    "summary": "首次沟通确认决策证据断裂和来源引用要求",
+    "source_ids": [
+      "MTG-001",
+      "WX-001"
+    ],
+    "related": [
+      "REQ-001-V1",
+      "DOC-CUSTOMER-001"
+    ],
+    "data_classification": "synthetic_demo",
+    "timeline_classification": "simulated_future_scenario"
+  },
+  {
+    "event_id": "EVT-KM-002",
+    "date": "2026-08-19",
+    "event": "数据范围",
+    "summary": "邮件确认首批脱敏资料与禁止采集范围",
+    "source_ids": [
+      "EMAIL-001"
+    ],
+    "related": [
+      "REQ-001-V1",
+      "DOC-REQ-001"
+    ],
+    "data_classification": "synthetic_demo",
+    "timeline_classification": "simulated_future_scenario"
+  },
+  {
+    "event_id": "EVT-KM-003",
+    "date": "2026-08-22",
+    "event": "业务调研",
+    "summary": "形成四类问题并确认REQ-001-V2",
+    "source_ids": [
+      "MTG-002",
+      "WX-003"
+    ],
+    "related": [
+      "REQ-001-V2",
+      "REQ-002-V1"
+    ],
+    "data_classification": "synthetic_demo",
+    "timeline_classification": "simulated_future_scenario"
+  },
+  {
+    "event_id": "EVT-KM-004",
+    "date": "2026-08-25",
+    "event": "架构基线",
+    "summary": "确认旁路架构、检索前权限和撤权验证",
+    "source_ids": [
+      "MTG-003",
+      "WX-002"
+    ],
+    "related": [
+      "REQ-003-V2",
+      "DOC-SPEC-001",
+      "DOC-SEC-001"
+    ],
+    "data_classification": "synthetic_demo",
+    "timeline_classification": "simulated_future_scenario"
+  },
+  {
+    "event_id": "EVT-KM-005",
+    "date": "2026-08-28",
+    "event": "方案共创",
+    "summary": "确认规则与模型分工、高风险人工复核",
+    "source_ids": [
+      "MTG-004",
+      "WX-004"
+    ],
+    "related": [
+      "REQ-002-V2",
+      "DOC-REQ-001"
+    ],
+    "data_classification": "synthetic_demo",
+    "timeline_classification": "simulated_future_scenario"
+  },
+  {
+    "event_id": "EVT-KM-006",
+    "date": "2026-09-05",
+    "event": "POC启动",
+    "summary": "冻结模拟数据集、问题集和阻断缺陷",
+    "source_ids": [
+      "MTG-005",
+      "WX-005",
+      "EMAIL-003"
+    ],
+    "related": [
+      "DOC-UAT-001",
+      "REQ-001-V2",
+      "REQ-002-V2",
+      "REQ-003-V2"
+    ],
+    "data_classification": "synthetic_demo",
+    "timeline_classification": "simulated_future_scenario"
+  },
+  {
+    "event_id": "EVT-KM-007",
+    "date": "2026-09-12",
+    "event": "POC复盘",
+    "summary": "记录版本引用和权限缓存缺陷并有条件通过",
+    "source_ids": [
+      "MTG-006",
+      "WX-006"
+    ],
+    "related": [
+      "DOC-SPEC-001",
+      "DOC-UAT-001"
+    ],
+    "data_classification": "synthetic_demo",
+    "timeline_classification": "simulated_future_scenario"
+  },
+  {
+    "event_id": "EVT-KM-008",
+    "date": "2026-09-18",
+    "event": "商务评审",
+    "summary": "明确分项报价、里程碑付款与变更机制",
+    "source_ids": [
+      "MTG-007",
+      "WX-007"
+    ],
+    "related": [
+      "DOC-TENDER-001",
+      "DOC-CONTRACT-001"
+    ],
+    "data_classification": "synthetic_demo",
+    "timeline_classification": "simulated_future_scenario"
+  },
+  {
+    "event_id": "EVT-KM-009",
+    "date": "2026-09-25",
+    "event": "招标答疑",
+    "summary": "统一模型、权限、验收、偏差和退出口径",
+    "source_ids": [
+      "MTG-008",
+      "WX-008",
+      "EMAIL-004"
+    ],
+    "related": [
+      "DOC-TENDER-001",
+      "REQ-003-V2"
+    ],
+    "data_classification": "synthetic_demo",
+    "timeline_classification": "simulated_future_scenario"
+  },
+  {
+    "event_id": "EVT-KM-010",
+    "date": "2026-10-08",
+    "event": "合同澄清",
+    "summary": "确认正式范围来源、数据权利与验收映射",
+    "source_ids": [
+      "MTG-009",
+      "WX-009"
+    ],
+    "related": [
+      "DOC-CONTRACT-001",
+      "DOC-UAT-001"
+    ],
+    "data_classification": "synthetic_demo",
+    "timeline_classification": "simulated_future_scenario"
+  },
+  {
+    "event_id": "EVT-KM-011",
+    "date": "2026-10-12",
+    "event": "合同附件确认",
+    "summary": "邮件冻结需求基线、规格和UAT附件版本",
+    "source_ids": [
+      "EMAIL-005"
+    ],
+    "related": [
+      "REQ-001-V2",
+      "REQ-002-V2",
+      "REQ-003-V2"
+    ],
+    "data_classification": "synthetic_demo",
+    "timeline_classification": "simulated_future_scenario"
+  },
+  {
+    "event_id": "EVT-KM-012",
+    "date": "2026-10-15",
+    "event": "项目启动",
+    "summary": "冻结治理、环境、数据入库和升级机制",
+    "source_ids": [
+      "MTG-010",
+      "WX-010"
+    ],
+    "related": [
+      "DOC-SEC-001",
+      "DOC-SPEC-001"
+    ],
+    "data_classification": "synthetic_demo",
+    "timeline_classification": "simulated_future_scenario"
+  },
+  {
+    "event_id": "EVT-KM-013",
+    "date": "2027-01-20",
+    "event": "UAT验收",
+    "summary": "记录文件名泄露缺陷修复及有条件通过",
+    "source_ids": [
+      "MTG-011",
+      "WX-011"
+    ],
+    "related": [
+      "DOC-UAT-001",
+      "REQ-001-V2",
+      "REQ-002-V2",
+      "REQ-003-V2"
+    ],
+    "data_classification": "synthetic_demo",
+    "timeline_classification": "simulated_future_scenario"
+  },
+  {
+    "event_id": "EVT-KM-014",
+    "date": "2027-01-21",
+    "event": "验收通知",
+    "summary": "发布模拟UAT结论和上线门禁",
+    "source_ids": [
+      "EMAIL-006"
+    ],
+    "related": [
+      "DOC-UAT-001"
+    ],
+    "data_classification": "synthetic_demo",
+    "timeline_classification": "simulated_future_scenario"
+  },
+  {
+    "event_id": "EVT-KM-015",
+    "date": "2027-02-05",
+    "event": "项目复盘",
+    "summary": "沉淀版本、权限、去重和诚实性规则",
+    "source_ids": [
+      "MTG-012",
+      "WX-012"
+    ],
+    "related": [
+      "DOC-REVIEW-001",
+      "DOC-SEC-001"
+    ],
+    "data_classification": "synthetic_demo",
+    "timeline_classification": "simulated_future_scenario"
+  }
+]
+

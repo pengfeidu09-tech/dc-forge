@@ -1,0 +1,187 @@
+{
+  "schema_version": "1.0.0",
+  "data_classification": "synthetic_demo",
+  "project_id": "PRJ-AUTO-001",
+  "products": [
+    {
+      "product_id": "PROD-AUTO-001",
+      "brand": "比亚迪（仅作模拟场景中的车型名称）",
+      "series": "秦PLUS EV",
+      "model_year": "2026模拟年款",
+      "model_name": "510km 卓越型（模拟配置口径）",
+      "manufacturer_suggested_price_cny": 159800,
+      "technical_parameters": {
+        "body_type": "紧凑型轿车",
+        "length_width_height_mm": "4765/1837/1515（模拟）",
+        "wheelbase_mm": 2718,
+        "energy_type": "纯电",
+        "cltc_range_km": 510,
+        "drive_type": "前置前驱",
+        "seat_count": 5,
+        "fast_charging": true
+      },
+      "configuration_summary": ["基础驾驶辅助", "自动空调", "倒车影像", "车联网", "厂家标准安全配置（模拟）"]
+    }
+  ],
+  "skus": [
+    {
+      "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+      "product_id": "PROD-AUTO-001",
+      "exterior_color": "白色",
+      "interior_color": "深色",
+      "configuration": "510km 卓越型（模拟）",
+      "required_documents": ["机动车销售统一发票", "合格证", "一致性证书", "保养手册"],
+      "warranty": "厂家标准质保（模拟）"
+    }
+  ],
+  "suppliers": [
+    {
+      "supplier_id": "SUP-AUTO-001",
+      "company_name": "申海新能源汽车销售有限公司（模拟）",
+      "contact": "张经理（模拟）",
+      "location": "上海",
+      "qualification_status": "approved_simulation",
+      "invoice_type": "13%增值税专用发票",
+      "after_sales": "厂家标准质保"
+    },
+    {
+      "supplier_id": "SUP-AUTO-002",
+      "company_name": "苏城汽车贸易有限公司（模拟）",
+      "contact": "王经理（模拟）",
+      "location": "苏州",
+      "qualification_status": "approved_simulation",
+      "invoice_type": "13%增值税专用发票",
+      "after_sales": "厂家标准质保"
+    },
+    {
+      "supplier_id": "SUP-AUTO-003",
+      "company_name": "东部汽车渠道服务有限公司（模拟）",
+      "contact": "陈经理（模拟）",
+      "location": "杭州",
+      "qualification_status": "approved_simulation",
+      "invoice_type": "13%增值税专用发票",
+      "after_sales": "厂家标准质保"
+    }
+  ],
+  "supplier_rfqs": [
+    {
+      "rfq_id": "RFQ-AUTO-001",
+      "requirement_version_id": "REQ-AUTO-001-V3",
+      "issued_at": "2026-08-18T14:00:00+08:00",
+      "response_due_at": "2026-08-20T18:00:00+08:00",
+      "supplier_ids": ["SUP-AUTO-001", "SUP-AUTO-002", "SUP-AUTO-003"],
+      "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+      "requested_quantity": 100,
+      "requested_delivery_schedule": ["30台不晚于2026-09-10", "30台不晚于2026-09-20", "40台不晚于2026-09-30"],
+      "requested_terms": ["含13%增值税", "逐车提供VIN和随车资料", "报价有效期不少于7天"]
+    }
+  ],
+  "supplier_quotes": [
+    {
+      "supplier_quote_id": "SQ-AUTO-001-V1",
+      "version": "V1",
+      "rfq_id": "RFQ-AUTO-001",
+      "supplier_id": "SUP-AUTO-001",
+      "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+      "available_quantity": 60,
+      "unit_price_cny": 133000,
+      "logistics_fee_cny": 0,
+      "tax_rate": 0.13,
+      "lead_time_days": 12,
+      "payment_terms": "40%订金，提车前付清",
+      "valid_until": "2026-08-27",
+      "inventory_location": "上海仓",
+      "vin_lock_supported": true,
+      "status": "superseded"
+    },
+    {
+      "supplier_quote_id": "SQ-AUTO-001-V2",
+      "version": "V2",
+      "rfq_id": "RFQ-AUTO-001",
+      "supplier_id": "SUP-AUTO-001",
+      "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+      "available_quantity": 60,
+      "unit_price_cny": 132000,
+      "logistics_fee_cny": 0,
+      "tax_rate": 0.13,
+      "lead_time_days": 10,
+      "payment_terms": "40%订金，提车前付清",
+      "valid_until": "2026-08-29",
+      "inventory_location": "上海仓",
+      "vin_lock_supported": true,
+      "status": "selected"
+    },
+    {
+      "supplier_quote_id": "SQ-AUTO-002-V1",
+      "version": "V1",
+      "rfq_id": "RFQ-AUTO-001",
+      "supplier_id": "SUP-AUTO-002",
+      "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+      "available_quantity": 40,
+      "unit_price_cny": 133500,
+      "logistics_fee_cny": 0,
+      "tax_rate": 0.13,
+      "lead_time_days": 8,
+      "payment_terms": "40%订金，提车前付清",
+      "valid_until": "2026-08-29",
+      "inventory_location": "苏州仓",
+      "vin_lock_supported": true,
+      "status": "selected"
+    },
+    {
+      "supplier_quote_id": "SQ-AUTO-003-V1",
+      "version": "V1",
+      "rfq_id": "RFQ-AUTO-001",
+      "supplier_id": "SUP-AUTO-003",
+      "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+      "available_quantity": 100,
+      "unit_price_cny": 134200,
+      "logistics_fee_cny": 80000,
+      "tax_rate": 0.13,
+      "lead_time_days": 25,
+      "payment_terms": "100%预付",
+      "valid_until": "2026-08-27",
+      "inventory_location": "杭州及周边调拨",
+      "vin_lock_supported": false,
+      "status": "not_selected"
+    }
+  ],
+  "comparison": {
+    "comparison_id": "CMP-AUTO-001",
+    "criteria": ["综合成本", "可供数量", "首批交期", "付款条件", "VIN锁定", "供应风险"],
+    "conclusion": "供应商1成本和上海首批交付能力更优但仅能提供60台；供应商2可补足苏州40台；供应商3交期和付款条件不满足。",
+    "risk_notes": ["双供应商增加资料一致性管理工作", "供应商1库存需在订金到账后锁定"]
+  },
+  "procurement_plans": [
+    {
+      "procurement_plan_id": "PP-AUTO-001",
+      "requirement_version_id": "REQ-AUTO-001-V3",
+      "comparison_id": "CMP-AUTO-001",
+      "status": "approved",
+      "approved_at": "2026-08-21T11:00:00+08:00",
+      "allocations": [
+        {
+          "supplier_id": "SUP-AUTO-001",
+          "supplier_quote_id": "SQ-AUTO-001-V2",
+          "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+          "quantity": 60,
+          "unit_price_cny": 132000,
+          "subtotal_cny": 7920000,
+          "planned_destination": "上海"
+        },
+        {
+          "supplier_id": "SUP-AUTO-002",
+          "supplier_quote_id": "SQ-AUTO-002-V1",
+          "sku_id": "SKU-AUTO-QIN510-WHITE-DARK",
+          "quantity": 40,
+          "unit_price_cny": 133500,
+          "subtotal_cny": 5340000,
+          "planned_destination": "苏州"
+        }
+      ],
+      "total_quantity": 100,
+      "vehicle_purchase_cost_cny": 13260000,
+      "mitigations": ["分别锁定VIN", "统一随车资料清单", "三批交付前逐批核验"]
+    }
+  ]
+}

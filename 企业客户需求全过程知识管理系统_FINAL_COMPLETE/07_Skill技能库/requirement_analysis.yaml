@@ -1,0 +1,87 @@
+{
+  "name": "requirement_analysis",
+  "version": "2.0.0",
+  "description": "从客户沟通和正式资料中提取需求、缺口、版本变化与确认基线，生成可追溯的需求分析。",
+  "applicable_scenarios": [
+    "首次需求发现",
+    "需求澄清",
+    "范围变更影响分析"
+  ],
+  "inputs": [
+    {
+      "name": "project_id",
+      "required": true
+    },
+    {
+      "name": "customer_context",
+      "required": true
+    },
+    {
+      "name": "communications",
+      "required": true
+    },
+    {
+      "name": "documents",
+      "required": true
+    },
+    {
+      "name": "current_requirement_versions",
+      "required": true
+    }
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "action": "验证调用者对项目和来源资料的访问权限"
+    },
+    {
+      "step": 2,
+      "action": "区分客户原话、内部理解、已确认事实和待确认项"
+    },
+    {
+      "step": 3,
+      "action": "按数量、预算、时间、技术、商务、合规与验收维度结构化"
+    },
+    {
+      "step": 4,
+      "action": "比较现有版本并生成变更原因和影响范围"
+    },
+    {
+      "step": 5,
+      "action": "为每项结论附来源并把未确认内容列为问题"
+    }
+  ],
+  "evidence_requirements": [
+    "每条需求至少关联一个source_id",
+    "确认基线必须有人类确认记录",
+    "证据冲突时同时展示冲突版本"
+  ],
+  "guardrails": [
+    "不得自行确认需求基线",
+    "不得用常识填补预算、数量或日期",
+    "模拟信息必须保留synthetic_demo标识"
+  ],
+  "outputs": [
+    {
+      "name": "requirement_summary",
+      "required": true
+    },
+    {
+      "name": "structured_requirements",
+      "required": true
+    },
+    {
+      "name": "open_questions",
+      "required": true
+    },
+    {
+      "name": "proposed_version_change",
+      "required": true
+    },
+    {
+      "name": "evidence",
+      "required": true
+    }
+  ]
+}
+

@@ -1,0 +1,100 @@
+{
+  "name": "document_generation",
+  "version": "2.0.0",
+  "description": "基于已确认对象和证据生成需求、纪要、方案、合同附件或复盘草稿，并保留版本与缺口。",
+  "applicable_scenarios": [
+    "生成采购需求书草案",
+    "生成会议纪要",
+    "生成方案或验收报告",
+    "生成项目复盘"
+  ],
+  "inputs": [
+    {
+      "name": "project_id",
+      "required": true
+    },
+    {
+      "name": "document_type",
+      "required": true
+    },
+    {
+      "name": "confirmed_objects",
+      "required": true
+    },
+    {
+      "name": "source_documents",
+      "required": true
+    },
+    {
+      "name": "template",
+      "required": true
+    },
+    {
+      "name": "audience",
+      "required": true
+    }
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "action": "校验模板、权限和文档类型"
+    },
+    {
+      "step": 2,
+      "action": "只读取已授权且版本明确的来源"
+    },
+    {
+      "step": 3,
+      "action": "按文档结构生成章节和关联ID"
+    },
+    {
+      "step": 4,
+      "action": "对金额、日期、结论和指标执行证据校验"
+    },
+    {
+      "step": 5,
+      "action": "把缺失信息保留为待确认项"
+    },
+    {
+      "step": 6,
+      "action": "输出草稿、引用和版本建议供人工批准"
+    }
+  ],
+  "evidence_requirements": [
+    "事实字段至少一个可靠来源",
+    "关键结论引用正式决定或确认基线",
+    "指标附分母、时间和数据性质"
+  ],
+  "guardrails": [
+    "不得伪造签署、审批或验收",
+    "不得把草稿标记为正式文件",
+    "不得用模板默认值填充未知业务事实"
+  ],
+  "outputs": [
+    {
+      "name": "document_draft",
+      "required": true
+    },
+    {
+      "name": "metadata",
+      "required": true
+    },
+    {
+      "name": "citations",
+      "required": true
+    },
+    {
+      "name": "open_items",
+      "required": true
+    },
+    {
+      "name": "validation_warnings",
+      "required": true
+    },
+    {
+      "name": "proposed_version",
+      "required": true
+    }
+  ]
+}
+

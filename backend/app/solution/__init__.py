@@ -18,11 +18,19 @@
 
 from backend.app.solution.agent import AgentRequest, AgentResponse, run_solution_agent
 from backend.app.solution.capabilities import CapabilityCapsule, load_capabilities
+from backend.app.solution.chat_agent import (
+    BusinessStateSnapshot,
+    ChatAgentRequest,
+    ChatAgentResponse,
+    ChatTurn,
+    run_chat_agent,
+)
 from backend.app.solution.constraints import (
     ConstraintCheck,
     ConstraintValidationResult,
     validate_constraints,
 )
+from backend.app.solution.feishu_bot import FeishuBotConfig, FeishuBotService
 from backend.app.solution.retriever import retrieve_components
 from backend.app.solution.reviewer import (
     ReviewDimension,
@@ -46,4 +54,11 @@ __all__ = [
     "AgentRequest",
     "AgentResponse",
     "run_solution_agent",
+    "ChatTurn",
+    "BusinessStateSnapshot",
+    "ChatAgentRequest",
+    "ChatAgentResponse",
+    "run_chat_agent",
+    "FeishuBotConfig",
+    "FeishuBotService",
 ]

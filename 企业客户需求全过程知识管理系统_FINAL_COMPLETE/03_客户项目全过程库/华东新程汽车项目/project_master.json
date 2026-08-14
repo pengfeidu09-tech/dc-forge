@@ -1,0 +1,46 @@
+{
+  "schema_version": "2.0.0",
+  "data_classification": "synthetic_demo",
+  "timeline_classification": "simulated_future_scenario",
+  "is_real_business_result": false,
+  "disclaimer": "华东新程、人员、项目过程、金额、指标和结论均为模拟演示数据；2026-08-14之后的事件属于未来剧本，不表示已经发生。",
+  "project_id": "PRJ-KM-001",
+  "project_name": "汽车采购全过程知识管理项目",
+  "customer_id": "CUS-KM-001",
+  "customer_name": "华东新程汽车股份有限公司（模拟）",
+  "project_type": "采购知识管理软件建设",
+  "project_status": "future_scenario_completed",
+  "object_index": {
+    "requirements": ["REQ-001", "REQ-002", "REQ-003"],
+    "meetings": ["MTG-001", "MTG-002", "MTG-003", "MTG-004", "MTG-005", "MTG-006", "MTG-007", "MTG-008", "MTG-009", "MTG-010", "MTG-011", "MTG-012"],
+    "documents": ["DOC-REQ-001", "DOC-SPEC-001", "DOC-SUP-001", "DOC-TENDER-001", "DOC-CONTRACT-001", "DOC-UAT-001", "DOC-REVIEW-001", "DOC-SEC-001"],
+    "communication_channels": ["wechat", "email"]
+  },
+  "scope": {
+    "in_scope": ["采购项目知识关联", "授权检索与来源引用", "招标文件辅助审查", "会议决策和行动项提取", "项目复盘与案例复用"],
+    "out_of_scope": ["替换SRM交易流程", "自动决定供应商中标", "绕过人工审批签署合同", "使用未经授权的个人聊天数据"]
+  },
+  "milestones": [
+    {"meeting_id": "MTG-001", "name": "首次需求沟通", "date": "2026-08-18", "stage": "discovery", "primary_requirement_ids": ["REQ-001"]},
+    {"meeting_id": "MTG-002", "name": "业务调研", "date": "2026-08-22", "stage": "discovery", "primary_requirement_ids": ["REQ-001", "REQ-002"]},
+    {"meeting_id": "MTG-003", "name": "IT架构评审", "date": "2026-08-25", "stage": "architecture", "primary_requirement_ids": ["REQ-003"]},
+    {"meeting_id": "MTG-004", "name": "方案共创", "date": "2026-08-28", "stage": "solution", "primary_requirement_ids": ["REQ-001", "REQ-002", "REQ-003"]},
+    {"meeting_id": "MTG-005", "name": "POC启动", "date": "2026-09-05", "stage": "poc", "primary_requirement_ids": ["REQ-001", "REQ-002"]},
+    {"meeting_id": "MTG-006", "name": "POC复盘", "date": "2026-09-12", "stage": "poc", "primary_requirement_ids": ["REQ-001", "REQ-002", "REQ-003"]},
+    {"meeting_id": "MTG-007", "name": "商务评审", "date": "2026-09-18", "stage": "commercial", "primary_requirement_ids": ["REQ-001", "REQ-002", "REQ-003"]},
+    {"meeting_id": "MTG-008", "name": "招标答疑", "date": "2026-09-25", "stage": "tender", "primary_requirement_ids": ["REQ-001", "REQ-002", "REQ-003"]},
+    {"meeting_id": "MTG-009", "name": "合同澄清", "date": "2026-10-08", "stage": "contract", "primary_requirement_ids": ["REQ-001", "REQ-002", "REQ-003"]},
+    {"meeting_id": "MTG-010", "name": "项目启动", "date": "2026-10-15", "stage": "delivery", "primary_requirement_ids": ["REQ-001", "REQ-002", "REQ-003"]},
+    {"meeting_id": "MTG-011", "name": "UAT验收", "date": "2027-01-20", "stage": "acceptance", "primary_requirement_ids": ["REQ-001", "REQ-002", "REQ-003"]},
+    {"meeting_id": "MTG-012", "name": "项目复盘", "date": "2027-02-05", "stage": "review", "primary_requirement_ids": ["REQ-001", "REQ-002", "REQ-003"]}
+  ],
+  "dataset_files": [
+    "01_客户画像/company_profile.md",
+    "02_需求阶段/requirements.json",
+    "03_会议记录/MTG-001_首次需求沟通.md 至 MTG-012_项目复盘.md",
+    "04_沟通记录/企业微信项目群.json",
+    "04_沟通记录/邮件往来.md",
+    "04_沟通记录/沟通时间线.json",
+    "05_业务文档/*.md"
+  ]
+}

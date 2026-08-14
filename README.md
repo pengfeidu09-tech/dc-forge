@@ -37,7 +37,9 @@ ProcessSpec → SolutionBundle → RunReport
 | **工具调用轨迹** | 每次 Agent 执行记录 `AgentToolCall`，含步骤、工具名、状态和摘要 |
 | **跨场景自适应** | 7 种场景识别（incident_response / fraud_risk / identity_account / dispute_investigation / customer_service / procurement_exception / generic） |
 | **human_gate 人工审批语义** | human-approval 节点统一 `human_gate=true`，gate_reason 按场景生成 |
-| **FastAPI 服务接口** | 5 个 RESTful 端点，支持 Swagger 文档 |
+| **企业招采可视化门户** | 三项目可浏览，完整展示需求版本、采购主链、供应商风险、文档审查、方案和AI助手 |
+| **MCP 服务** | stdio与HTTP JSON-RPC，11个受ACL和as_of约束的只读工具 |
+| **FastAPI 服务接口** | 统一托管门户、企业知识API、方案接口、AI机器人和飞书事件 |
 
 ## 系统架构
 
@@ -58,7 +60,7 @@ flowchart LR
     RT --> RP[RunReport<br/>运行报告]
 ```
 
-> **注**：Runtime 模块和前端界面当前为规划阶段，尚未实现。Solution 模块已完整交付。
+> **注**：企业招采门户、知识API和MCP服务已经实现；Runtime仍是独立的后续执行模块。门户中的项目、金额、评分和未来事件均为模拟验收数据，不是实际经营成果。
 
 ## 快速开始
 
@@ -89,13 +91,36 @@ pip install -r requirements.txt
 ### 启动 API 服务
 
 ```bash
-.venv/Scripts/python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+# macOS / Linux
+PYTHONPATH=. .venv/bin/python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+
+# Windows PowerShell
+$env:PYTHONPATH = "."
+.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
 ```
 
 启动后访问：
 
+- 企业招采门户：http://127.0.0.1:8000/
 - Swagger 文档：http://127.0.0.1:8000/docs
 - 健康检查：http://127.0.0.1:8000/health
+
+首次启动门户前构建前端：
+
+```bash
+cd frontend
+npm ci
+npm run build
+cd ..
+```
+
+MCP stdio服务：
+
+```bash
+PYTHONPATH=. .venv/bin/python -m backend.app.solution.mcp_server
+```
+
+详细说明见 [docs/enterprise-portal-mcp.md](docs/enterprise-portal-mcp.md)。
 
 ### 配置 Solution Agent（可选）
 

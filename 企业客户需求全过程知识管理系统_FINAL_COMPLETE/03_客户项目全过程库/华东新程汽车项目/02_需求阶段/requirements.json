@@ -1,0 +1,121 @@
+{
+  "schema_version": "2.0.0",
+  "data_classification": "synthetic_demo",
+  "timeline_classification": "simulated_future_scenario",
+  "project_id": "PRJ-KM-001",
+  "requirements": [
+    {
+      "requirement_id": "REQ-001",
+      "name": "采购全过程知识关联与可信检索",
+      "business_problem": "历史采购资料分散在SRM、共享盘、邮件和个人聊天中，新项目难以还原需求背景、供应商选择原因和决策依据。",
+      "owner": "陈敏（甲方采购数字化负责人，模拟）",
+      "priority": "P0",
+      "source_ids": ["WX-001", "EMAIL-001", "MTG-001", "DOC-REQ-001"],
+      "dependencies": ["REQ-003"],
+      "acceptance_criteria": [
+        "可按项目、物料、供应商、需求和时间检索授权范围内的资料",
+        "回答同时返回来源文档、来源段落、文档版本和更新时间",
+        "至少覆盖需求、招标、评审、合同、验收和复盘六类文档",
+        "无法找到可靠证据时明确返回证据不足，不生成确定性结论"
+      ],
+      "versions": [
+        {
+          "requirement_version_id": "REQ-001-V1",
+          "version": "V1",
+          "created_at": "2026-08-18T11:30:00+08:00",
+          "change_reason": "首次需求沟通形成原始记录",
+          "scope": ["统一搜索历史采购文档", "按关键词返回相关内容"],
+          "confirmed_baseline": false,
+          "status": "superseded"
+        },
+        {
+          "requirement_version_id": "REQ-001-V2",
+          "version": "V2",
+          "created_at": "2026-08-22T17:00:00+08:00",
+          "change_reason": "业务调研发现仅做全文搜索无法还原决策链",
+          "scope": ["以项目为中心关联需求、会议、供应商评审和复盘", "RAG回答返回来源", "记录需求与文档版本"],
+          "confirmed_baseline": true,
+          "confirmed_at": "2026-08-22T17:00:00+08:00",
+          "status": "current_baseline"
+        }
+      ]
+    },
+    {
+      "requirement_id": "REQ-002",
+      "name": "招标文件智能审查与人工复核",
+      "business_problem": "招标文件条款多且跨专业，采购人员依赖少数专家检查资质、交期、付款、违约和技术偏差，审查过程缺少统一依据。",
+      "owner": "王磊（甲方战略采购经理，模拟）",
+      "priority": "P0",
+      "source_ids": ["MTG-002", "MTG-004", "EMAIL-003", "DOC-TENDER-001"],
+      "dependencies": ["REQ-001", "REQ-003"],
+      "acceptance_criteria": [
+        "按规则清单识别资格条件、商务条款、技术参数和格式完整性问题",
+        "每个问题返回原文位置、命中规则、风险等级和建议处理动作",
+        "高风险问题必须进入人工确认，系统不得自动作出废标结论",
+        "规则版本、模型版本、人工修改和最终结论均留存审计记录"
+      ],
+      "versions": [
+        {
+          "requirement_version_id": "REQ-002-V1",
+          "version": "V1",
+          "created_at": "2026-08-19T16:00:00+08:00",
+          "change_reason": "业务访谈提出自动发现招标文件问题",
+          "scope": ["识别缺失字段", "提示明显冲突"],
+          "confirmed_baseline": false,
+          "status": "superseded"
+        },
+        {
+          "requirement_version_id": "REQ-002-V2",
+          "version": "V2",
+          "created_at": "2026-08-28T16:30:00+08:00",
+          "change_reason": "方案共创建立规则审查与人工审批边界",
+          "scope": ["四类规则审查", "证据定位", "风险分级", "人工复核", "审计追踪"],
+          "confirmed_baseline": true,
+          "confirmed_at": "2026-08-28T16:30:00+08:00",
+          "status": "current_baseline"
+        }
+      ]
+    },
+    {
+      "requirement_id": "REQ-003",
+      "name": "权限继承、数据隔离与审计追踪",
+      "business_problem": "采购文件包含价格、供应商评价和合同条款，不同事业部与角色的可见范围不同，AI检索不能绕过原系统权限。",
+      "owner": "李超（甲方IT架构师，模拟）",
+      "priority": "P0",
+      "source_ids": ["WX-002", "MTG-003", "EMAIL-002", "DOC-SEC-001"],
+      "dependencies": [],
+      "acceptance_criteria": [
+        "检索前按用户、部门、项目和文档密级执行权限过滤",
+        "权限来源可追溯到SRM、文档平台或项目成员配置，不维护隐式超级权限",
+        "查询、命中文档、生成回答、导出和人工修改均形成审计日志",
+        "权限变更后索引访问控制在约定同步窗口内生效，并可执行撤权验证"
+      ],
+      "versions": [
+        {
+          "requirement_version_id": "REQ-003-V1",
+          "version": "V1",
+          "created_at": "2026-08-20T10:00:00+08:00",
+          "change_reason": "首次提出部门数据隔离",
+          "scope": ["按部门隔离文档"],
+          "confirmed_baseline": false,
+          "status": "superseded"
+        },
+        {
+          "requirement_version_id": "REQ-003-V2",
+          "version": "V2",
+          "created_at": "2026-08-25T17:00:00+08:00",
+          "change_reason": "架构评审补充权限继承、撤权和全过程审计",
+          "scope": ["原系统权限继承", "检索前过滤", "撤权同步", "操作审计", "敏感字段脱敏"],
+          "confirmed_baseline": true,
+          "confirmed_at": "2026-08-25T17:00:00+08:00",
+          "status": "current_baseline"
+        }
+      ]
+    }
+  ],
+  "change_control": {
+    "rule": "需求变更必须记录提出人、原因、影响范围和新版本；已确认基线不得原地覆盖。",
+    "approvers": ["业务负责人（模拟）", "IT负责人（模拟）", "乙方项目经理（模拟）"],
+    "downstream_links": ["会议决策", "技术规格", "招标文件", "合同范围", "UAT用例"]
+  }
+}

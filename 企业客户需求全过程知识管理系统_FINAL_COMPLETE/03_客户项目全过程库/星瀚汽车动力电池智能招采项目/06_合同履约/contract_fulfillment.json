@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0.0",
+  "data_classification": "synthetic_demo",
+  "project_id": "PRJ-TENDER-001",
+  "contracts": [
+    {
+      "contract_id": "CON-BAT-001",
+      "supplier_id": "SUP-BAT-001",
+      "requirement_version_id": "REQ-BAT-001-V3",
+      "quantity": 8400,
+      "unit_price_cny": 102800,
+      "total_amount_cny": 863520000,
+      "signed_at": "2026-10-20T15:00:00+08:00",
+      "status": "active_simulation"
+    },
+    {
+      "contract_id": "CON-BAT-002",
+      "supplier_id": "SUP-BAT-002",
+      "requirement_version_id": "REQ-BAT-001-V3",
+      "quantity": 3600,
+      "unit_price_cny": 101900,
+      "total_amount_cny": 366360000,
+      "signed_at": "2026-10-20T16:00:00+08:00",
+      "status": "active_simulation"
+    }
+  ],
+  "key_terms": {
+    "quality_ppm_target": 250,
+    "on_time_delivery_target": 0.97,
+    "traceability_retention_years": 15,
+    "capacity_reservation": "月度滚动预测+季度锁量",
+    "breach": "延迟、质量批次和追溯缺失分别设整改与违约机制"
+  },
+  "fulfillment_snapshots": [
+    {
+      "period": "2027-Q1",
+      "supplier_id": "SUP-BAT-001",
+      "planned": 1050,
+      "delivered": 1040,
+      "on_time_rate": 0.981,
+      "quality_ppm": 210,
+      "open_corrective_actions": 1
+    },
+    {
+      "period": "2027-Q1",
+      "supplier_id": "SUP-BAT-002",
+      "planned": 450,
+      "delivered": 450,
+      "on_time_rate": 0.973,
+      "quality_ppm": 260,
+      "open_corrective_actions": 1
+    }
+  ],
+  "exceptions": [
+    {
+      "exception_id": "EXC-BAT-001",
+      "supplier_id": "SUP-BAT-002",
+      "type": "quality",
+      "description": "武汉批次密封圈装配偏差导致抽检气密失败（模拟）",
+      "status": "closed_simulation",
+      "corrective_action_id": "CAPA-BAT-002",
+      "closed_at": "2027-04-05T17:00:00+08:00"
+    }
+  ],
+  "financial_summary": {
+    "contracted_cny": 1229880000,
+    "invoiced_cny": 307470000,
+    "paid_cny": 215229000,
+    "outstanding_cny": 92241000,
+    "as_of": "2027-04-15T23:59:59+08:00",
+    "note": "模拟季度履约快照，不代表真实结算。"
+  }
+}
+

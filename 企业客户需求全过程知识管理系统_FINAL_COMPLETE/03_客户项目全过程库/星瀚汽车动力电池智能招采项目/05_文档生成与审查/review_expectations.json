@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.0.0",
+  "project_id": "PRJ-TENDER-001",
+  "rule_set_id": "RULESET-TENDER-002",
+  "data_classification": "synthetic_demo",
+  "samples": [
+    {
+      "sample_id": "CONTROL-01",
+      "sample_type": "control",
+      "document_type": "bid_document",
+      "source_path": "05_文档生成与审查/samples/control-01.txt",
+      "expected_findings": []
+    },
+    {
+      "sample_id": "CONTROL-02",
+      "sample_type": "control",
+      "document_type": "bid_response",
+      "source_path": "05_文档生成与审查/samples/control-02.txt",
+      "expected_findings": []
+    },
+    {
+      "sample_id": "CONTROL-03",
+      "sample_type": "control",
+      "document_type": "contract",
+      "source_path": "05_文档生成与审查/samples/control-03.txt",
+      "expected_findings": []
+    },
+    {
+      "sample_id": "CONTROL-04",
+      "sample_type": "control",
+      "document_type": "review_report",
+      "source_path": "05_文档生成与审查/samples/control-04.txt",
+      "expected_findings": []
+    },
+    {
+      "sample_id": "DEFECT-01",
+      "sample_type": "defective",
+      "document_type": "bid_document",
+      "source_path": "05_文档生成与审查/samples/defect-01.txt",
+      "expected_findings": [
+        {
+          "finding_id": "F-DEFECT-01-RULE-GEO-001",
+          "rule_id": "RULE-GEO-001",
+          "locator": "资格条款：必须在安徽省注册且控股股东必须为国有企业",
+          "severity": "high",
+          "human_outcome": "confirmed",
+          "issue_type": "unrelated_geographic_restriction"
+        }
+      ]
+    },
+    {
+      "sample_id": "DEFECT-02",
+      "sample_type": "defective",
+      "document_type": "bid_response",
+      "source_path": "05_文档生成与审查/samples/defect-02.txt",
+      "expected_findings": [
+        {
+          "finding_id": "F-DEFECT-02-RULE-CERT-002",
+          "rule_id": "RULE-CERT-002",
+          "locator": "ISO 14001证书有效至2026-07-31",
+          "severity": "critical",
+          "human_outcome": "confirmed",
+          "issue_type": "expired_certificate"
+        }
+      ]
+    },
+    {
+      "sample_id": "DEFECT-03",
+      "sample_type": "defective",
+      "document_type": "bid_document",
+      "source_path": "05_文档生成与审查/samples/defect-03.txt",
+      "expected_findings": [
+        {
+          "finding_id": "F-DEFECT-03-RULE-DATE-003",
+          "rule_id": "RULE-DATE-003",
+          "locator": "答疑会2026-09-22；开标2026-09-19",
+          "severity": "high",
+          "human_outcome": "confirmed",
+          "issue_type": "timeline_conflict"
+        }
+      ]
+    },
+    {
+      "sample_id": "DEFECT-04",
+      "sample_type": "defective",
+      "document_type": "contract",
+      "source_path": "05_文档生成与审查/samples/defect-04.txt",
+      "expected_findings": [
+        {
+          "finding_id": "F-DEFECT-04-RULE-WARRANTY-004",
+          "rule_id": "RULE-WARRANTY-004",
+          "locator": "第十二条：质保5年或150,000公里",
+          "severity": "high",
+          "human_outcome": "confirmed",
+          "issue_type": "cross_document_inconsistency"
+        },
+        {
+          "finding_id": "F-DEFECT-04-RULE-PAYMENT-005",
+          "rule_id": "RULE-PAYMENT-005",
+          "locator": "第八条：签约后一次性支付100%",
+          "severity": "high",
+          "human_outcome": "confirmed",
+          "issue_type": "cross_document_inconsistency"
+        }
+      ]
+    },
+    {
+      "sample_id": "DEFECT-05",
+      "sample_type": "defective",
+      "document_type": "contract",
+      "source_path": "05_文档生成与审查/samples/defect-05.txt",
+      "expected_findings": [
+        {
+          "finding_id": "F-DEFECT-05-RULE-QUANTITY-006",
+          "rule_id": "RULE-QUANTITY-006",
+          "locator": "数量表：总量11,500套",
+          "severity": "critical",
+          "human_outcome": "confirmed",
+          "issue_type": "baseline_mismatch"
+        },
+        {
+          "finding_id": "F-DEFECT-05-RULE-TECH-007",
+          "rule_id": "RULE-TECH-007",
+          "locator": "技术规格表：72kWh、IP67",
+          "severity": "critical",
+          "human_outcome": "risk_adjusted",
+          "issue_type": "cross_document_inconsistency"
+        }
+      ]
+    },
+    {
+      "sample_id": "DEFECT-06",
+      "sample_type": "defective",
+      "document_type": "award_notice",
+      "source_path": "05_文档生成与审查/samples/defect-06.txt",
+      "expected_findings": [
+        {
+          "finding_id": "F-DEFECT-06-RULE-AUTO-008",
+          "rule_id": "RULE-AUTO-008",
+          "locator": "模型风险分高于80分由系统自动判废",
+          "severity": "critical",
+          "human_outcome": "confirmed",
+          "issue_type": "unauthorized_automation"
+        },
+        {
+          "finding_id": "F-DEFECT-06-RULE-BUDGET-012",
+          "rule_id": "RULE-BUDGET-012",
+          "locator": "合同总额1,260,000,000元",
+          "severity": "critical",
+          "human_outcome": "confirmed",
+          "issue_type": "budget_exceeded"
+        },
+        {
+          "finding_id": "F-DEFECT-06-RULE-APPROVAL-009",
+          "rule_id": "RULE-APPROVAL-009",
+          "locator": "未附重新审批记录",
+          "severity": "critical",
+          "human_outcome": "confirmed",
+          "issue_type": "approval_missing"
+        }
+      ]
+    }
+  ]
+}
+

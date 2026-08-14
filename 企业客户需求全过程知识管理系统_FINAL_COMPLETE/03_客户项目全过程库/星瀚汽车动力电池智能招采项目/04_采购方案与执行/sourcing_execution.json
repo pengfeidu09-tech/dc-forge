@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0.0",
+  "data_classification": "synthetic_demo",
+  "project_id": "PRJ-TENDER-001",
+  "requirement_version_id": "REQ-BAT-001-V3",
+  "procurement_scheme": {
+    "scheme_id": "SCHEME-TENDER-001",
+    "strategy": "双供应源，主供70%、备供30%，保留季度动态调整权",
+    "candidate_supplier_ids": [
+      "SUP-BAT-001",
+      "SUP-BAT-002",
+      "SUP-BAT-003",
+      "SUP-BAT-004",
+      "SUP-BAT-005"
+    ],
+    "shortlisted_supplier_ids": [
+      "SUP-BAT-001",
+      "SUP-BAT-002",
+      "SUP-BAT-004"
+    ],
+    "allocation_options": [
+      {
+        "option_id": "OPT-A",
+        "allocations": [
+          {
+            "supplier_id": "SUP-BAT-001",
+            "ratio": 0.7
+          },
+          {
+            "supplier_id": "SUP-BAT-002",
+            "ratio": 0.3
+          }
+        ],
+        "risk": "低至中",
+        "selected": true
+      },
+      {
+        "option_id": "OPT-B",
+        "allocations": [
+          {
+            "supplier_id": "SUP-BAT-001",
+            "ratio": 0.5
+          },
+          {
+            "supplier_id": "SUP-BAT-004",
+            "ratio": 0.5
+          }
+        ],
+        "risk": "中",
+        "selected": false
+      }
+    ],
+    "selected_reason": "供应商1质量和产能稳定，供应商2价格与武汉工厂距离较优；两者证书在合同期内有效。",
+    "human_approval_id": "APR-SCHEME-001",
+    "status": "approved_simulation"
+  },
+  "execution": {
+    "tender_id": "TENDER-BAT-001",
+    "tender_document_version": "TENDER-V3",
+    "rule_set_id": "RULESET-TENDER-002",
+    "issued_at": "2026-09-05T09:00:00+08:00",
+    "bid_due_at": "2026-09-20T17:00:00+08:00",
+    "bid_ids": [
+      "BID-SUP-001",
+      "BID-SUP-002",
+      "BID-SUP-003",
+      "BID-SUP-004"
+    ],
+    "review_workflow": [
+      "形式与资格规则审查",
+      "技术偏差专家复核",
+      "供应商画像与风险复核",
+      "商务谈判",
+      "采购委员会审批"
+    ],
+    "selected_suppliers": [
+      {
+        "supplier_id": "SUP-BAT-001",
+        "annual_quantity": 8400,
+        "unit_price_cny": 102800
+      },
+      {
+        "supplier_id": "SUP-BAT-002",
+        "annual_quantity": 3600,
+        "unit_price_cny": 101900
+      }
+    ],
+    "total_contract_value_cny": 1229880000,
+    "status": "completed_simulation"
+  },
+  "policy_qa_examples": [
+    {
+      "question": "超过10亿元的生产物料采购由谁审批？",
+      "answer": "集团采购委员会审议并由总裁办公会确认。",
+      "source_id": "SRC-TENDER-012"
+    },
+    {
+      "question": "高风险技术偏差能否自动判废？",
+      "answer": "不能，系统只提示并由技术、采购和法务按职责复核。",
+      "source_id": "SRC-TENDER-011"
+    }
+  ]
+}
+

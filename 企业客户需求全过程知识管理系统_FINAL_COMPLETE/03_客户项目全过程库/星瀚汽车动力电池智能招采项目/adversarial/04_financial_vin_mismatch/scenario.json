@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0.0",
+  "scenario_id": "ADV-TENDER-004",
+  "base_project_id": "PRJ-TENDER-001",
+  "data_classification": "synthetic_adversarial",
+  "isolated_from_golden": true,
+  "simulation_note": "本文件故意植入不一致，仅用于负向测试，不得并入黄金业务统计。",
+  "payload": {
+    "contract_amount_cny": 1229880000,
+    "invoice_amount_cny": 1230880000,
+    "payment_amount_cny": 1229380000,
+    "delivery_serials": [
+      "BATVIN000001",
+      "BATVIN000001"
+    ]
+  },
+  "expected_findings": [
+    {
+      "finding_id": "ADV-F-005",
+      "type": "contract_amount_mismatch",
+      "severity": "critical",
+      "evidence": [
+        "合同1,229,880,000元",
+        "发票1,230,880,000元",
+        "收款1,229,380,000元"
+      ],
+      "expected_action": "冻结结算并生成差异单"
+    },
+    {
+      "finding_id": "ADV-F-006",
+      "type": "duplicate_vin",
+      "severity": "critical",
+      "evidence": [
+        "BATVIN000001在两条交付记录重复"
+      ],
+      "expected_action": "隔离车辆记录并检查订单引用"
+    }
+  ]
+}
+

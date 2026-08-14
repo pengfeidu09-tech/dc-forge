@@ -1,0 +1,99 @@
+{
+  "name": "solution_recommendation",
+  "version": "2.0.0",
+  "description": "根据确认需求和可用资源形成多个可比较的客户解决方案，并说明覆盖、差距与取舍。",
+  "applicable_scenarios": [
+    "客户方案设计",
+    "采购组合包装",
+    "范围与能力匹配"
+  ],
+  "inputs": [
+    {
+      "name": "project_id",
+      "required": true
+    },
+    {
+      "name": "requirement_version_id",
+      "required": true
+    },
+    {
+      "name": "capabilities",
+      "required": true
+    },
+    {
+      "name": "procurement_options",
+      "required": true
+    },
+    {
+      "name": "constraints",
+      "required": true
+    },
+    {
+      "name": "historical_cases",
+      "required": true
+    }
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "action": "确认输入需求为当前或指定基线"
+    },
+    {
+      "step": 2,
+      "action": "建立需求到能力和资源的覆盖矩阵"
+    },
+    {
+      "step": 3,
+      "action": "形成至少一个可执行方案和必要备选"
+    },
+    {
+      "step": 4,
+      "action": "计算交期、成本、风险与服务边界"
+    },
+    {
+      "step": 5,
+      "action": "标记未满足需求和所需客户确认"
+    },
+    {
+      "step": 6,
+      "action": "输出带证据的比较建议"
+    }
+  ],
+  "evidence_requirements": [
+    "每个方案组件关联需求和能力来源",
+    "历史案例只作参考并说明适用差异",
+    "成本与交期引用相应报价或计划"
+  ],
+  "guardrails": [
+    "不得把推荐写成客户已接受",
+    "不得隐藏方案缺口或依赖",
+    "不得把模拟案例成果当作真实证明"
+  ],
+  "outputs": [
+    {
+      "name": "solution_options",
+      "required": true
+    },
+    {
+      "name": "coverage_matrix",
+      "required": true
+    },
+    {
+      "name": "tradeoffs",
+      "required": true
+    },
+    {
+      "name": "gaps",
+      "required": true
+    },
+    {
+      "name": "customer_questions",
+      "required": true
+    },
+    {
+      "name": "evidence",
+      "required": true
+    }
+  ]
+}
+

@@ -1,0 +1,205 @@
+{
+  "schema_version": "1.0.0",
+  "data_classification": "synthetic_demo",
+  "project_id": "PRJ-TENDER-001",
+  "roles": [
+    {
+      "role_id": "procurement_owner",
+      "name": "采购业务负责人",
+      "departments": [
+        "集团采购中心"
+      ]
+    },
+    {
+      "role_id": "legal_finance",
+      "name": "法务财务复核",
+      "departments": [
+        "法务部",
+        "财务部"
+      ]
+    },
+    {
+      "role_id": "supplier_quality",
+      "name": "供应商质量管理",
+      "departments": [
+        "供应商质量部"
+      ]
+    },
+    {
+      "role_id": "observer",
+      "name": "受限观察员",
+      "departments": [
+        "内审观察组"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "user_id": "user-procurement-owner",
+      "roles": [
+        "procurement_owner"
+      ],
+      "department": "集团采购中心",
+      "permission_version": "PV-003",
+      "status": "active"
+    },
+    {
+      "user_id": "user-legal-finance",
+      "roles": [
+        "legal_finance"
+      ],
+      "department": "法务部",
+      "permission_version": "PV-003",
+      "status": "active"
+    },
+    {
+      "user_id": "user-quality",
+      "roles": [
+        "supplier_quality"
+      ],
+      "department": "供应商质量部",
+      "permission_version": "PV-003",
+      "status": "active"
+    },
+    {
+      "user_id": "user-observer",
+      "roles": [
+        "observer"
+      ],
+      "department": "内审观察组",
+      "permission_version": "PV-003",
+      "status": "active"
+    },
+    {
+      "user_id": "user-quality-temp",
+      "roles": [
+        "supplier_quality"
+      ],
+      "department": "供应商质量部",
+      "permission_version": "PV-002",
+      "status": "revoked_after_2026-09-15"
+    }
+  ],
+  "acls": [
+    {
+      "acl_id": "ACL-PUBLIC",
+      "security_label": "internal",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance",
+        "supplier_quality",
+        "observer"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部",
+        "供应商质量部",
+        "内审观察组"
+      ],
+      "field_masking": {}
+    },
+    {
+      "acl_id": "ACL-PROCUREMENT",
+      "security_label": "restricted",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部"
+      ],
+      "field_masking": {
+        "observer": [
+          "unit_price_cny",
+          "supplier_score"
+        ]
+      }
+    },
+    {
+      "acl_id": "ACL-QUALITY",
+      "security_label": "restricted",
+      "allowed_roles": [
+        "procurement_owner",
+        "supplier_quality"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "供应商质量部"
+      ],
+      "field_masking": {
+        "observer": [
+          "supplier_score",
+          "quality_ppm"
+        ]
+      }
+    },
+    {
+      "acl_id": "ACL-STRICT",
+      "security_label": "strictly_restricted",
+      "allowed_roles": [
+        "procurement_owner",
+        "legal_finance"
+      ],
+      "allowed_departments": [
+        "集团采购中心",
+        "法务部",
+        "财务部"
+      ],
+      "field_masking": {
+        "legal_finance": [
+          "technical_secret"
+        ],
+        "observer": [
+          "unit_price_cny",
+          "supplier_score",
+          "technical_secret"
+        ]
+      }
+    }
+  ],
+  "revocation_events": [
+    {
+      "event_id": "REVOKE-001",
+      "user_id": "user-quality-temp",
+      "effective_at": "2026-09-15T00:00:00+08:00",
+      "old_permission_version": "PV-002",
+      "new_permission_version": "PV-003",
+      "affected_source_ids": [
+        "SRC-TENDER-017",
+        "SRC-TENDER-021",
+        "SRC-TENDER-023"
+      ],
+      "reason": "临时质量评审授权到期",
+      "verification_status": "passed_simulation"
+    }
+  ],
+  "masking_rules": [
+    {
+      "field": "unit_price_cny",
+      "mask": "***",
+      "roles_exempt": [
+        "procurement_owner",
+        "legal_finance"
+      ]
+    },
+    {
+      "field": "supplier_score",
+      "mask": "区间值",
+      "roles_exempt": [
+        "procurement_owner",
+        "supplier_quality"
+      ]
+    },
+    {
+      "field": "technical_secret",
+      "mask": "受限技术参数",
+      "roles_exempt": [
+        "procurement_owner"
+      ]
+    }
+  ]
+}
+

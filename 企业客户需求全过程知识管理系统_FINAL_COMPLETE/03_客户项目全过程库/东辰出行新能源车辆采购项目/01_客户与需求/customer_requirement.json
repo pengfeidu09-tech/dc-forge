@@ -1,0 +1,143 @@
+{
+  "schema_version": "1.0.0",
+  "data_classification": "synthetic_demo",
+  "project_id": "PRJ-AUTO-001",
+  "customer": {
+    "customer_id": "CUS-AUTO-001",
+    "company_name": "东辰出行服务有限公司（模拟）",
+    "unified_social_credit_code": "91310000FAKE000001",
+    "industry": "汽车租赁与出行服务",
+    "company_scale": "约1200名员工、运营车辆约6000台（模拟）",
+    "registered_location": "上海市浦东新区（模拟）",
+    "business_locations": ["上海", "苏州"],
+    "credit_rating": "A-（内部模拟评级）",
+    "qualification_review_status": "passed_simulation"
+  },
+  "contacts": [
+    {
+      "contact_id": "CON-AUTO-001",
+      "name": "林悦（模拟）",
+      "department": "战略采购部",
+      "title": "采购总监",
+      "phone": "13800000001（模拟）",
+      "email": "linyue@example.invalid",
+      "decision_role": "业务决策人"
+    },
+    {
+      "contact_id": "CON-AUTO-002",
+      "name": "周屹（模拟）",
+      "department": "运营管理部",
+      "title": "车队运营负责人",
+      "phone": "13800000002（模拟）",
+      "email": "zhouyi@example.invalid",
+      "decision_role": "使用与验收负责人"
+    },
+    {
+      "contact_id": "CON-AUTO-003",
+      "name": "许岚（模拟）",
+      "department": "财务部",
+      "title": "资金经理",
+      "phone": "13800000003（模拟）",
+      "email": "xulan@example.invalid",
+      "decision_role": "付款与账期影响人"
+    }
+  ],
+  "lead": {
+    "lead_id": "LEAD-AUTO-001",
+    "source": "老客户转介绍",
+    "received_at": "2026-08-13T09:30:00+08:00",
+    "owner": "销售经理赵航（模拟）",
+    "summary": "客户计划为上海和苏州运营网点补充100台新能源轿车。",
+    "status": "converted",
+    "converted_opportunity_id": "OPP-AUTO-001"
+  },
+  "opportunity": {
+    "opportunity_id": "OPP-AUTO-001",
+    "lead_id": "LEAD-AUTO-001",
+    "requirement_id": "REQ-AUTO-001",
+    "name": "东辰出行100台新能源运营车辆采购",
+    "stage": "won_simulation",
+    "estimated_amount_cny": 15000000,
+    "probability_at_creation": 0.45,
+    "created_at": "2026-08-13T14:00:00+08:00",
+    "won_at": "2026-08-29T16:00:00+08:00"
+  },
+  "requirement": {
+    "requirement_id": "REQ-AUTO-001",
+    "title": "100台新能源运营轿车采购需求",
+    "customer_id": "CUS-AUTO-001",
+    "source_lead_id": "LEAD-AUTO-001",
+    "business_reason": "补充租赁运营车辆并替换部分高里程燃油车（模拟）。",
+    "source_channel": "销售拜访与客户RFQ",
+    "use_scenarios": ["长租", "企业员工用车", "网约运营储备"],
+    "priority": ["交期优先", "总成本优先", "售后可追溯"],
+    "decision_conditions": ["落地预算", "首批交付能力", "续航", "账期", "售后覆盖"],
+    "competition": ["供应商甲（模拟）", "供应商乙（模拟）"],
+    "source_documents": [
+      {"document_id": "DOC-AUTO-RFQ-001", "name": "新能源运营车辆采购RFQ（模拟）", "document_type": "RFQ"},
+      {"document_id": "DOC-AUTO-ATT-001", "name": "上海苏州交付地址清单（模拟）", "document_type": "attachment"}
+    ],
+    "versions": [
+      {
+        "requirement_version_id": "REQ-AUTO-001-V1",
+        "version": "V1",
+        "created_at": "2026-08-13T10:00:00+08:00",
+        "created_by": "销售经理赵航（模拟）",
+        "change_reason": "记录客户原始口头需求",
+        "quantity": 100,
+        "vehicle_type": "纯电轿车",
+        "energy_type": "纯电",
+        "target_models": ["比亚迪秦PLUS EV或同级车型"],
+        "technical_constraints": {"cltc_range_km_min": 450, "seats": 5},
+        "budget": {"unit_landed_price_cny_max": 150000, "total_budget_cny_max": 15000000},
+        "delivery_locations": ["上海", "苏州"],
+        "expected_final_delivery_date": "2026-09-30",
+        "special_requirements": ["厂家标准质保", "含运输"],
+        "confirmed_baseline": false,
+        "status": "superseded"
+      },
+      {
+        "requirement_version_id": "REQ-AUTO-001-V2",
+        "version": "V2",
+        "created_at": "2026-08-14T16:00:00+08:00",
+        "created_by": "解决方案经理顾言（模拟）",
+        "change_reason": "补充两地数量、首批交付和服务边界",
+        "quantity": 100,
+        "vehicle_type": "纯电轿车",
+        "energy_type": "纯电",
+        "target_models": ["比亚迪秦PLUS EV 510km同级或更高配置"],
+        "technical_constraints": {"cltc_range_km_min": 450, "seats": 5, "fast_charging_required": true},
+        "budget": {"unit_landed_price_cny_max": 150000, "total_budget_cny_max": 15000000},
+        "delivery_locations": ["上海60台", "苏州40台"],
+        "expected_final_delivery_date": "2026-09-30",
+        "special_requirements": ["首批30台须于2026-09-10前到达上海", "含运输", "协助上牌资料", "厂家标准质保"],
+        "confirmed_baseline": false,
+        "status": "superseded"
+      },
+      {
+        "requirement_version_id": "REQ-AUTO-001-V3",
+        "version": "V3",
+        "created_at": "2026-08-15T15:30:00+08:00",
+        "created_by": "客户采购总监林悦与销售经理赵航（均为模拟）",
+        "change_reason": "确认颜色、成交车型、付款边界和分批交付计划",
+        "quantity": 100,
+        "vehicle_type": "纯电轿车",
+        "energy_type": "纯电",
+        "target_models": ["比亚迪秦PLUS EV 510km 卓越型（模拟SKU口径）"],
+        "technical_constraints": {"cltc_range_km_min": 500, "seats": 5, "fast_charging_required": true},
+        "budget": {"unit_landed_price_cny_max": 145000, "total_budget_cny_max": 14500000},
+        "delivery_locations": ["上海60台", "苏州40台"],
+        "delivery_schedule": [
+          {"batch": 1, "quantity": 30, "location": "上海", "required_by": "2026-09-10"},
+          {"batch": 2, "quantity": 30, "location": "上海", "required_by": "2026-09-20"},
+          {"batch": 3, "quantity": 40, "location": "苏州", "required_by": "2026-09-30"}
+        ],
+        "special_requirements": ["全部白色", "深色内饰", "含运输", "协助上牌资料", "厂家标准质保", "逐车VIN和资料可追溯"],
+        "payment_expectation": "30%预付款，交付完成后30日内支付70%尾款",
+        "confirmed_baseline": true,
+        "confirmed_at": "2026-08-15T15:30:00+08:00",
+        "status": "current_baseline"
+      }
+    ]
+  }
+}

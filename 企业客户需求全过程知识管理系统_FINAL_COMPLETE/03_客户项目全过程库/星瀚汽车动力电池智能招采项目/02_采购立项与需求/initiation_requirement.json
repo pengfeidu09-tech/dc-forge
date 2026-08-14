@@ -1,0 +1,112 @@
+{
+  "schema_version": "1.0.0",
+  "data_classification": "synthetic_demo",
+  "project_id": "PRJ-TENDER-001",
+  "initiation": {
+    "initiation_id": "INIT-TENDER-001",
+    "plan_id": "PLAN-TENDER-001",
+    "title": "2027款纯电平台动力电池包采购立项",
+    "business_reason": "保障新车型SOP并建立双供应源，降低单一供应中断风险。",
+    "estimated_amount_cny": 1248000000,
+    "risk_level": "high",
+    "go_no_go": "GO_WITH_CONTROLS",
+    "conditions": [
+      "供应商必须具备IATF 16949有效证书",
+      "电芯和Pack工厂均需通过现场审核",
+      "合同必须包含产能、质量和追溯条款"
+    ],
+    "approved_at": "2026-08-20T18:00:00+08:00",
+    "approval_id": "APR-INIT-001"
+  },
+  "requirement": {
+    "requirement_id": "REQ-BAT-001",
+    "title": "12,000套磷酸铁锂动力电池包采购",
+    "versions": [
+      {
+        "requirement_version_id": "REQ-BAT-001-V1",
+        "version": "V1",
+        "occurred_at": "2026-08-10T10:00:00+08:00",
+        "recorded_at": "2026-08-10T11:00:00+08:00",
+        "valid_from": "2026-08-10T10:00:00+08:00",
+        "valid_to": "2026-08-13T16:00:00+08:00",
+        "supersedes": [],
+        "quantity": 10000,
+        "unit_budget_cny": 108000,
+        "sop_date": "2027-04-01",
+        "status": "superseded"
+      },
+      {
+        "requirement_version_id": "REQ-BAT-001-V2",
+        "version": "V2",
+        "occurred_at": "2026-08-13T16:00:00+08:00",
+        "recorded_at": "2026-08-13T17:00:00+08:00",
+        "valid_from": "2026-08-13T16:00:00+08:00",
+        "valid_to": "2026-08-18T15:30:00+08:00",
+        "supersedes": [
+          "REQ-BAT-001-V1"
+        ],
+        "quantity": 12000,
+        "unit_budget_cny": 105000,
+        "sop_date": "2027-03-15",
+        "status": "superseded"
+      },
+      {
+        "requirement_version_id": "REQ-BAT-001-V3",
+        "version": "V3",
+        "occurred_at": "2026-08-18T15:30:00+08:00",
+        "recorded_at": "2026-08-18T16:00:00+08:00",
+        "valid_from": "2026-08-18T15:30:00+08:00",
+        "valid_to": null,
+        "supersedes": [
+          "REQ-BAT-001-V2"
+        ],
+        "quantity": 12000,
+        "unit_budget_cny": 104000,
+        "sop_date": "2027-03-01",
+        "confirmed_baseline": true,
+        "status": "current_baseline",
+        "technical": {
+          "chemistry": "磷酸铁锂",
+          "pack_energy_kwh": 75,
+          "nominal_voltage_v": 400,
+          "fast_charge": "30%-80%不超过30分钟",
+          "cycle_life_min": 2500,
+          "ip_rating": "IP68",
+          "traceability": "电芯批次到整包序列号"
+        },
+        "commercial": {
+          "warranty_years": 8,
+          "warranty_km": 240000,
+          "payment_terms": "30%预付款、到货验收后60天支付70%",
+          "annual_cost_reduction_target": "仅作为谈判目标，不是已实现结果"
+        },
+        "delivery": {
+          "annual_quantity": 12000,
+          "sop_date": "2027-03-01",
+          "factories": [
+            "合肥整车工厂",
+            "武汉整车工厂"
+          ],
+          "dual_source_required": true
+        }
+      }
+    ],
+    "open_items_at_baseline": [
+      {
+        "item_id": "OPEN-BAT-001",
+        "topic": "2027-Q4第二车型平台增量",
+        "status": "non_blocking_open",
+        "owner": "产品规划部（模拟）",
+        "due_date": "2026-11-30"
+      },
+      {
+        "item_id": "OPEN-BAT-002",
+        "topic": "海外电芯原材料追溯深度",
+        "status": "non_blocking_open",
+        "owner": "供应商质量部（模拟）",
+        "due_date": "2026-09-15"
+      }
+    ]
+  }
+}
+

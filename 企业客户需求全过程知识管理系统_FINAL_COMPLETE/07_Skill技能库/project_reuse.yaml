@@ -1,0 +1,99 @@
+{
+  "name": "project_reuse",
+  "version": "2.0.0",
+  "description": "从已结束项目中提取经验证的方法、规则、模板和风险，形成带适用范围的复用包。",
+  "applicable_scenarios": [
+    "项目复盘",
+    "新项目启动",
+    "跨项目知识运营"
+  ],
+  "inputs": [
+    {
+      "name": "project_id",
+      "required": true
+    },
+    {
+      "name": "project_master",
+      "required": true
+    },
+    {
+      "name": "requirements",
+      "required": true
+    },
+    {
+      "name": "decisions",
+      "required": true
+    },
+    {
+      "name": "delivery_results",
+      "required": true
+    },
+    {
+      "name": "review_documents",
+      "required": true
+    }
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "action": "确认项目状态和数据性质"
+    },
+    {
+      "step": 2,
+      "action": "沿需求基线核对方案、决定、实施和结果"
+    },
+    {
+      "step": 3,
+      "action": "区分计划指标、模拟结果和真实运营结果"
+    },
+    {
+      "step": 4,
+      "action": "提取有效做法、失败、修复与未决风险"
+    },
+    {
+      "step": 5,
+      "action": "为资产写明适用范围、前置条件和反例"
+    },
+    {
+      "step": 6,
+      "action": "提交项目负责人和知识治理人员审核"
+    }
+  ],
+  "evidence_requirements": [
+    "复用结论关联原始需求、会议和结果",
+    "失败过程不得只保留最终成功状态",
+    "指标必须有明确来源和计算口径"
+  ],
+  "guardrails": [
+    "不得从单一案例声称普遍规律",
+    "不得移除模拟或未来剧本标识",
+    "不得复用客户敏感内容到无权限项目"
+  ],
+  "outputs": [
+    {
+      "name": "reusable_assets",
+      "required": true
+    },
+    {
+      "name": "applicability",
+      "required": true
+    },
+    {
+      "name": "prerequisites",
+      "required": true
+    },
+    {
+      "name": "known_limits",
+      "required": true
+    },
+    {
+      "name": "risks",
+      "required": true
+    },
+    {
+      "name": "evidence",
+      "required": true
+    }
+  ]
+}
+

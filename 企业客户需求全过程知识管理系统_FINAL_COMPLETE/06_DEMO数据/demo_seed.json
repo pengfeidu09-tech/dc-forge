@@ -1,0 +1,29 @@
+{
+  "data_classification": "synthetic_demo",
+  "timeline_classification": "simulated_future_scenario",
+  "is_real_business_result": false,
+  "disclaimer": "以下项目、企业、人员、金额、VIN、合同和业务结果均为模拟演示数据。",
+  "projects": [
+    {
+      "project_id": "PRJ-KM-001",
+      "customer": "华东新程汽车股份有限公司（模拟）",
+      "project": "汽车采购知识管理项目",
+      "scenario": "企业采购知识管理软件项目",
+      "entry": "03_客户项目全过程库/华东新程汽车项目"
+    },
+    {
+      "project_id": "PRJ-AUTO-001",
+      "customer": "东辰出行服务有限公司（模拟）",
+      "project": "100台新能源运营车辆采购项目",
+      "scenario": "企业客户车辆采购全过程",
+      "entry": "03_客户项目全过程库/东辰出行新能源车辆采购项目/project_master.json"
+    },
+    {
+      "project_id": "PRJ-TENDER-001",
+      "customer": "星瀚汽车制造集团（模拟）",
+      "project": "动力电池智能招采黄金验收项目",
+      "scenario": "汽车制造企业采购预算至统计分析全过程及智能招采能力验收",
+      "entry": "03_客户项目全过程库/星瀚汽车动力电池智能招采项目/project_master.json"
+    }
+  ]
+}

@@ -1,0 +1,1237 @@
+{
+  "schema_version": "1.0",
+  "project_id": "PRJ-TENDER-001",
+  "state_version": 3,
+  "source_ids": [
+    "SRC-TENDER-001",
+    "SRC-TENDER-002",
+    "SRC-TENDER-003",
+    "SRC-TENDER-004",
+    "SRC-TENDER-005",
+    "SRC-TENDER-006",
+    "SRC-TENDER-007",
+    "SRC-TENDER-008",
+    "SRC-TENDER-009",
+    "SRC-TENDER-010",
+    "SRC-TENDER-011",
+    "SRC-TENDER-012",
+    "SRC-TENDER-013",
+    "SRC-TENDER-014",
+    "SRC-TENDER-015",
+    "SRC-TENDER-016",
+    "SRC-TENDER-017",
+    "SRC-TENDER-018",
+    "SRC-TENDER-019",
+    "SRC-TENDER-020",
+    "SRC-TENDER-021",
+    "SRC-TENDER-022",
+    "SRC-TENDER-023",
+    "SRC-TENDER-024"
+  ],
+  "items": [
+    {
+      "requirement_id": "REQ-TRUTH-001",
+      "category": "industry",
+      "subject": "客户行业",
+      "value": "汽车制造",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-001",
+          "locator": "正文",
+          "excerpt": "星瀚汽车制造集团（模拟）所属行业为汽车制造，本次需求牵头部门为集团采购中心。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-002",
+      "category": "department",
+      "subject": "牵头部门",
+      "value": "集团采购中心",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-001",
+          "locator": "正文",
+          "excerpt": "本次需求牵头部门为集团采购中心。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-003",
+      "category": "business_goal",
+      "subject": "业务目标",
+      "value": "建立覆盖采购九阶段、可证据追溯且保留人工决策权的智能招采能力",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-003",
+          "locator": "正文",
+          "excerpt": "业务目标是打通预算、计划、立项、方案、执行、合同、归档、供应商管理和统计分析，任何自动生成结果都必须能够回到原始证据。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-004",
+      "category": "role",
+      "subject": "采购业务负责人",
+      "value": "采购业务负责人",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-014",
+          "locator": "正文",
+          "excerpt": "至少设置采购业务负责人、法务财务复核、供应商质量管理和受限观察员四类角色。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-005",
+      "category": "role",
+      "subject": "法务财务复核",
+      "value": "法务财务复核",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-014",
+          "locator": "正文",
+          "excerpt": "至少设置采购业务负责人、法务财务复核、供应商质量管理和受限观察员四类角色。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-006",
+      "category": "role",
+      "subject": "供应商质量管理",
+      "value": "供应商质量管理",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-014",
+          "locator": "正文",
+          "excerpt": "至少设置采购业务负责人、法务财务复核、供应商质量管理和受限观察员四类角色。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-007",
+      "category": "role",
+      "subject": "受限观察员",
+      "value": "受限观察员",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-014",
+          "locator": "正文",
+          "excerpt": "至少设置采购业务负责人、法务财务复核、供应商质量管理和受限观察员四类角色。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-008",
+      "category": "available_data",
+      "subject": "采购制度",
+      "value": "采购制度",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-015",
+          "locator": "正文",
+          "excerpt": "可用数据包括采购制度、历史招标文件、合同文本、供应商主数据、报价记录、交付记录、质量PPM、投诉整改和审批日志。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-009",
+      "category": "available_data",
+      "subject": "历史招标文件",
+      "value": "历史招标文件",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-015",
+          "locator": "正文",
+          "excerpt": "可用数据包括采购制度、历史招标文件、合同文本、供应商主数据、报价记录、交付记录、质量PPM、投诉整改和审批日志。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-010",
+      "category": "available_data",
+      "subject": "合同文本",
+      "value": "合同文本",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-015",
+          "locator": "正文",
+          "excerpt": "可用数据包括采购制度、历史招标文件、合同文本、供应商主数据、报价记录、交付记录、质量PPM、投诉整改和审批日志。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-011",
+      "category": "available_data",
+      "subject": "供应商主数据",
+      "value": "供应商主数据",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-015",
+          "locator": "正文",
+          "excerpt": "可用数据包括采购制度、历史招标文件、合同文本、供应商主数据、报价记录、交付记录、质量PPM、投诉整改和审批日志。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-012",
+      "category": "available_data",
+      "subject": "报价记录",
+      "value": "报价记录",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-015",
+          "locator": "正文",
+          "excerpt": "可用数据包括采购制度、历史招标文件、合同文本、供应商主数据、报价记录、交付记录、质量PPM、投诉整改和审批日志。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-013",
+      "category": "available_data",
+      "subject": "交付记录",
+      "value": "交付记录",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-015",
+          "locator": "正文",
+          "excerpt": "可用数据包括采购制度、历史招标文件、合同文本、供应商主数据、报价记录、交付记录、质量PPM、投诉整改和审批日志。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-014",
+      "category": "available_data",
+      "subject": "质量PPM",
+      "value": "质量PPM",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-015",
+          "locator": "正文",
+          "excerpt": "可用数据包括采购制度、历史招标文件、合同文本、供应商主数据、报价记录、交付记录、质量PPM、投诉整改和审批日志。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-015",
+      "category": "available_data",
+      "subject": "审批日志",
+      "value": "审批日志",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-015",
+          "locator": "正文",
+          "excerpt": "可用数据包括采购制度、历史招标文件、合同文本、供应商主数据、报价记录、交付记录、质量PPM、投诉整改和审批日志。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-016",
+      "category": "existing_system",
+      "subject": "SRM",
+      "value": "SRM",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-015",
+          "locator": "正文",
+          "excerpt": "信息化部门确认现有系统包括SRM、ERP、OA和合同管理平台。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-017",
+      "category": "existing_system",
+      "subject": "ERP",
+      "value": "ERP",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-015",
+          "locator": "正文",
+          "excerpt": "信息化部门确认现有系统包括SRM、ERP、OA和合同管理平台。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-018",
+      "category": "existing_system",
+      "subject": "OA",
+      "value": "OA",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-015",
+          "locator": "正文",
+          "excerpt": "信息化部门确认现有系统包括SRM、ERP、OA和合同管理平台。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-019",
+      "category": "existing_system",
+      "subject": "合同管理平台",
+      "value": "合同管理平台",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-015",
+          "locator": "正文",
+          "excerpt": "信息化部门确认现有系统包括SRM、ERP、OA和合同管理平台。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-020",
+      "category": "current_process",
+      "subject": "采购预算",
+      "value": "采购预算",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-016",
+          "locator": "正文",
+          "excerpt": "采购业务负责人确认当前流程依次为：采购预算、采购计划、采购立项、采购方案、采购执行、供应商评审、采购合同、合同履约、文件归档与统计分析。"
+        }
+      ],
+      "process_detail": {
+        "process_node_id": "PROC-01",
+        "name": "采购预算",
+        "actor": "集团采购中心",
+        "node_type": "human",
+        "description": "采购预算阶段保留对象版本、来源证据、审批和状态记录。",
+        "next_node_ids": [
+          "PROC-02"
+        ]
+      },
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-021",
+      "category": "current_process",
+      "subject": "采购计划",
+      "value": "采购计划",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-016",
+          "locator": "正文",
+          "excerpt": "采购业务负责人确认当前流程依次为：采购预算、采购计划、采购立项、采购方案、采购执行、供应商评审、采购合同、合同履约、文件归档与统计分析。"
+        }
+      ],
+      "process_detail": {
+        "process_node_id": "PROC-02",
+        "name": "采购计划",
+        "actor": "集团采购中心",
+        "node_type": "human",
+        "description": "采购计划阶段保留对象版本、来源证据、审批和状态记录。",
+        "next_node_ids": [
+          "PROC-03"
+        ]
+      },
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-022",
+      "category": "current_process",
+      "subject": "采购立项",
+      "value": "采购立项",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-016",
+          "locator": "正文",
+          "excerpt": "采购业务负责人确认当前流程依次为：采购预算、采购计划、采购立项、采购方案、采购执行、供应商评审、采购合同、合同履约、文件归档与统计分析。"
+        }
+      ],
+      "process_detail": {
+        "process_node_id": "PROC-03",
+        "name": "采购立项",
+        "actor": "集团采购中心",
+        "node_type": "human",
+        "description": "采购立项阶段保留对象版本、来源证据、审批和状态记录。",
+        "next_node_ids": [
+          "PROC-04"
+        ]
+      },
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-023",
+      "category": "current_process",
+      "subject": "采购方案",
+      "value": "采购方案",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-016",
+          "locator": "正文",
+          "excerpt": "采购业务负责人确认当前流程依次为：采购预算、采购计划、采购立项、采购方案、采购执行、供应商评审、采购合同、合同履约、文件归档与统计分析。"
+        }
+      ],
+      "process_detail": {
+        "process_node_id": "PROC-04",
+        "name": "采购方案",
+        "actor": "集团采购中心",
+        "node_type": "human",
+        "description": "采购方案阶段保留对象版本、来源证据、审批和状态记录。",
+        "next_node_ids": [
+          "PROC-05"
+        ]
+      },
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-024",
+      "category": "current_process",
+      "subject": "采购执行",
+      "value": "采购执行",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-016",
+          "locator": "正文",
+          "excerpt": "采购业务负责人确认当前流程依次为：采购预算、采购计划、采购立项、采购方案、采购执行、供应商评审、采购合同、合同履约、文件归档与统计分析。"
+        }
+      ],
+      "process_detail": {
+        "process_node_id": "PROC-05",
+        "name": "采购执行",
+        "actor": "集团采购中心",
+        "node_type": "human",
+        "description": "采购执行阶段保留对象版本、来源证据、审批和状态记录。",
+        "next_node_ids": [
+          "PROC-06"
+        ]
+      },
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-025",
+      "category": "current_process",
+      "subject": "供应商评审",
+      "value": "供应商评审",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-016",
+          "locator": "正文",
+          "excerpt": "采购业务负责人确认当前流程依次为：采购预算、采购计划、采购立项、采购方案、采购执行、供应商评审、采购合同、合同履约、文件归档与统计分析。"
+        }
+      ],
+      "process_detail": {
+        "process_node_id": "PROC-06",
+        "name": "供应商评审",
+        "actor": "采购、技术与质量评审组",
+        "node_type": "human",
+        "description": "供应商评审阶段保留对象版本、来源证据、审批和状态记录。",
+        "next_node_ids": [
+          "PROC-07"
+        ]
+      },
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-026",
+      "category": "current_process",
+      "subject": "采购合同",
+      "value": "采购合同",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-016",
+          "locator": "正文",
+          "excerpt": "采购业务负责人确认当前流程依次为：采购预算、采购计划、采购立项、采购方案、采购执行、供应商评审、采购合同、合同履约、文件归档与统计分析。"
+        }
+      ],
+      "process_detail": {
+        "process_node_id": "PROC-07",
+        "name": "采购合同",
+        "actor": "采购与法务",
+        "node_type": "human",
+        "description": "采购合同阶段保留对象版本、来源证据、审批和状态记录。",
+        "next_node_ids": [
+          "PROC-08"
+        ]
+      },
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-027",
+      "category": "current_process",
+      "subject": "合同履约",
+      "value": "合同履约",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-016",
+          "locator": "正文",
+          "excerpt": "采购业务负责人确认当前流程依次为：采购预算、采购计划、采购立项、采购方案、采购执行、供应商评审、采购合同、合同履约、文件归档与统计分析。"
+        }
+      ],
+      "process_detail": {
+        "process_node_id": "PROC-08",
+        "name": "合同履约",
+        "actor": "采购、质量与供应商",
+        "node_type": "human",
+        "description": "合同履约阶段保留对象版本、来源证据、审批和状态记录。",
+        "next_node_ids": [
+          "PROC-09"
+        ]
+      },
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-028",
+      "category": "current_process",
+      "subject": "文件归档与统计分析",
+      "value": "文件归档与统计分析",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-016",
+          "locator": "正文",
+          "excerpt": "采购业务负责人确认当前流程依次为：采购预算、采购计划、采购立项、采购方案、采购执行、供应商评审、采购合同、合同履约、文件归档与统计分析。"
+        }
+      ],
+      "process_detail": {
+        "process_node_id": "PROC-09",
+        "name": "文件归档与统计分析",
+        "actor": "采购运营与档案管理员",
+        "node_type": "human",
+        "description": "文件归档与统计分析阶段保留对象版本、来源证据、审批和状态记录。",
+        "next_node_ids": []
+      },
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-029",
+      "category": "pain_point",
+      "subject": "PAIN-01",
+      "value": "需求版本散落，历史时间点容易被最新版本覆盖",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-016",
+          "locator": "正文",
+          "excerpt": "主要痛点是需求版本散落、审查依赖人工检索、供应商评分缺少时间与工厂限定、跨系统引用断裂、撤权后索引可能残留。"
+        }
+      ],
+      "pain_point_detail": {
+        "pain_point_id": "PAIN-01",
+        "description": "需求版本散落，历史时间点容易被最新版本覆盖",
+        "severity": "high",
+        "affected_process_node_ids": [
+          "PROC-02",
+          "PROC-03",
+          "PROC-04"
+        ]
+      },
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-030",
+      "category": "pain_point",
+      "subject": "PAIN-02",
+      "value": "招标与合同审查依赖人工检索，规则定位和复核记录不统一",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-016",
+          "locator": "正文",
+          "excerpt": "主要痛点是需求版本散落、审查依赖人工检索、供应商评分缺少时间与工厂限定、跨系统引用断裂、撤权后索引可能残留。"
+        }
+      ],
+      "pain_point_detail": {
+        "pain_point_id": "PAIN-02",
+        "description": "招标与合同审查依赖人工检索，规则定位和复核记录不统一",
+        "severity": "high",
+        "affected_process_node_ids": [
+          "PROC-05",
+          "PROC-07"
+        ]
+      },
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-031",
+      "category": "pain_point",
+      "subject": "PAIN-03",
+      "value": "供应商评分缺少时间、工厂和品类限定",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-016",
+          "locator": "正文",
+          "excerpt": "主要痛点是需求版本散落、审查依赖人工检索、供应商评分缺少时间与工厂限定、跨系统引用断裂、撤权后索引可能残留。"
+        }
+      ],
+      "pain_point_detail": {
+        "pain_point_id": "PAIN-03",
+        "description": "供应商评分缺少时间、工厂和品类限定",
+        "severity": "high",
+        "affected_process_node_ids": [
+          "PROC-06"
+        ]
+      },
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-032",
+      "category": "pain_point",
+      "subject": "PAIN-04",
+      "value": "跨SRM、ERP、OA和合同平台的对象引用容易断裂",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-016",
+          "locator": "正文",
+          "excerpt": "主要痛点是需求版本散落、审查依赖人工检索、供应商评分缺少时间与工厂限定、跨系统引用断裂、撤权后索引可能残留。"
+        }
+      ],
+      "pain_point_detail": {
+        "pain_point_id": "PAIN-04",
+        "description": "跨SRM、ERP、OA和合同平台的对象引用容易断裂",
+        "severity": "medium",
+        "affected_process_node_ids": [
+          "PROC-05",
+          "PROC-07",
+          "PROC-08",
+          "PROC-09"
+        ]
+      },
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-033",
+      "category": "pain_point",
+      "subject": "PAIN-05",
+      "value": "撤权后搜索索引可能残留受限内容",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-016",
+          "locator": "正文",
+          "excerpt": "主要痛点是需求版本散落、审查依赖人工检索、供应商评分缺少时间与工厂限定、跨系统引用断裂、撤权后索引可能残留。"
+        }
+      ],
+      "pain_point_detail": {
+        "pain_point_id": "PAIN-05",
+        "description": "撤权后搜索索引可能残留受限内容",
+        "severity": "high",
+        "affected_process_node_ids": [
+          "PROC-06",
+          "PROC-07",
+          "PROC-09"
+        ]
+      },
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-034",
+      "category": "business_rule",
+      "subject": "双供应源",
+      "value": "主供70%、备供30%，季度动态复核",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-009",
+          "locator": "正文",
+          "excerpt": "计划采用公开邀请招标与双供应源策略，主供比例目标70%，备供比例目标30%，季度复核产能、交付、质量和信用风险。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-035",
+      "category": "security",
+      "subject": "安全权限",
+      "value": "供应商价格、评分和技术参数按角色、部门、字段与时间执行ACL及撤权",
+      "parameters": {
+        "hard": true,
+        "minimum_roles": 4,
+        "revocation_effective_at": "2026-09-15T00:00:00+08:00"
+      },
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-014",
+          "locator": "正文",
+          "excerpt": "无合同权限用户不能查看unit_price_cny；观察员只能看到公开流程和脱敏汇总。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-036",
+      "category": "approval",
+      "subject": "人工审批",
+      "value": "定标、重大偏差、超预算、合同变更和付款不得由AI自动决定",
+      "parameters": {
+        "hard": true,
+        "threshold_cny": 1000000000
+      },
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-012",
+          "locator": "正文",
+          "excerpt": "AI可以生成草稿、发现规则风险和汇总证据，但不得代替授权人员作出定标、签署、付款或供应商退出决定。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-037",
+      "category": "budget",
+      "subject": "采购预算",
+      "value": "年度预算上限1,248,000,000元，单套上限104,000元",
+      "parameters": {
+        "hard": true,
+        "currency": "CNY",
+        "annual_cap": 1248000000,
+        "unit_cap": 104000
+      },
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-008",
+          "locator": "正文",
+          "excerpt": "动力电池包年度采购预算上限为1,248,000,000元人民币，对应12,000套和单套104,000元的控制口径。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-038",
+      "category": "time",
+      "subject": "目标时间",
+      "value": "2027-03-01进入SOP",
+      "parameters": {
+        "hard": true,
+        "sop_date": "2027-03-01"
+      },
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-007",
+          "locator": "正文",
+          "excerpt": "目标SOP日期为2027-03-01"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-039",
+      "category": "data",
+      "subject": "证据闭包",
+      "value": "正式回答必须关联来源ID、原文摘录、版本和双时态字段",
+      "parameters": {
+        "hard": true,
+        "requires_citation": true
+      },
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-016",
+          "locator": "正文",
+          "excerpt": "客户要求系统在正式回答中给出来源ID和原文摘录；证据不足时必须明确说无法确认，而不是根据内部经验补全。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-040",
+      "category": "risk",
+      "subject": "风险控制",
+      "value": "证书、质量、交付、信用和跨文档不一致均需提示并由人工复核",
+      "parameters": {
+        "hard": true,
+        "human_review": true
+      },
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-011",
+          "locator": "正文",
+          "excerpt": "资格证书必须校验有效期和适用工厂；招标日期、答疑日期、投标截止日期和开标日期必须按先后顺序一致。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-041",
+      "category": "target_metric",
+      "subject": "引用正确率",
+      "value": "每个事实均可定位到期望来源ID和原文",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-024",
+          "locator": "正文",
+          "excerpt": "机器评测题需保存query、project_id、user_context、as_of、expected_facts、expected_source_ids、forbidden_claims、expected_refusal、expected_masked_fields和grading_rules。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-042",
+      "category": "target_metric",
+      "subject": "版本选择正确率",
+      "value": "as_of查询不泄漏未来版本",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-006",
+          "locator": "正文",
+          "excerpt": "不得仅选择文件修改时间最新的记录。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-043",
+      "category": "target_metric",
+      "subject": "权限泄露率",
+      "value": "越权资料泄露为零，撤权按生效时间执行",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-014",
+          "locator": "正文",
+          "excerpt": "撤权后对质量整改资料的查询应返回拒绝或空结果，并记录权限版本。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-044",
+      "category": "target_metric",
+      "subject": "文档审查可判分性",
+      "value": "规则ID、定位、严重度和人工结果完整",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-011",
+          "locator": "正文",
+          "excerpt": "审查结果必须记录规则ID、精确定位、严重度、适用规则集版本、人工确认或驳回结果。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-045",
+      "category": "scope",
+      "subject": "业务范围",
+      "value": "覆盖采购九阶段及需求理解、文档审查、制度问答、供应商画像、ACL和时间点检索",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-013",
+          "locator": "正文",
+          "excerpt": "客户确认本项目交付范围包括需求真相、带引用问答、文档生成与审查、供应商画像、权限撤权和时间点查询的可执行验收数据。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-046",
+      "category": "deliverable",
+      "subject": "Requirement Truth与来源清单",
+      "value": "Requirement Truth与来源清单",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-024",
+          "locator": "正文",
+          "excerpt": "机器评测题需保存query、project_id、user_context、as_of、expected_facts、expected_source_ids、forbidden_claims、expected_refusal、expected_masked_fields和grading_rules。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-047",
+      "category": "deliverable",
+      "subject": "带ACL和双时态的RAG知识块",
+      "value": "带ACL和双时态的RAG知识块",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-024",
+          "locator": "正文",
+          "excerpt": "机器评测题需保存query、project_id、user_context、as_of、expected_facts、expected_source_ids、forbidden_claims、expected_refusal、expected_masked_fields和grading_rules。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-048",
+      "category": "deliverable",
+      "subject": "10份文档审查黄金样本",
+      "value": "10份文档审查黄金样本",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-024",
+          "locator": "正文",
+          "excerpt": "文档审查至少包含4份无问题控制样本、6份故意缺陷样本。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-049",
+      "category": "deliverable",
+      "subject": "30至50条机器可判分问题",
+      "value": "30至50条机器可判分问题",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-024",
+          "locator": "正文",
+          "excerpt": "机器评测题需保存query、project_id、user_context、as_of、expected_facts、expected_source_ids、forbidden_claims、expected_refusal、expected_masked_fields和grading_rules。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-050",
+      "category": "ext:automotive:procurement_category",
+      "subject": "采购品类",
+      "value": "2027款纯电平台磷酸铁锂动力电池包",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-009",
+          "locator": "正文",
+          "excerpt": "采购对象为2027款纯电平台磷酸铁锂动力电池包，年度计划数量12,000套。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-051",
+      "category": "ext:automotive:multi_site_process",
+      "subject": "工厂覆盖",
+      "value": "合肥整车工厂与武汉整车工厂",
+      "parameters": {},
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-007",
+          "locator": "正文",
+          "excerpt": "交付覆盖合肥整车工厂和武汉整车工厂，必须采用双供应源。"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    },
+    {
+      "requirement_id": "REQ-TRUTH-052",
+      "category": "ext:automotive:annual_quantity",
+      "subject": "当前有效年需求量",
+      "value": "12,000套",
+      "parameters": {
+        "requirement_version_id": "REQ-BAT-001-V3"
+      },
+      "provenance": "customer_raw",
+      "status": "confirmed",
+      "confirmation_level": "customer",
+      "confidence": 0.99,
+      "source_refs": [
+        {
+          "source_id": "SRC-TENDER-007",
+          "locator": "正文",
+          "excerpt": "最终年需求量为12,000套"
+        }
+      ],
+      "supersedes_requirement_ids": []
+    }
+  ],
+  "gaps": [
+    {
+      "gap_id": "GAP-BAT-001",
+      "category": "scope",
+      "gap_type": "unconfirmed",
+      "description": "2027年第四季度第二车型平台增量尚未确认",
+      "blocking": false,
+      "reason": "不影响当前12,000套基线",
+      "related_requirement_ids": []
+    },
+    {
+      "gap_id": "GAP-BAT-002",
+      "category": "data",
+      "gap_type": "unconfirmed",
+      "description": "海外电芯原材料追溯深度尚未确认",
+      "blocking": false,
+      "reason": "当前国内批次追溯可先验收",
+      "related_requirement_ids": []
+    }
+  ],
+  "conflicts": [],
+  "selected_skill_id": "automotive-procurement-v1",
+  "organization": {
+    "organization_name": "星瀚汽车制造集团（模拟）",
+    "industry": "汽车制造",
+    "department": "集团采购中心",
+    "organization_notes": [
+      "synthetic_demo",
+      "simulated_future_scenario"
+    ]
+  },
+  "contacts": [
+    {
+      "contact_id": "CONTACT-PROC-001",
+      "name": "周岚（模拟）",
+      "role": "采购业务负责人",
+      "department": "集团采购中心",
+      "influence": "decision_maker",
+      "metadata": {
+        "synthetic": true
+      }
+    },
+    {
+      "contact_id": "CONTACT-IT-001",
+      "name": "陈知行（模拟）",
+      "role": "信息化经理",
+      "department": "数字化中心",
+      "influence": "influencer",
+      "metadata": {
+        "synthetic": true
+      }
+    }
+  ],
+  "process_observations": [],
+  "pain_observations": [],
+  "created_at": "2026-08-10T11:00:00+08:00",
+  "updated_at": "2026-09-30T17:00:00+08:00"
+}

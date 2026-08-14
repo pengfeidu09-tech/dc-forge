@@ -1,0 +1,99 @@
+{
+  "name": "supplier_analysis",
+  "version": "2.0.0",
+  "description": "在明确品类、时间和数据范围内比较供应商报价、能力、质量、交期和风险。",
+  "applicable_scenarios": [
+    "供应商询价比较",
+    "采购方案组合",
+    "供应商历史表现查询"
+  ],
+  "inputs": [
+    {
+      "name": "project_id",
+      "required": true
+    },
+    {
+      "name": "requirement_version_id",
+      "required": true
+    },
+    {
+      "name": "supplier_quotes",
+      "required": true
+    },
+    {
+      "name": "supplier_profiles",
+      "required": true
+    },
+    {
+      "name": "performance_records",
+      "required": true
+    },
+    {
+      "name": "evaluation_weights",
+      "required": true
+    }
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "action": "检查需求版本、报价有效期和评价适用范围"
+    },
+    {
+      "step": 2,
+      "action": "统一币种、税、物流和付款口径"
+    },
+    {
+      "step": 3,
+      "action": "按配置权重计算并保留原始数据"
+    },
+    {
+      "step": 4,
+      "action": "识别缺失值、异常值和不可比较项"
+    },
+    {
+      "step": 5,
+      "action": "生成单一或组合采购方案及风险"
+    },
+    {
+      "step": 6,
+      "action": "提交采购人员复核"
+    }
+  ],
+  "evidence_requirements": [
+    "评分项必须有字段来源和时间范围",
+    "历史评价限定物料、工厂和周期",
+    "被选报价必须关联询价与需求基线"
+  ],
+  "guardrails": [
+    "不得用一次事件概括供应商整体能力",
+    "不得自动决定中标或淘汰",
+    "缺少关键报价条件时不得强行排名"
+  ],
+  "outputs": [
+    {
+      "name": "normalized_comparison",
+      "required": true
+    },
+    {
+      "name": "score_breakdown",
+      "required": true
+    },
+    {
+      "name": "procurement_options",
+      "required": true
+    },
+    {
+      "name": "risks",
+      "required": true
+    },
+    {
+      "name": "missing_data",
+      "required": true
+    },
+    {
+      "name": "evidence",
+      "required": true
+    }
+  ]
+}
+

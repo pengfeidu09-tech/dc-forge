@@ -1,0 +1,102 @@
+{
+  "schema_version": "1.0.0",
+  "data_classification": "synthetic_demo",
+  "project_id": "PRJ-AUTO-001",
+  "requirement_id": "REQ-AUTO-001",
+  "communications": [
+    {
+      "communication_id": "COM-AUTO-001",
+      "channel": "phone",
+      "occurred_at": "2026-08-13T09:30:00+08:00",
+      "participants": ["林悦（客户，模拟）", "赵航（销售，模拟）"],
+      "summary": "客户提出100台纯电运营轿车采购意向，强调预算与9月底前交付。",
+      "source_requirement_version_id": "REQ-AUTO-001-V1"
+    },
+    {
+      "communication_id": "COM-AUTO-002",
+      "channel": "meeting",
+      "occurred_at": "2026-08-14T14:00:00+08:00",
+      "participants": ["客户采购与运营团队（模拟）", "销售、采购、方案团队（模拟）"],
+      "summary": "确认上海60台、苏州40台及首批30台提前交付要求。",
+      "source_requirement_version_id": "REQ-AUTO-001-V2"
+    },
+    {
+      "communication_id": "COM-AUTO-003",
+      "channel": "email",
+      "occurred_at": "2026-08-15T15:30:00+08:00",
+      "participants": ["林悦（客户，模拟）", "赵航（销售，模拟）"],
+      "summary": "双方确认V3需求基线：100台白色、分三批、成交车型口径和付款预期。",
+      "source_requirement_version_id": "REQ-AUTO-001-V3"
+    }
+  ],
+  "clarification_items": [
+    {
+      "clarification_id": "CLR-AUTO-001",
+      "customer_question_or_statement": "需要100台新能源车，落地单价不能超过15万元。",
+      "company_question": "续航、车型、交付批次和地区是否有硬性要求？",
+      "customer_answer": "纯电轿车，续航至少450km；上海60台、苏州40台；首批30台需提前。",
+      "internal_interpretation": "需要拆分库存与交付资源，单一供应商可能无法满足首批交期。",
+      "resolution": "进入V2并启动多供应商寻源。",
+      "status": "confirmed",
+      "resolved_in_version_id": "REQ-AUTO-001-V2"
+    },
+    {
+      "clarification_id": "CLR-AUTO-002",
+      "customer_question_or_statement": "所有车辆要白色，资料必须逐车对应VIN。",
+      "company_question": "是否接受同级替代车型以及付款方式？",
+      "customer_answer": "本次锁定秦PLUS EV 510km配置口径；接受30%预付、70%交付后30日支付。",
+      "internal_interpretation": "SKU必须固定颜色和内饰，履约需逐车管理。",
+      "resolution": "形成REQ-AUTO-001-V3确认基线。",
+      "status": "confirmed",
+      "resolved_in_version_id": "REQ-AUTO-001-V3"
+    }
+  ],
+  "open_items_at_baseline": [],
+  "confirmed_requirement_baseline": {
+    "baseline_id": "BASE-AUTO-001",
+    "requirement_version_id": "REQ-AUTO-001-V3",
+    "confirmed_at": "2026-08-15T15:30:00+08:00",
+    "confirmed_by": ["林悦（客户采购总监，模拟）", "赵航（销售经理，模拟）"],
+    "evidence_ids": ["COM-AUTO-003", "CLR-AUTO-002"]
+  },
+  "feasibility_assessment": {
+    "assessment_id": "FEAS-AUTO-001",
+    "requirement_version_id": "REQ-AUTO-001-V3",
+    "assessed_at": "2026-08-17T17:00:00+08:00",
+    "business": {
+      "status": "feasible_with_split_sourcing",
+      "vehicle_resource_available": true,
+      "supplier_coverage": true,
+      "delivery_date_achievable": true,
+      "configuration_supported": true,
+      "notes": "需由两家供应商组合供货，首批优先从上海现车资源锁定。"
+    },
+    "finance": {
+      "status": "conditionally_feasible",
+      "estimated_sales_revenue_cny": 14380000,
+      "estimated_vehicle_purchase_cost_cny": 13260000,
+      "customer_payment_terms": "30%预付，70%交付后30日",
+      "supplier_payment_terms": "40%订金，提车前付清",
+      "peak_funding_gap_cny": 4800000,
+      "estimated_financing_cost_cny": 150000,
+      "customer_credit_risk": "medium_low_simulation",
+      "mitigation": ["预付款到账后锁车", "设置尾款到期提醒", "分批采购和交付"]
+    },
+    "legal_compliance": {
+      "status": "feasible_with_controls",
+      "tender_required": false,
+      "brand_authorization_check": "passed_simulation",
+      "invoice_requirement": "13%增值税专用发票",
+      "contract_risks": ["交付延期责任需与供应商背靠背", "VIN及合格证资料应列为验收条件"],
+      "tax_review": "passed_simulation"
+    }
+  },
+  "go_no_go": {
+    "decision_id": "GNG-AUTO-001",
+    "decision": "GO_WITH_CONDITIONS",
+    "decided_at": "2026-08-18T10:00:00+08:00",
+    "decision_makers": ["销售负责人（模拟）", "采购负责人（模拟）", "财务负责人（模拟）", "法务负责人（模拟）"],
+    "conditions": ["使用两家供应商分摊交付风险", "客户预付款到账后生效采购锁定", "供应商合同承接延期与资料缺失责任"],
+    "related_assessment_id": "FEAS-AUTO-001"
+  }
+}

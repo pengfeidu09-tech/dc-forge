@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0.0",
+  "data_classification": "synthetic_demo",
+  "project_id": "PRJ-AUTO-001",
+  "after_sales_tickets": [
+    {
+      "ticket_id": "AST-AUTO-001",
+      "customer_id": "CUS-AUTO-001",
+      "sales_contract_id": "SC-AUTO-001",
+      "sales_order_id": "SO-AUTO-002",
+      "vin": "LDCFAKE0000000042",
+      "opened_at": "2026-10-12T09:00:00+08:00",
+      "category": "air_conditioning",
+      "customer_report": "车辆空调制冷间歇异常（模拟）。",
+      "supplier_id": "SUP-AUTO-001",
+      "purchase_order_id": "PO-AUTO-001",
+      "diagnosis": "低压传感器插接件接触不良（模拟）。",
+      "resolution": "供应商服务站重新固定插接件并完成检测。",
+      "cost_cny": 5000,
+      "closed_at": "2026-10-13T16:00:00+08:00",
+      "status": "closed"
+    }
+  ],
+  "customer_satisfaction": {
+    "survey_id": "SAT-AUTO-001",
+    "surveyed_at": "2026-11-03T10:00:00+08:00",
+    "overall_score_out_of_5": 4.4,
+    "nps_score": 8,
+    "complaints_count": 0,
+    "positive_feedback": ["首批按期", "VIN资料清晰", "异常处理有闭环"],
+    "improvement_feedback": ["希望后续提供客户自助查询交付状态的入口"],
+    "note": "满意度和NPS均为模拟问卷数据。"
+  },
+  "repurchase_lead": {
+    "repurchase_lead_id": "REP-AUTO-001",
+    "object_type": "lead",
+    "is_confirmed_order": false,
+    "source_project_id": "PRJ-AUTO-001",
+    "customer_id": "CUS-AUTO-001",
+    "potential_product": "新能源SUV运营车辆",
+    "potential_quantity": 50,
+    "estimated_requirement_time": "2027-Q2",
+    "confidence": "customer_intent_only",
+    "next_action": "2027年1月回访预算与车型计划",
+    "owner": "赵航（模拟）",
+    "status": "nurturing"
+  },
+  "project_review": {
+    "review_id": "REV-AUTO-001",
+    "reviewed_at": "2026-11-05T14:00:00+08:00",
+    "requirement_version_id": "REQ-AUTO-001-V3",
+    "requirement_fulfillment": {
+      "requested_quantity": 100,
+      "final_accepted_quantity": 100,
+      "requested_color": "白色",
+      "delivered_color": "白色",
+      "final_delivery_on_or_before": "2026-09-30",
+      "result": "fulfilled_in_simulation"
+    },
+    "what_worked": ["需求V3基线避免报价口径漂移", "双供应商组合满足分批交付", "VIN级台账支持异常和售后追溯"],
+    "what_to_improve": ["询价时统一要求供应商提交电子资料清单", "财务测算应更早纳入尾款账期敏感性分析", "客户侧交付状态可视化应前置设计"],
+    "reusable_knowledge": ["多供应源采购分配模板", "VIN资料核验清单", "交付异常复验流程", "需求版本到合同关联规则"],
+    "final_profit_calculation_id": "PROFIT-AUTO-001",
+    "note": "复盘结论基于本模拟数据集，不是实际经营经验或真实成果。"
+  }
+}

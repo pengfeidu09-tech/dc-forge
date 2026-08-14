@@ -1,0 +1,100 @@
+{
+  "name": "meeting_intelligence",
+  "version": "2.0.0",
+  "description": "把会议转写或纪要整理为议题、讨论、正式决策、行动项、风险和关联对象。",
+  "applicable_scenarios": [
+    "需求会议",
+    "方案评审",
+    "项目例会",
+    "验收和复盘"
+  ],
+  "inputs": [
+    {
+      "name": "project_id",
+      "required": true
+    },
+    {
+      "name": "meeting_id",
+      "required": true
+    },
+    {
+      "name": "transcript_or_notes",
+      "required": true
+    },
+    {
+      "name": "participants",
+      "required": true
+    },
+    {
+      "name": "related_objects",
+      "required": true
+    }
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "action": "校验会议来源、参与角色和时间"
+    },
+    {
+      "step": 2,
+      "action": "识别议题并按语义分段"
+    },
+    {
+      "step": 3,
+      "action": "严格区分讨论意见、建议、正式决定和未决事项"
+    },
+    {
+      "step": 4,
+      "action": "提取行动项的负责人、截止日期与状态"
+    },
+    {
+      "step": 5,
+      "action": "关联需求、文档、风险和后续会议"
+    },
+    {
+      "step": 6,
+      "action": "输出待参会人确认的纪要草案"
+    }
+  ],
+  "evidence_requirements": [
+    "每个决定引用对应原话或确认段落",
+    "行动项必须可定位到会议内容",
+    "人工确认后才标记为approved_decision"
+  ],
+  "guardrails": [
+    "不得把发言建议自动写成批准决定",
+    "负责人或日期缺失时标为待确认",
+    "不得推断未出席人员同意"
+  ],
+  "outputs": [
+    {
+      "name": "agenda",
+      "required": true
+    },
+    {
+      "name": "discussion_summary",
+      "required": true
+    },
+    {
+      "name": "decisions",
+      "required": true
+    },
+    {
+      "name": "actions",
+      "required": true
+    },
+    {
+      "name": "risks",
+      "required": true
+    },
+    {
+      "name": "related_objects",
+      "required": true
+    },
+    {
+      "name": "evidence",
+      "required": true
+    }
+  ]
+}
+

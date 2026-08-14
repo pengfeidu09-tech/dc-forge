@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0.0",
+  "data_classification": "synthetic_demo",
+  "project_id": "PRJ-TENDER-001",
+  "procurement_budget": {
+    "budget_id": "BUD-TENDER-001",
+    "fiscal_year": 2027,
+    "cost_center": "EV-PLATFORM-27",
+    "currency": "CNY",
+    "initial_budget_cny": 1260000000,
+    "approved_ceiling_cny": 1248000000,
+    "unit_budget_cny": 104000,
+    "approved_at": "2026-08-16T17:00:00+08:00",
+    "approval_id": "APR-BUD-001",
+    "basis": [
+      "12,000套年度预测",
+      "整包单价不高于104,000元",
+      "含税、包装、到厂物流和基础质保"
+    ],
+    "status": "approved_simulation"
+  },
+  "procurement_plan": {
+    "plan_id": "PLAN-TENDER-001",
+    "budget_id": "BUD-TENDER-001",
+    "requirement_id": "REQ-BAT-001",
+    "planned_quantity": 12000,
+    "procurement_method": "公开招标+竞争性谈判澄清",
+    "multi_source_strategy": "至少两家量产供应商",
+    "planned_tender_date": "2026-09-01",
+    "planned_contract_date": "2026-10-20",
+    "sop_date": "2027-03-01",
+    "delivery_forecast": [
+      {
+        "quarter": "2027-Q1",
+        "quantity": 1500
+      },
+      {
+        "quarter": "2027-Q2",
+        "quantity": 3000
+      },
+      {
+        "quarter": "2027-Q3",
+        "quantity": 3500
+      },
+      {
+        "quarter": "2027-Q4",
+        "quantity": 4000
+      }
+    ],
+    "approvals": [
+      "采购计划负责人",
+      "财务预算负责人",
+      "新能源平台项目总监"
+    ],
+    "status": "approved_simulation"
+  },
+  "controls": [
+    "立项金额不得超过预算上限",
+    "需求基线变化超过数量5%或单价3%需重新评估预算",
+    "未完成供应商资质核验不得发布招标"
+  ]
+}
+
