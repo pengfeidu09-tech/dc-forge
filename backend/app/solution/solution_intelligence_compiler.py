@@ -81,13 +81,20 @@ class SolutionIntelligenceCompiler:
         evidence_refs = _unique(evidence_refs + [ref for claim in claims for ref in claim.evidence_refs])
         dependencies = [dep for decision in decisions for dep in decision.dependencies]
         gaps = [gap for decision in decisions for gap in decision.gaps]
-        risks = _unique([risk for decision in decisions for risk in decision.risks] + (unresolved if plan_type != "conservative" else []))
+        risks = _unique(
+            [risk for decision in decisions for risk in decision.risks]
+            + [f"unresolved reusable module: {module_id}" for module_id in unresolved]
+        )
         fit_assessments = _unique_fits([fit for _, fit, _ in selected])
         omitted = [item for item in executable if item not in selected]
         plan_warnings = _unique(gaps + (unresolved if plan_type == "conservative" else []))
         plan_warnings.append(
             "Expected value is insufficiently specified: no reliable customer parameters or RunReport exist."
         )
+        if claims:
+            plan_warnings.append(
+                "Historical value claims are source-case evidence, not verified outcomes for the current customer."
+            )
         if plan_type == "conservative":
             plan_warnings.extend(
                 f"not selected for Quick Win: {decision.decision} {decision.module_id}"
@@ -95,18 +102,21 @@ class SolutionIntelligenceCompiler:
             )
         if plan_type == "innovative":
             plan_warnings.append("No additional cross-asset executable module was introduced without a ReuseDecision.")
-        steps = self._steps(plan_type, decisions, dependencies)
+        steps = self._steps(plan_type, decisions, dependencies, process)
         review_score = round(sum(item.raw_fit_score for item in fit_assessments) / len(fit_assessments), 2)
         return SolutionPlanV2(
             solution_id=f"{process.project_id}-{plan_type}-v2", source_project_id=process.project_id,
             plan_type=plan_type, display_strategy=display_strategy, name=display_name,
-            summary=f"{display_name}: deterministic compilation from selected reuse decisions.",
+            summary=self._summary(display_name, process, assets, components),
             primary_asset_ids=assets, fit_assessments=fit_assessments, reuse_decisions=decisions,
             reuse_summary=summary, selected_components=components, to_be_nodes=nodes,
             applied_constraints=list(process.constraints),
             data_requirements=[dep for dep in dependencies if dep.startswith("data:")],
             knowledge_requirements=[dep for dep in dependencies if dep.startswith("knowledge:")],
-            system_integrations=[dep for dep in dependencies if dep.startswith(("system:", "tool:"))],
+            system_integrations=_unique(
+                [dep for dep in dependencies if dep.startswith(("system:", "tool:"))]
+                + [f"system:{system}" for system in process.existing_systems]
+            ),
             implementation_steps=steps, assumptions=list(process.missing_information),
             warnings=plan_warnings, risks=risks, evidence_refs=evidence_refs, value_claims=claims,
             review_score=review_score,
@@ -118,12 +128,31 @@ class SolutionIntelligenceCompiler:
             return list(executable)
         direct = [item for item in executable if item[2].decision == "direct_reuse"]
         if direct:
-            return direct
+            return direct[:1]
         configuration = [item for item in executable if item[2].decision == "configuration"]
         if configuration:
             return configuration[:1]
         customization = [item for item in executable if item[2].decision == "customization"]
         return customization[:1]
+
+    @staticmethod
+    def _summary(display_name: str, process: ProcessSpec, assets: list[str], components: list[ComponentRef]) -> str:
+        component_names = "、".join(component.name for component in components)
+        asset_names = "、".join(assets)
+        workflow = " → ".join(node.name for node in process.as_is_nodes)
+        roles = "、".join(process.roles)
+        context = []
+        if workflow:
+            context.append(f"覆盖已确认现状流程 {workflow}")
+        if roles:
+            context.append(f"明确业务角色边界 {roles}")
+        summary = (
+            f"{display_name} 面向“{process.business_goal}”，"
+            f"复用方案资产 {asset_names} 的 {component_names}；"
+        )
+        if context:
+            summary += f"{'；'.join(context)}。"
+        return summary + "实施范围与人工决策边界以已确认需求、约束和复用决策为准。"
 
     def _components(self, selected):
         components = []
@@ -156,13 +185,22 @@ class SolutionIntelligenceCompiler:
             nodes.insert(1, handoff)
         return nodes
 
-    def _steps(self, plan_type: str, decisions, dependencies):
+    def _steps(self, plan_type: str, decisions, dependencies, process: ProcessSpec):
         steps = [f"{decision.decision}: {decision.module_id}" for decision in decisions]
+        if process.as_is_nodes:
+            steps.append(
+                "map confirmed process sequence: "
+                + " -> ".join(node.name for node in process.as_is_nodes)
+            )
+        if process.roles:
+            steps.append("assign confirmed business responsibilities: " + ", ".join(process.roles))
+        if process.existing_systems:
+            steps.append("validate system boundaries: " + ", ".join(process.existing_systems))
         steps += [f"validate dependency: {item}" for item in _unique(dependencies)]
         if plan_type == "balanced":
-            steps.append("confirm production security, system, and approval gaps")
+            steps.append("configure production controls for confirmed security, system, and approval constraints")
         if plan_type == "innovative":
-            steps.append("redesign handoff around selected executable modules")
+            steps.append("design governed cross-stage handoff around selected executable modules")
         return steps
 
 

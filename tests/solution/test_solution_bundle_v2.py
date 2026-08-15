@@ -1,4 +1,5 @@
 from collections import Counter
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -72,6 +73,27 @@ def test_quick_win_is_a_real_minimum_executable_scope_and_production_covers_more
     assert production.reuse_summary.configuration_count == 1
     assert quick_win.reuse_summary.configuration_count == 0
     assert any("not selected for Quick Win" in warning for warning in quick_win.warnings)
+
+
+def test_quick_win_selects_only_one_direct_reuse_when_multiple_are_available() -> None:
+    compiler = SolutionIntelligenceCompiler()
+    executable = [
+        (object(), object(), SimpleNamespace(decision="direct_reuse")),
+        (object(), object(), SimpleNamespace(decision="direct_reuse")),
+    ]
+
+    assert compiler._select_for_strategy("conservative", executable) == executable[:1]
+
+
+def test_plan_summary_and_integrations_are_grounded_in_process_context() -> None:
+    process = frozen_procurement_golden_process()
+    bundle = SolutionIntelligenceCompiler().compile(process)
+
+    for plan in bundle.plans:
+        assert process.business_goal in plan.summary
+        assert all(component.name in plan.summary for component in plan.selected_components)
+        assert {f"system:{system}" for system in process.existing_systems} <= set(plan.system_integrations)
+        assert any("Historical value claims" in warning for warning in plan.warnings)
 
 
 def test_transform_has_real_topology_difference_without_fabricated_assets_or_customization() -> None:

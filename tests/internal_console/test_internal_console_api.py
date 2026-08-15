@@ -336,10 +336,16 @@ def test_golden_uses_only_raw_sources_and_never_auto_confirms(console_client) ->
 
     assert len(provider.calls) == 4
     assert all("Untrusted business data" in call for call in provider.calls)
-    assert len(state["items"]) == 16
+    assert len(state["items"]) == 18
     assert {item["status"] for item in state["items"]} == {"pending"}
     assert {item["confirmation_level"] for item in state["items"]} == {"none"}
     assert {item["provenance"] for item in state["items"]} == {"ai_extracted"}
+    extension_items = [item for item in state["items"] if item["category"].startswith("ext:")]
+    assert {item["category"] for item in extension_items} == {
+        "ext:automotive:quality_compliance",
+        "ext:automotive:system_boundary",
+    }
+    assert all(item["source_refs"] for item in extension_items)
     assert service.repository.list_baseline_versions("automotive-raw-only") == []
 
 

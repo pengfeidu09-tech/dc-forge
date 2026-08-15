@@ -418,7 +418,7 @@ def test_process_and_pain_details_are_typed_and_unknown_pain_node_references_are
                         "actor": "采购专员",
                         "node_type": "human",
                         "description": "手工整理采购需求",
-                        "next_node_ids": [],
+                        "next_node_ids": ["forged-node"],
                     },
                 ),
                 _candidate(
@@ -438,6 +438,9 @@ def test_process_and_pain_details_are_typed_and_unknown_pain_node_references_are
     result = RequirementExtractor(SpyProvider([response])).extract(_context(source))
     repeated = RequirementExtractor(SpyProvider([response])).extract(_context(source))
     pain = next(item for item in result.candidates if item.category == "pain_point")
+    process = next(item for item in result.candidates if item.category == "current_process")
+    assert process.process_detail is not None
+    assert process.process_detail.next_node_ids == []
     assert pain.pain_point_detail is not None
     assert pain.pain_point_detail.affected_process_node_ids == ["node-prepare"]
     assert result.model_dump() == repeated.model_dump()
@@ -473,6 +476,228 @@ def test_structured_parameters_follow_candidate_category_without_numeric_reinter
     assert approval.candidates[0].parameters == {"threshold_amount": 500000}
     assert budget.candidates[0].category == "budget"
     assert budget.candidates[0].parameters == {"amount": 500000, "currency": "CNY"}
+
+
+def test_available_data_keeps_reusable_materials_and_rejects_descriptive_operating_facts() -> None:
+    source = _source(
+        "data-asset-boundary",
+        "customer_attachment",
+        "可用材料包括采购制度、历史招标文件和合同文本。工厂申报年产能18,000套。",
+    )
+    response = _response(
+        _candidate(
+            category="available_data",
+            subject="procurement policy",
+            value="采购制度",
+            quote="采购制度",
+        ),
+        _candidate(
+            category="available_data",
+            subject="historical tender documents",
+            value="历史招标文件",
+            quote="历史招标文件",
+        ),
+        _candidate(
+            category="available_data",
+            subject="contract documents",
+            value="合同文本",
+            quote="合同文本",
+        ),
+        _candidate(
+            category="available_data",
+            subject="production capacity",
+            value="18,000套/年",
+            quote="工厂申报年产能18,000套",
+        ),
+    )
+
+    result = RequirementExtractor(SpyProvider([response])).extract(_context(source))
+
+    assert [item.value for item in result.candidates] == ["采购制度", "历史招标文件", "合同文本"]
+
+
+def test_explicit_role_definition_is_atomized_into_source_closed_roles() -> None:
+    source = _source(
+        "role-definition",
+        "meeting_minutes",
+        "至少设置采购负责人、法务复核、质量管理和受限观察员四类角色。",
+    )
+    result = RequirementExtractor(
+        SpyProvider(
+            [
+                _response(
+                    _candidate(
+                        category="security",
+                        subject="role_definition",
+                        value="至少设置采购负责人、法务复核、质量管理和受限观察员四类角色",
+                        quote="至少设置采购负责人、法务复核、质量管理和受限观察员四类角色",
+                    )
+                )
+            ]
+        )
+    ).extract(_context(source))
+
+    assert [(item.category, item.value) for item in result.candidates] == [
+        ("role", "采购负责人"),
+        ("role", "法务复核"),
+        ("role", "质量管理"),
+        ("role", "受限观察员"),
+    ]
+    assert all(item.source_refs[0].source_id == "role-definition" for item in result.candidates)
+
+
+def test_explicit_sequential_process_is_atomized_with_adjacent_edges() -> None:
+    source = _source("process-list", "conversation", "发现 -> 评估 -> 审批")
+    result = RequirementExtractor(
+        SpyProvider(
+            [
+                _response(
+                    _candidate(
+                        category="current_process",
+                        subject="workflow",
+                        value="发现 -> 评估 -> 审批",
+                        quote="发现 -> 评估 -> 审批",
+                        process_detail={
+                            "process_node_id": "workflow-01",
+                            "name": "当前流程",
+                            "actor": "业务人员",
+                            "node_type": "human",
+                            "description": "当前流程",
+                            "next_node_ids": [],
+                        },
+                    )
+                )
+            ]
+        )
+    ).extract(_context(source))
+
+    assert [item.value for item in result.candidates] == ["发现", "评估", "审批"]
+    assert [item.process_detail.process_node_id for item in result.candidates] == [
+        "workflow-01", "workflow-01-stage-02", "workflow-01-stage-03",
+    ]
+    assert [item.process_detail.next_node_ids for item in result.candidates] == [
+        ["workflow-01-stage-02"], ["workflow-01-stage-03"], [],
+    ]
+
+
+def test_historical_metric_and_evaluation_fixture_are_not_formal_requirement_candidates() -> None:
+    source = _source(
+        "context-only",
+        "customer_attachment",
+        "2024年供应商质量表现为420 PPM。目标供应商准入达标率95%。机器评测字段包含grading_rules。",
+    )
+    result = RequirementExtractor(
+        SpyProvider(
+            [
+                _response(
+                    _candidate(
+                        category="target_metric",
+                        subject="historical_quality",
+                        value="420 PPM",
+                        quote="2024年供应商质量表现为420 PPM",
+                    ),
+                    _candidate(
+                        category="target_metric",
+                        subject="supplier_entry_target",
+                        value="供应商准入达标率95%",
+                        quote="目标供应商准入达标率95%",
+                    ),
+                    _candidate(
+                        category="data",
+                        subject="evaluation_fields",
+                        value="grading_rules",
+                        quote="机器评测字段包含grading_rules",
+                    ),
+                )
+            ]
+        )
+    ).extract(_context(source))
+
+    assert [(item.category, item.value) for item in result.candidates] == [
+        ("target_metric", "供应商准入达标率95%")
+    ]
+
+
+def test_explicit_data_and_system_lists_are_atomized_without_losing_data_like_values() -> None:
+    source = _source(
+        "enumerated-assets",
+        "meeting_minutes",
+        "可用数据包括采购制度、质量PPM和审批日志；现有系统为SRM、ERP和OA。",
+    )
+    result = RequirementExtractor(
+        SpyProvider(
+            [
+                _response(
+                    _candidate(
+                        category="available_data",
+                        subject="available_data",
+                        value="采购制度、质量PPM和审批日志",
+                        quote="可用数据包括采购制度、质量PPM和审批日志",
+                    ),
+                    _candidate(
+                        category="existing_system",
+                        subject="systems",
+                        value="SRM、ERP和OA",
+                        quote="现有系统为SRM、ERP和OA",
+                    ),
+                )
+            ]
+        )
+    ).extract(_context(source))
+
+    assert [item.value for item in result.candidates if item.category == "available_data"] == [
+        "采购制度", "质量PPM", "审批日志"
+    ]
+    assert [item.value for item in result.candidates if item.category == "existing_system"] == [
+        "SRM", "ERP", "OA"
+    ]
+
+
+def test_certificate_is_not_misclassified_as_existing_system() -> None:
+    source = _source("credential-not-system", "customer_attachment", "供应商持有IATF 16949认证证书。")
+    result = RequirementExtractor(
+        SpyProvider(
+            [
+                _response(
+                    _candidate(
+                        category="existing_system",
+                        subject="certification",
+                        value="IATF 16949认证证书",
+                        quote="IATF 16949认证证书",
+                    )
+                )
+            ]
+        )
+    ).extract(_context(source))
+
+    assert result.candidates == []
+
+
+def test_explicit_testable_rule_is_projected_as_source_closed_target_metric() -> None:
+    source = _source(
+        "measurable-rule",
+        "requirement_document",
+        "审查结果必须记录规则ID、精确定位、严重度和人工确认结果。",
+    )
+    result = RequirementExtractor(
+        SpyProvider(
+            [
+                _response(
+                    _candidate(
+                        category="business_rule",
+                        subject="review_record",
+                        value="审查结果必须记录规则ID、精确定位、严重度和人工确认结果",
+                        quote="审查结果必须记录规则ID、精确定位、严重度和人工确认结果",
+                    )
+                )
+            ]
+        )
+    ).extract(_context(source))
+
+    metric = next(item for item in result.candidates if item.category == "target_metric")
+    assert metric.value == "审查结果必须记录规则ID、精确定位、严重度和人工确认结果"
+    assert metric.source_refs[0].source_id == "measurable-rule"
+    assert not any("18,000" in item.value for item in result.candidates)
 
 
 def test_partial_invalid_candidates_preserve_valid_siblings_and_warning_location() -> None:

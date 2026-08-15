@@ -228,9 +228,12 @@ def test_first_feishu_turn_creates_automotive_requirement_state_v1(
         "business_goal",
         "current_process",
         "pain_point",
+        "ext:automotive:quality_compliance",
+        "ext:procurement:supplier_entry_policy",
     }
     assert state.source_ids == [orchestrator.source_id(project_id, "event-001")]
     assert all(ref.source_id == state.source_ids[0] for item in state.items for ref in item.source_refs)
+    assert all(item.status == "pending" and item.confirmation_level == "none" for item in state.items)
     assert result.state_version == 1
     assert result.readiness_stage == "DISCOVERY"
     assert result.completeness_score > 0

@@ -176,6 +176,23 @@ def test_blueprint_keeps_reference_closure_security_and_approval_without_fabrica
     assert not any("30min" in item.expected_condition or "30分钟" in item.expected_condition for item in blueprint.assertions)
 
 
+def test_demo_inputs_remain_data_assets_and_do_not_absorb_descriptive_metrics() -> None:
+    process = frozen_procurement_golden_process().model_copy(
+        update={
+            "available_data": ["采购制度", "历史招标文件", "合同文本"],
+            "target_metrics": ["12,000套"],
+        }
+    )
+    bundle = SolutionIntelligenceCompiler().compile(process)
+    selected = next(plan for plan in bundle.plans if plan.plan_type == "balanced")
+    blueprint = DemoBlueprintCompiler().compile(process, selected)
+
+    input_descriptions = [item.description for item in blueprint.inputs]
+    assert all(value in " ".join(input_descriptions) for value in process.available_data)
+    assert not any("18,000" in description for description in input_descriptions)
+    assert blueprint.metric_names == ["12,000套"]
+
+
 def test_quick_win_production_and_transform_preserve_their_real_structures() -> None:
     process, plans = _plans()
     compiler = DemoBlueprintCompiler()
