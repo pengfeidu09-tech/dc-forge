@@ -14,7 +14,7 @@ def test_root_portal_links_to_the_presales_workspace() -> None:
 
     assert "内部工具目录" in app
     assert "统一售前工作台" in app
-    assert "href: '/presales/workbench'" in app
+    assert "href: '/presales/workbench/'" in app
 
 
 def test_workspace_link_uses_sidebar_navigation_styles() -> None:

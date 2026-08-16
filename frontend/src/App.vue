@@ -17,25 +17,25 @@ const tools = [
   {
     name: '统一售前工作台',
     description: '需求状态、资料研究、V2 方案、评审发布与客户同步',
-    href: '/presales/workbench',
+    href: '/presales/workbench/',
     icon: AuditOutlined,
   },
   {
     name: '客户专属中心',
     description: '客户入口由项目生成，通过飞书机器人或售前工作台获取',
-    href: '/presales/workbench',
+    href: '/presales/workbench/',
     icon: MessageOutlined,
   },
   {
     name: '案例知识库与 MCP',
     description: '维护可复用案例，查询 MCP Tool 目录和知识来源',
-    href: '/presales/workbench?view=agent',
+    href: '/presales/workbench/?view=agent',
     icon: DatabaseOutlined,
   },
   {
     name: '飞书 Agent 配置',
     description: '配置客户与内部 Agent 可使用的 Tool 和 Skill',
-    href: '/presales/workbench?view=agent',
+    href: '/presales/workbench/?view=agent',
     icon: SettingOutlined,
   },
 ]

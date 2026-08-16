@@ -758,7 +758,7 @@ onMounted(() => {
           </a-menu-item>
         </a-menu>
       </a-spin>
-      <a-empty v-if="!loadingProjects && !filteredProjects.length" class="sider-empty" :image="null" description="没有匹配项目" />
+      <a-empty v-if="!loadingProjects && !filteredProjects.length" class="sider-empty" description="没有匹配项目" />
 
       <div class="sider-footer">
         <SafetyCertificateOutlined />
@@ -1086,7 +1086,7 @@ onMounted(() => {
                         <a-list-item><a-list-item-meta :title="item.title" :description="item.summary" /></a-list-item>
                       </template>
                     </a-list>
-                    <a-empty v-if="!researchResults(latestResearch).length" :image="null" description="没有匹配结果" />
+                    <a-empty v-if="!researchResults(latestResearch).length" description="没有匹配结果" />
                   </div>
                   <div>
                     <h3>外部情报</h3>
@@ -1098,7 +1098,7 @@ onMounted(() => {
                         </a-list-item>
                       </template>
                     </a-list>
-                    <a-empty v-if="!externalSources(latestResearch).length" :image="null" description="尚无外部情报" />
+                    <a-empty v-if="!externalSources(latestResearch).length" description="尚无外部情报" />
                   </div>
                 </div>
               </section>
