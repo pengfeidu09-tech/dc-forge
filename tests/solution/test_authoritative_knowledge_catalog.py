@@ -152,9 +152,11 @@ def test_rest_exposes_source_catalog_and_requirement_evidence() -> None:
     }
 
 
-def test_mcp_keeps_eleven_tools_and_returns_authoritative_requirement_sources() -> None:
+def test_mcp_catalog_includes_case_search_and_returns_requirement_sources() -> None:
     dispatcher = MCPDispatcher(_service())
-    assert len(dispatcher.tool_definitions()) == 11
+    definitions = dispatcher.tool_definitions()
+    assert len(definitions) == 12
+    assert any(tool["name"] == "search_solution_cases" for tool in definitions)
 
     response = dispatcher.handle(
         {

@@ -19,7 +19,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from backend.app.contracts.process import PainPoint, ProcessNode, ProcessSpec
 from backend.app.process.process_spec_adapter import ProcessSpecAdapter
 from backend.app.solution.customer_engagement import CustomerEngagementService
-from backend.app.solution.service import compile_solution, compile_solution_v2
+from backend.app.solution.service import compile_solution_v2
+from backend.app.solution.workspace_database import WorkspaceSQLite, deserialize, serialize
 
 
 _CUSTOMER_SOURCE_TYPES = {
@@ -109,6 +110,29 @@ class DeliverableContent(_PrivateModel):
     citations: list[dict[str, str]] = Field(default_factory=list, max_length=200)
 
 
+class EditableSolutionPlan(_PrivateModel):
+    solution_id: str = Field(min_length=1, max_length=240)
+    recommended: bool = False
+    name: str = Field(min_length=1, max_length=240)
+    summary: str = Field(min_length=1, max_length=4000)
+    strategy: str = Field(min_length=1, max_length=240)
+    capabilities: list[dict[str, str]] = Field(default_factory=list, max_length=200)
+    target_workflow: list[dict[str, Any]] = Field(default_factory=list, max_length=200)
+    implementation_steps: list[str] = Field(default_factory=list, max_length=200)
+    data_requirements: list[str] = Field(default_factory=list, max_length=200)
+    system_integrations: list[str] = Field(default_factory=list, max_length=200)
+    assumptions: list[str] = Field(default_factory=list, max_length=200)
+    risks: list[str] = Field(default_factory=list, max_length=200)
+
+
+class SolutionEditRecord(_PrivateModel):
+    solution_revision: int = Field(ge=2)
+    action: Literal["selected", "edited"]
+    solution_id: str
+    updated_by: str
+    updated_at: str
+
+
 class SolutionDraft(_PrivateModel):
     draft_version: int = Field(ge=1)
     baseline_version: int | None = Field(default=None, ge=1)
@@ -118,6 +142,9 @@ class SolutionDraft(_PrivateModel):
     ] = "confirmed_baseline"
     research_version: int = Field(ge=1)
     plans: list[dict[str, Any]]
+    selected_solution_id: str | None = None
+    solution_revision: int = Field(default=1, ge=1)
+    solution_edits: list[SolutionEditRecord] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     deliverable_revision: int = Field(ge=1)
     deliverable: DeliverableContent
@@ -131,6 +158,7 @@ class DraftReview(_PrivateModel):
     review_version: int = Field(ge=1)
     draft_version: int = Field(ge=1)
     deliverable_revision: int = Field(ge=1)
+    solution_revision: int = Field(default=1, ge=1)
     decision: Literal["approved", "rejected"]
     reviewed_by: str
     note: str | None = Field(default=None, max_length=2000)
@@ -141,6 +169,7 @@ class PublishedDeliverable(_PrivateModel):
     publication_version: int = Field(ge=1)
     draft_version: int = Field(ge=1)
     deliverable_revision: int = Field(ge=1)
+    solution_revision: int = Field(default=1, ge=1)
     content: DeliverableContent
     published_by: str
     published_at: str
@@ -151,7 +180,7 @@ class PresalesProjectRecord(_PrivateModel):
     title: str
     owner: str
     industry: str | None = None
-    reference_project_id: str = "PRJ-TENDER-001"
+    reference_project_id: str = "CASE-KNOWLEDGE"
     created_at: str
     updated_at: str
     sources: list[PresalesSource] = Field(default_factory=list)
@@ -278,7 +307,7 @@ class FilePresalesOrchestrationRepository:
                     title=title or project_id,
                     owner=owner or "unassigned",
                     industry=industry,
-                    reference_project_id=reference_project_id or "PRJ-TENDER-001",
+                    reference_project_id=reference_project_id or "CASE-KNOWLEDGE",
                     created_at=timestamp,
                     updated_at=timestamp,
                 )
@@ -375,13 +404,106 @@ class FilePresalesOrchestrationRepository:
             )
 
 
+class SqlitePresalesOrchestrationRepository(
+    FilePresalesOrchestrationRepository, WorkspaceSQLite
+):
+    """Presales projects and all solution revisions in the workspace DB."""
+
+    def __init__(self, path: Path | str) -> None:
+        WorkspaceSQLite.__init__(self, path)
+
+    def ensure_project(
+        self,
+        project_id: str,
+        *,
+        title: str | None = None,
+        owner: str | None = None,
+        industry: str | None = None,
+        reference_project_id: str | None = None,
+    ) -> PresalesProjectRecord:
+        if not project_id.strip():
+            raise ValueError("project_id must not be blank")
+        with self._lock:
+            try:
+                current = self.get_project(project_id)
+            except FileNotFoundError:
+                current = None
+            timestamp = _now()
+            if current is not None:
+                updates = {"updated_at": timestamp}
+                if title:
+                    updates["title"] = title
+                if owner:
+                    updates["owner"] = owner
+                if industry:
+                    updates["industry"] = industry
+                if reference_project_id:
+                    updates["reference_project_id"] = reference_project_id
+                project = current.model_copy(update=updates)
+            else:
+                project = PresalesProjectRecord(
+                    project_id=project_id,
+                    title=title or project_id,
+                    owner=owner or "unassigned",
+                    industry=industry,
+                    reference_project_id=reference_project_id or "CASE-KNOWLEDGE",
+                    created_at=timestamp,
+                    updated_at=timestamp,
+                )
+            self._write_project(project)
+            return project
+
+    def _write_project(self, project: PresalesProjectRecord) -> None:
+        with self.connect() as connection:
+            connection.execute(
+                "INSERT INTO presales_projects (project_id, updated_at, payload_json) "
+                "VALUES (?, ?, ?) ON CONFLICT(project_id) DO UPDATE SET "
+                "updated_at = excluded.updated_at, payload_json = excluded.payload_json",
+                (
+                    project.project_id,
+                    project.updated_at,
+                    serialize(project.model_dump(mode="json")),
+                ),
+            )
+
+    def get_project(self, project_id: str) -> PresalesProjectRecord:
+        if not project_id.strip():
+            raise ValueError("project_id must not be blank")
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT payload_json FROM presales_projects WHERE project_id = ?",
+                (project_id,),
+            ).fetchone()
+        if row is None:
+            raise FileNotFoundError("presales project does not exist")
+        return PresalesProjectRecord.model_validate(deserialize(row["payload_json"]))
+
+    def list_projects(self) -> list[PresalesProjectRecord]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT payload_json FROM presales_projects ORDER BY updated_at DESC"
+            ).fetchall()
+        return [
+            PresalesProjectRecord.model_validate(deserialize(row["payload_json"]))
+            for row in rows
+        ]
+
+    def _save(self, project: PresalesProjectRecord) -> PresalesProjectRecord:
+        updated = project.model_copy(update={"updated_at": _now()})
+        self._write_project(updated)
+        return updated
+
+
 class PresalesOrchestrationService:
     """Connect customer facts, research, solution drafts, reviews, and output."""
 
     def __init__(
         self,
         *,
-        repository: FilePresalesOrchestrationRepository,
+        repository: (
+            FilePresalesOrchestrationRepository
+            | SqlitePresalesOrchestrationRepository
+        ),
         engagement_service: CustomerEngagementService,
         knowledge_service: EnterpriseKnowledgeBoundary,
         skill_catalog: PresalesSkillCatalog,
@@ -399,16 +521,12 @@ class PresalesOrchestrationService:
         knowledge_service: EnterpriseKnowledgeBoundary,
     ) -> "PresalesOrchestrationService":
         project_root = Path(__file__).resolve().parents[3]
-        raw_root = os.getenv("PRESALES_ORCHESTRATION_ROOT", "").strip()
-        if raw_root:
-            root = Path(raw_root).expanduser().resolve()
-        else:
-            engagement_root = engagement_service.repository.root.resolve()
-            root = engagement_root.parent / f"{engagement_root.name}-presales"
-        if root == project_root or root.is_relative_to(project_root):
-            raise RuntimeError("PRESALES_ORCHESTRATION_ROOT must be outside the Git working tree")
+        from backend.app.solution.agent_configuration import configured_database_path
+
         return cls(
-            repository=FilePresalesOrchestrationRepository(root),
+            repository=SqlitePresalesOrchestrationRepository(
+                configured_database_path()
+            ),
             engagement_service=engagement_service,
             knowledge_service=knowledge_service,
             skill_catalog=PresalesSkillCatalog(
@@ -431,7 +549,7 @@ class PresalesOrchestrationService:
         title: str,
         owner: str,
         industry: str | None = None,
-        reference_project_id: str = "PRJ-TENDER-001",
+        reference_project_id: str = "CASE-KNOWLEDGE",
     ) -> dict[str, Any]:
         project_id = f"presales:{secrets.token_hex(12)}"
         self.engagement_service.repository.register_project(
@@ -511,13 +629,26 @@ class PresalesOrchestrationService:
             item.get("snippet")
             or item.get("content_preview")
             or item.get("content")
+            or item.get("solution_summary")
+            or item.get("problem")
             or ""
         )
+        evidence_refs = item.get("evidence_refs")
+        evidence_ref = (
+            evidence_refs[0]
+            if isinstance(evidence_refs, list) and evidence_refs
+            else ""
+        )
         return {
-            "source_id": str(source_id or "KNOWLEDGE-UNRESOLVED"),
+            "source_id": str(source_id or evidence_ref or "KNOWLEDGE-UNRESOLVED"),
             "title": str(item.get("title") or source_id or "企业知识资料"),
             "summary": str(preview)[:600],
-            "locator": str(item.get("source_path") or item.get("locator") or ""),
+            "locator": str(
+                item.get("source_path")
+                or item.get("locator")
+                or evidence_ref
+                or ""
+            ),
         }
 
     def run_research(
@@ -530,13 +661,17 @@ class PresalesOrchestrationService:
         generated_by: str,
     ) -> dict[str, Any]:
         project = self._ensure_project(project_id)
-        response = self.knowledge_service.search_knowledge(
-            project.reference_project_id,
-            query=query,
-            user_id=user_id,
-            as_of=as_of,
-            limit=8,
-        )
+        case_search = getattr(self.knowledge_service, "search_solution_cases", None)
+        if callable(case_search):
+            response = case_search(query=query, limit=8)
+        else:
+            response = self.knowledge_service.search_knowledge(
+                project.reference_project_id,
+                query=query,
+                user_id=user_id,
+                as_of=as_of,
+                limit=8,
+            )
         knowledge_results = [
             self._normalize_knowledge_result(item)
             for item in response.get("results", [])
@@ -745,46 +880,6 @@ class PresalesOrchestrationService:
             readiness_score=readiness_score,
         )
 
-    @staticmethod
-    def _safe_general_plan(plan, recommended_solution_id: str) -> dict[str, Any]:
-        data_requirements = list(
-            dict.fromkeys(
-                requirement
-                for component in plan.selected_components
-                for requirement in component.required_data
-            )
-        )
-        return {
-            "recommended": plan.solution_id == recommended_solution_id,
-            "name": plan.name,
-            "summary": plan.summary,
-            "strategy": {
-                "conservative": "快速验证",
-                "balanced": "生产适配",
-                "innovative": "体系升级",
-            }[plan.plan_type],
-            "capabilities": [
-                {"name": component.name, "reason": component.reason}
-                for component in plan.selected_components
-            ],
-            "target_workflow": [
-                {
-                    "name": node.name,
-                    "executor": {"ai": "AI", "human": "人工", "system": "系统"}[
-                        node.executor
-                    ],
-                    "human_gate": node.human_gate,
-                    "gate_reason": node.gate_reason,
-                }
-                for node in plan.to_be_nodes
-            ],
-            "implementation_steps": list(plan.implementation_steps),
-            "data_requirements": data_requirements,
-            "system_integrations": [],
-            "assumptions": list(plan.assumptions),
-            "risks": list(plan.warnings),
-        }
-
     def _deliverable(
         self,
         project: PresalesProjectRecord,
@@ -884,30 +979,13 @@ class PresalesOrchestrationService:
             if state is None:
                 raise ValueError("latest RequirementState is required")
             process = self._demo_process_spec(project, state)
-            try:
-                bundle = compile_solution_v2(process)
-                plans = [
-                    self.engagement_service._safe_plan(
-                        plan, bundle.recommended_solution_id
-                    )
-                    for plan in bundle.plans
-                ]
-            except ValueError as error:
-                if "no executable reuse decisions" not in str(error):
-                    raise
-                general_bundle = compile_solution(process)
-                recommended = next(
-                    plan
-                    for plan in general_bundle.plans
-                    if plan.plan_type == "balanced"
+            bundle = compile_solution_v2(process)
+            plans = [
+                self.engagement_service._safe_plan(
+                    plan, bundle.recommended_solution_id
                 )
-                plans = [
-                    self._safe_general_plan(plan, recommended.solution_id)
-                    for plan in general_bundle.plans
-                ]
-                draft_warnings.append(
-                    "当前需求信息不足以匹配可执行方案资产，演示预览已自动使用通用三方案编译器。"
-                )
+                for plan in bundle.plans
+            ]
             requirement_items = self._active_requirement_items(state)
             requirement_state_version = state.state_version
             requirement_basis = "latest_requirement_state"
@@ -924,6 +1002,7 @@ class PresalesOrchestrationService:
             requirement_basis=requirement_basis,
             research_version=research.research_version,
             plans=plans,
+            selected_solution_id=bundle.recommended_solution_id,
             warnings=draft_warnings,
             deliverable_revision=1,
             deliverable=self._deliverable(
@@ -971,6 +1050,157 @@ class PresalesOrchestrationService:
         self.repository.replace_draft(project_id, updated)
         return updated.model_dump(mode="json")
 
+    @staticmethod
+    def _selected_plan(draft: SolutionDraft) -> dict[str, Any]:
+        selected_id = draft.selected_solution_id
+        if selected_id:
+            selected = next(
+                (
+                    plan
+                    for plan in draft.plans
+                    if plan.get("solution_id") == selected_id
+                ),
+                None,
+            )
+            if selected is not None:
+                return selected
+        recommended = next(
+            (plan for plan in draft.plans if plan.get("recommended") is True),
+            None,
+        )
+        if recommended is not None:
+            return recommended
+        if not draft.plans:
+            raise ValueError("solution draft has no candidate plans")
+        return draft.plans[0]
+
+    @staticmethod
+    def _deliverable_for_plan(
+        deliverable: DeliverableContent,
+        plan: dict[str, Any],
+    ) -> DeliverableContent:
+        return deliverable.model_copy(
+            update={
+                "recommended_solution": str(plan.get("summary") or plan.get("name")),
+                "implementation_roadmap": [
+                    str(item) for item in plan.get("implementation_steps", [])
+                ],
+                "risks_and_boundaries": [
+                    *[str(item) for item in plan.get("risks", [])],
+                    *[
+                        f"待确认假设：{item}"
+                        for item in plan.get("assumptions", [])
+                    ],
+                    "方案效果和目标指标需在客户环境中验证，不代表已实现业务成果。",
+                ],
+            }
+        )
+
+    def select_solution_plan(
+        self,
+        project_id: str,
+        *,
+        draft_version: int,
+        solution_id: str,
+        updated_by: str,
+    ) -> dict[str, Any]:
+        project = self._ensure_project(project_id)
+        draft = self._draft(project, draft_version)
+        selected = next(
+            (plan for plan in draft.plans if plan.get("solution_id") == solution_id),
+            None,
+        )
+        if selected is None:
+            raise ValueError("selected solution is not part of this draft")
+        if draft.selected_solution_id == solution_id:
+            return draft.model_dump(mode="json")
+        revision = draft.solution_revision + 1
+        timestamp = _now()
+        updated = draft.model_copy(
+            update={
+                "selected_solution_id": solution_id,
+                "solution_revision": revision,
+                "solution_edits": [
+                    *draft.solution_edits,
+                    SolutionEditRecord(
+                        solution_revision=revision,
+                        action="selected",
+                        solution_id=solution_id,
+                        updated_by=updated_by,
+                        updated_at=timestamp,
+                    ),
+                ],
+                "deliverable_revision": draft.deliverable_revision + 1,
+                "deliverable": self._deliverable_for_plan(
+                    draft.deliverable, selected
+                ),
+                "updated_by": updated_by,
+                "updated_at": timestamp,
+            }
+        )
+        self.repository.replace_draft(project_id, updated)
+        return updated.model_dump(mode="json")
+
+    def update_solution_plan(
+        self,
+        project_id: str,
+        *,
+        draft_version: int,
+        solution_id: str,
+        plan: EditableSolutionPlan,
+        updated_by: str,
+    ) -> dict[str, Any]:
+        if plan.solution_id != solution_id:
+            raise ValueError("solution_id does not match edited plan")
+        project = self._ensure_project(project_id)
+        draft = self._draft(project, draft_version)
+        existing = next(
+            (item for item in draft.plans if item.get("solution_id") == solution_id),
+            None,
+        )
+        if existing is None:
+            raise ValueError("edited solution is not part of this draft")
+        edited = plan.model_copy(
+            update={"recommended": bool(existing.get("recommended"))}
+        ).model_dump(mode="json")
+        plans = [
+            edited if item.get("solution_id") == solution_id else item
+            for item in draft.plans
+        ]
+        revision = draft.solution_revision + 1
+        timestamp = _now()
+        selected_id = draft.selected_solution_id or self._selected_plan(draft).get(
+            "solution_id"
+        )
+        deliverable = (
+            self._deliverable_for_plan(draft.deliverable, edited)
+            if selected_id == solution_id
+            else draft.deliverable
+        )
+        updated = draft.model_copy(
+            update={
+                "plans": plans,
+                "selected_solution_id": selected_id,
+                "solution_revision": revision,
+                "solution_edits": [
+                    *draft.solution_edits,
+                    SolutionEditRecord(
+                        solution_revision=revision,
+                        action="edited",
+                        solution_id=solution_id,
+                        updated_by=updated_by,
+                        updated_at=timestamp,
+                    ),
+                ],
+                "deliverable_revision": draft.deliverable_revision + 1,
+                "deliverable": deliverable,
+                "updated_by": updated_by,
+                "updated_at": timestamp,
+            }
+        )
+        self.repository.replace_draft(project_id, updated)
+        return updated.model_dump(mode="json")
+
     def review_draft(
         self,
         project_id: str,
@@ -986,6 +1216,7 @@ class PresalesOrchestrationService:
             review_version=len(project.reviews) + 1,
             draft_version=draft_version,
             deliverable_revision=draft.deliverable_revision,
+            solution_revision=draft.solution_revision,
             decision=decision,
             reviewed_by=reviewed_by,
             note=note,
@@ -1004,6 +1235,7 @@ class PresalesOrchestrationService:
                 for review in reversed(project.reviews)
                 if review.draft_version == draft.draft_version
                 and review.deliverable_revision == draft.deliverable_revision
+                and review.solution_revision == draft.solution_revision
                 and review.decision == "approved"
             ),
             None,
@@ -1020,25 +1252,19 @@ class PresalesOrchestrationService:
         draft = self._draft(project, draft_version)
         if self._approved_review(project, draft) is None:
             raise ValueError("current solution draft and deliverable must be approved")
-        if draft.baseline_version is None:
-            if draft.requirement_state_version is None:
-                raise ValueError("demo draft requirement state is missing")
-            publication = self.engagement_service.publish_demo_preview(
-                project_id,
-                requirement_state_version=draft.requirement_state_version,
-                plans=draft.plans,
-                published_by=published_by,
-            )
-        else:
-            publication = self.engagement_service.publish_project(
-                project_id,
-                baseline_version=draft.baseline_version,
-                published_by=published_by,
-            )
+        selected_plan = self._selected_plan(draft)
+        publication = self.engagement_service.publish_selected_plan(
+            project_id,
+            baseline_version=draft.baseline_version,
+            requirement_state_version=draft.requirement_state_version,
+            plan=selected_plan,
+            published_by=published_by,
+        )
         published = PublishedDeliverable(
             publication_version=publication["publication_version"],
             draft_version=draft.draft_version,
             deliverable_revision=draft.deliverable_revision,
+            solution_revision=draft.solution_revision,
             content=draft.deliverable,
             published_by=published_by,
             published_at=publication["published_at"],

@@ -5,12 +5,13 @@ from __future__ import annotations
 import json
 from itertools import count
 import re
-from typing import Any, Literal
+from typing import Any, Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend.app.solution.llm_provider import LLMProvider
 from backend.app.solution.mcp_server import MCPDispatcher
+from backend.app.solution.chat_agent import ChatTurn
 
 
 class _AssistantModel(BaseModel):
@@ -23,6 +24,10 @@ class EnterpriseAssistantRequest(_AssistantModel):
     as_of: str = Field(min_length=1)
     message: str = Field(min_length=1, max_length=12000)
     audience: Literal["customer", "internal"] = "internal"
+    history: list[ChatTurn] = Field(default_factory=list, max_length=20)
+    requirement_summary: str | None = Field(default=None, max_length=4000)
+    clarification_topic: str | None = Field(default=None, max_length=200)
+    clarification_question: str | None = Field(default=None, max_length=2000)
 
 
 class EnterpriseAssistantResponse(_AssistantModel):
@@ -40,7 +45,7 @@ class EnterpriseAssistantResponse(_AssistantModel):
 
 _CUSTOMER_PROJECT_ID = "PUBLIC-CAPABILITIES"
 _CUSTOMER_USER_ID = "external-customer"
-_CUSTOMER_TOOLS = frozenset({"search_knowledge"})
+_CUSTOMER_TOOLS = frozenset({"search_knowledge", "search_solution_cases"})
 _MAX_TOOL_CALLS = 3
 _CONTEXT_FIELDS = frozenset({"project_id", "user_id", "as_of"})
 _CUSTOMER_FORBIDDEN_OUTPUT = re.compile(
@@ -54,6 +59,8 @@ Return strict JSON only in this form:
 Rules:
 - Select zero to three tools from the supplied catalog.
 - Use tools only when they help answer the latest message.
+- Resolve pronouns such as "这个" from the recent conversation and current
+  clarification topic before selecting tools and queries.
 - Never invent a tool name.
 - project_id, user_id, as_of, permissions, and audience are controlled by the
   application. Do not attempt to override them.
@@ -68,9 +75,20 @@ Write a concise Chinese answer using only the supplied tool evidence.
 - Preserve human-review boundaries for approvals, supplier selection, contracts,
   payments, and compliance decisions.
 - Synthetic project data and simulated metrics are not real business outcomes.
+- Resolve pronouns from the supplied conversation context. When a customer asks
+  how to define an approval rule and no organization-specific threshold is in the
+  evidence, give a non-numeric confirmation framework covering internal
+  procurement/finance policy, applicable procurement limits, and fixed-asset
+  registration, then state that the customer's responsible owner must confirm it.
 - For a customer audience, do not expose internal project IDs, supplier IDs,
   contract IDs, requirement IDs, tool names, workflow metadata, or private data.
 """
+
+
+class AgentCapabilityPolicy(Protocol):
+    def enabled_tool_names(self, audience: str) -> set[str]: ...
+
+    def enabled_skills(self, audience: str) -> list[dict[str, Any]]: ...
 
 
 class EnterpriseAssistantService:
@@ -81,9 +99,11 @@ class EnterpriseAssistantService:
         dispatcher: MCPDispatcher,
         *,
         provider: LLMProvider | None = None,
+        capability_policy: AgentCapabilityPolicy | None = None,
     ) -> None:
         self.dispatcher = dispatcher
         self.provider = provider
+        self.capability_policy = capability_policy
         self._ids = count(1)
 
     @staticmethod
@@ -107,12 +127,41 @@ class EnterpriseAssistantService:
             tool["name"]: tool for tool in self.dispatcher.tool_definitions()
         }
         if audience == "customer":
-            return {
+            definitions = {
                 name: definition
                 for name, definition in definitions.items()
                 if name in _CUSTOMER_TOOLS
             }
+        if self.capability_policy is not None:
+            enabled = self.capability_policy.enabled_tool_names(audience)
+            definitions = {
+                name: definition
+                for name, definition in definitions.items()
+                if name in enabled
+            }
         return definitions
+
+    @staticmethod
+    def _conversation_context(request: EnterpriseAssistantRequest) -> str:
+        payload = {
+            "recent_conversation": [
+                turn.model_dump(mode="json") for turn in request.history[-10:]
+            ],
+            "current_requirement_summary": request.requirement_summary,
+            "current_clarification_topic": request.clarification_topic,
+            "current_clarification_question": request.clarification_question,
+            "latest_customer_message": request.message,
+        }
+        return json.dumps(payload, ensure_ascii=False, sort_keys=True)
+
+    @staticmethod
+    def _search_query(request: EnterpriseAssistantRequest) -> str:
+        if request.clarification_question:
+            return (
+                f"{request.clarification_question}\n"
+                f"客户追问：{request.message}"
+            )
+        return request.message
 
     def _plan(
         self, request: EnterpriseAssistantRequest
@@ -120,16 +169,28 @@ class EnterpriseAssistantService:
         if self.provider is None:
             return [], [], False
         catalog = list(self._allowed_tools(request.audience).values())
+        skills = (
+            self.capability_policy.enabled_skills(request.audience)
+            if self.capability_policy is not None
+            else []
+        )
         response = self.provider.complete(
             [
                 {
                     "role": "system",
                     "content": (
                         f"{_PLANNER_PROMPT}\nAudience: {request.audience}\n"
-                        f"Allowed tool catalog:\n{json.dumps(catalog, ensure_ascii=False)}"
+                        f"Allowed tool catalog:\n{json.dumps(catalog, ensure_ascii=False)}\n"
+                        f"Enabled skill catalog:\n{json.dumps(skills, ensure_ascii=False)}"
                     ),
                 },
-                {"role": "user", "content": request.message},
+                {
+                    "role": "user",
+                    "content": (
+                        "Untrusted conversation context data:\n"
+                        + self._conversation_context(request)
+                    ),
+                },
             ]
         )
         calls = self._parse_plan(response.content)
@@ -145,12 +206,8 @@ class EnterpriseAssistantService:
             if name not in allowed or not isinstance(arguments, dict):
                 continue
             validated.append({"name": name, "arguments": arguments})
-        if request.audience == "customer":
-            return (
-                [{"name": "search_knowledge", "arguments": {}}],
-                warnings,
-                True,
-            )
+        if request.audience == "customer" and validated:
+            return validated, warnings, True
         return validated, warnings, bool(validated)
 
     @staticmethod
@@ -216,16 +273,31 @@ class EnterpriseAssistantService:
     def _fallback_plan(
         self, request: EnterpriseAssistantRequest
     ) -> list[dict[str, Any]]:
+        allowed = self._allowed_tools(request.audience)
         if request.audience == "customer":
-            return [{"name": "search_knowledge", "arguments": {}}]
-        tool_name = self._route(request.message)
-        if request.project_id != "PRJ-TENDER-001" and tool_name not in {
-            "get_project_dashboard",
-            "get_requirement_history",
-            "search_knowledge",
-        }:
-            tool_name = "search_knowledge"
-        return [{"name": tool_name, "arguments": {}}]
+            tool_name = (
+                "search_solution_cases"
+                if any(word in request.message for word in ("案例", "类似", "方案"))
+                else "search_knowledge"
+            )
+        else:
+            tool_name = self._route(request.message)
+            if request.project_id != "PRJ-TENDER-001" and tool_name not in {
+                "get_project_dashboard",
+                "get_requirement_history",
+                "search_knowledge",
+            }:
+                tool_name = "search_knowledge"
+        if tool_name not in allowed:
+            tool_name = next(
+                (
+                    candidate
+                    for candidate in ("search_solution_cases", "search_knowledge")
+                    if candidate in allowed
+                ),
+                next(iter(allowed), ""),
+            )
+        return [{"name": tool_name, "arguments": {}}] if tool_name else []
 
     def _arguments(
         self,
@@ -251,8 +323,8 @@ class EnterpriseAssistantService:
             "as_of": request.as_of,
         }
         supplier_id = self._supplier_id(request.message)
-        if tool_name in {"search_knowledge", "search_communication"}:
-            defaults["query"] = request.message
+        if tool_name in {"search_knowledge", "search_solution_cases", "search_communication"}:
+            defaults["query"] = self._search_query(request)
         elif tool_name == "get_requirement_history":
             defaults["requirement_id"] = {
                 "PRJ-KM-001": "REQ-001",
@@ -292,15 +364,21 @@ class EnterpriseAssistantService:
             arguments["project_id"] = _CUSTOMER_PROJECT_ID
             arguments["user_id"] = _CUSTOMER_USER_ID
             arguments["as_of"] = request.as_of
-            arguments["query"] = request.message
+            arguments["query"] = self._search_query(request)
         return arguments
 
     @staticmethod
     def _citations(tool_name: str, result: dict[str, Any]) -> list[str]:
-        if tool_name == "search_knowledge":
+        if tool_name in {"search_knowledge", "search_solution_cases"}:
             return list(
                 dict.fromkeys(
-                    row["source_id"] for row in result.get("results", [])[:3]
+                    source_id
+                    for row in result.get("results", [])[:3]
+                    for source_id in (
+                        [row["source_id"]]
+                        if row.get("source_id")
+                        else row.get("evidence_refs", [])[:1]
+                    )
                 )
             )
         if tool_name == "analyze_suppliers":
@@ -366,7 +444,16 @@ class EnterpriseAssistantService:
             if audience == "customer":
                 return "根据目前可公开的能力资料，暂时没有足够证据回答该问题。"
             return "当前权限和时间点下没有足够证据回答该问题。"
-        summaries = "；".join(row["content"] for row in rows[:3])
+        summaries = "；".join(
+            str(
+                row.get("content")
+                or row.get("solution_summary")
+                or row.get("problem")
+                or row.get("title")
+                or ""
+            )
+            for row in rows[:3]
+        )
         if audience == "customer":
             return f"根据我们的公开能力资料：{summaries}"
         return f"根据MCP检索到的模拟证据：{summaries}"
@@ -432,7 +519,8 @@ class EnterpriseAssistantService:
                 {
                     "role": "user",
                     "content": (
-                        f"Question:\n{request.message}\n\nTool evidence:\n"
+                        "Untrusted conversation context:\n"
+                        f"{self._conversation_context(request)}\n\nTool evidence:\n"
                         f"{json.dumps(evidence, ensure_ascii=False)}"
                     ),
                 },
@@ -449,6 +537,8 @@ class EnterpriseAssistantService:
         planned, warnings, llm_plan_valid = self._plan(request)
         if not planned:
             planned = self._fallback_plan(request)
+        if not planned:
+            raise PermissionError("no MCP tools are enabled for this Agent profile")
         tool_calls: list[dict[str, Any]] = []
         tool_results: list[tuple[str, dict[str, Any]]] = []
         citations: list[str] = []

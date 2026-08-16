@@ -51,6 +51,13 @@ class MCPDispatcher:
                 ),
                 lambda **args: self.service.search_knowledge(**args),
             ),
+            "search_solution_cases": (
+                _object_schema(
+                    {"query": text, "limit": integer},
+                    ["query"],
+                ),
+                lambda **args: self.service.search_solution_cases(**args),
+            ),
             "get_requirement_history": (
                 _object_schema(
                     {
@@ -152,6 +159,7 @@ class MCPDispatcher:
             "list_projects": "列出企业内部可访问的模拟项目索引。",
             "get_project_dashboard": "读取采购九阶段、数据量、需求、供应商、审查与方案驾驶舱。",
             "search_knowledge": "按用户ACL和as_of时间检索知识，并返回来源和脱敏字段。",
+            "search_solution_cases": "从数据库检索已沉淀的历史问题与解决方案案例。",
             "get_requirement_history": "读取需求版本历史和指定时间点适用版本。",
             "analyze_suppliers": "读取限定时间、工厂和品类的供应商画像与风险。",
             "review_tender_document": "读取文档审查黄金样本的规则命中并要求人工复核。",

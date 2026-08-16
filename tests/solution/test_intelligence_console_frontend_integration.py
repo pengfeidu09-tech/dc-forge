@@ -16,8 +16,8 @@ def test_enterprise_frontend_exposes_the_intelligence_console_view() -> None:
 
     assert "import IntelligenceConsole from './components/IntelligenceConsole.vue'" in app
     assert "智能引擎控制台" in app
-    assert "id: 'intelligence-console'" in app
-    assert "activeView === 'intelligence-console'" in app
+    assert "activeView = 'console'" in app
+    assert "activeView === 'tools'" in app
     assert "<IntelligenceConsole" in app
 
 

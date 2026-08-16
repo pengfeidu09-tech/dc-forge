@@ -29,6 +29,10 @@ from backend.app.solution.enterprise_assistant import (
     EnterpriseAssistantService,
 )
 from backend.app.solution.enterprise_portal import EnterpriseKnowledgeService
+from backend.app.solution.agent_configuration import (
+    AgentConfigurationService,
+    configured_agent_service,
+)
 from backend.app.solution.customer_engagement import CustomerEngagementService
 from backend.app.solution.customer_engagement_pages import (
     customer_center_html,
@@ -48,6 +52,7 @@ from backend.app.solution.llm_provider import LLMProvider, OpenAICompatibleProvi
 from backend.app.solution.production_readiness import evaluate_production_readiness
 from backend.app.solution.presales_orchestration import (
     DeliverableContent,
+    EditableSolutionPlan,
     PresalesOrchestrationService,
 )
 from backend.app.solution.rate_limiter import InMemoryRateLimiter
@@ -69,6 +74,7 @@ _chat_agent_provider_override: LLMProvider | None = None
 _feishu_bot_service_override: FeishuBotService | None = None
 _customer_engagement_service_override: CustomerEngagementService | None = None
 _presales_orchestration_service_override: PresalesOrchestrationService | None = None
+_agent_configuration_service_override: AgentConfigurationService | None = None
 _customer_rate_limiter: InMemoryRateLimiter | None = None
 _customer_rate_limiter_settings: tuple[int, float] | None = None
 _customer_rate_limiter_lock = Lock()
@@ -295,10 +301,33 @@ def get_enterprise_mcp_dispatcher() -> MCPDispatcher:
 
 @lru_cache(maxsize=1)
 def get_enterprise_assistant_service() -> EnterpriseAssistantService:
+    dispatcher = get_enterprise_mcp_dispatcher()
     return EnterpriseAssistantService(
-        get_enterprise_mcp_dispatcher(),
+        dispatcher,
         provider=OpenAICompatibleProvider(),
+        capability_policy=get_agent_configuration_service(),
     )
+
+
+@lru_cache(maxsize=1)
+def get_agent_configuration_service() -> AgentConfigurationService:
+    return configured_agent_service(get_enterprise_mcp_dispatcher())
+
+
+def set_agent_configuration_service(
+    service: AgentConfigurationService | None,
+) -> None:
+    global _agent_configuration_service_override
+    _agent_configuration_service_override = service
+
+
+def _active_agent_configuration_service() -> AgentConfigurationService:
+    if _agent_configuration_service_override is not None:
+        return _agent_configuration_service_override
+    try:
+        return get_agent_configuration_service()
+    except RuntimeError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
 
 
 def _portal_error(error: Exception) -> HTTPException:
@@ -370,7 +399,7 @@ class PresalesProjectCreateRequest(BaseModel):
     owner: str = Field(min_length=1, max_length=120)
     industry: str | None = Field(default=None, max_length=120)
     reference_project_id: str = Field(
-        default="PRJ-TENDER-001", min_length=1, max_length=160
+        default="CASE-KNOWLEDGE", min_length=1, max_length=160
     )
 
 
@@ -414,6 +443,20 @@ class PresalesDeliverableUpdateRequest(BaseModel):
     updated_by: str = Field(min_length=1, max_length=120)
 
 
+class PresalesSolutionSelectRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    solution_id: str = Field(min_length=1, max_length=240)
+    updated_by: str = Field(min_length=1, max_length=120)
+
+
+class PresalesSolutionUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    plan: EditableSolutionPlan
+    updated_by: str = Field(min_length=1, max_length=120)
+
+
 class PresalesReviewRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
@@ -428,6 +471,26 @@ class PresalesPublishRequest(BaseModel):
 
     draft_version: int = Field(ge=1)
     published_by: str = Field(min_length=1, max_length=120)
+
+
+class AgentProfileUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    enabled_tools: list[str] = Field(max_length=100)
+    enabled_skills: list[str] = Field(max_length=100)
+    updated_by: str = Field(min_length=1, max_length=120)
+
+
+class KnowledgeCaseRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    case_id: str = Field(min_length=1, max_length=120)
+    title: str = Field(min_length=1, max_length=240)
+    industry: str | None = Field(default=None, max_length=120)
+    problem: str = Field(min_length=1, max_length=12000)
+    solution_summary: str = Field(min_length=1, max_length=12000)
+    tags: list[str] = Field(default_factory=list, max_length=100)
+    evidence_refs: list[str] = Field(default_factory=list, max_length=200)
 
 
 @router.get("/health")
@@ -679,6 +742,61 @@ def customer_engagement_workbench_page() -> HTMLResponse:
     return response
 
 
+@router.get("/presales/agent-config")
+def presales_agent_configuration_endpoint(
+    request: Request,
+    response: Response,
+) -> dict[str, Any]:
+    _require_internal_access(request)
+    _apply_customer_security_headers(response)
+    return _active_agent_configuration_service().catalog()
+
+
+@router.put("/presales/agent-config/{agent_id}")
+def presales_update_agent_configuration_endpoint(
+    agent_id: Literal["feishu-customer", "feishu-internal"],
+    update: AgentProfileUpdateRequest,
+    request: Request,
+    response: Response,
+) -> dict[str, Any]:
+    _require_internal_access(request)
+    _apply_customer_security_headers(response)
+    try:
+        return _active_agent_configuration_service().update_profile(
+            agent_id,
+            **update.model_dump(),
+        ).model_dump(mode="json")
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+@router.get("/presales/knowledge/cases")
+def presales_knowledge_cases_endpoint(
+    request: Request,
+    response: Response,
+    query: str = "",
+) -> dict[str, Any]:
+    _require_internal_access(request)
+    _apply_customer_security_headers(response)
+    return {"cases": _active_agent_configuration_service().list_cases(query)}
+
+
+@router.put("/presales/knowledge/cases/{case_id}")
+def presales_save_knowledge_case_endpoint(
+    case_id: str,
+    case: KnowledgeCaseRequest,
+    request: Request,
+    response: Response,
+) -> dict[str, Any]:
+    _require_internal_access(request)
+    _apply_customer_security_headers(response)
+    if not hmac.compare_digest(case_id, case.case_id):
+        raise HTTPException(status_code=422, detail="case_id does not match request path")
+    return _active_agent_configuration_service().save_case(case.model_dump())
+
+
 @router.get("/presales/projects")
 def presales_projects_endpoint(
     request: Request,
@@ -809,6 +927,56 @@ def presales_deliverable_update_endpoint(
             draft_version=draft_version,
             content=update.content,
             updated_by=update.updated_by,
+        )
+    except HTTPException:
+        raise
+    except Exception as error:
+        raise _presales_error(error) from error
+
+
+@router.put(
+    "/presales/projects/{project_id}/drafts/{draft_version}/selection"
+)
+def presales_solution_selection_endpoint(
+    project_id: str,
+    draft_version: int,
+    selection: PresalesSolutionSelectRequest,
+    request: Request,
+    response: Response,
+) -> dict[str, Any]:
+    _require_internal_access(request)
+    _apply_customer_security_headers(response)
+    try:
+        return _active_presales_orchestration_service().select_solution_plan(
+            project_id,
+            draft_version=draft_version,
+            **selection.model_dump(),
+        )
+    except HTTPException:
+        raise
+    except Exception as error:
+        raise _presales_error(error) from error
+
+
+@router.put(
+    "/presales/projects/{project_id}/drafts/{draft_version}/plans/{solution_id}"
+)
+def presales_solution_update_endpoint(
+    project_id: str,
+    draft_version: int,
+    solution_id: str,
+    update: PresalesSolutionUpdateRequest,
+    request: Request,
+    response: Response,
+) -> dict[str, Any]:
+    _require_internal_access(request)
+    _apply_customer_security_headers(response)
+    try:
+        return _active_presales_orchestration_service().update_solution_plan(
+            project_id,
+            draft_version=draft_version,
+            solution_id=solution_id,
+            **update.model_dump(),
         )
     except HTTPException:
         raise

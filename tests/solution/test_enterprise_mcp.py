@@ -57,6 +57,7 @@ def test_mcp_initialize_list_tools_and_call_search() -> None:
         "list_projects",
         "get_project_dashboard",
         "search_knowledge",
+        "search_solution_cases",
         "get_requirement_history",
         "analyze_suppliers",
         "review_tender_document",
@@ -303,6 +304,9 @@ def test_all_mcp_tools_execute_with_representative_arguments() -> None:
             "query": "年需求量",
             "user_id": "user-procurement-owner",
             "as_of": "2026-10-30T23:59:59+08:00",
+        },
+        "search_solution_cases": {
+            "query": "采购需求分析",
         },
         "get_requirement_history": {
             "project_id": "PRJ-TENDER-001",

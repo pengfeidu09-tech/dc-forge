@@ -20,6 +20,12 @@ from backend.app.internal_console.service import InternalConsoleService
 from backend.app.process.requirement_repository import FileRequirementRepository
 from backend.app.process.requirement_skill import RequirementSkillLoader
 from backend.app.solution.chat_agent import ChatTurn
+from backend.app.solution.workspace_database import (
+    SqliteRequirementRepository,
+    WorkspaceSQLite,
+    deserialize,
+    serialize,
+)
 
 
 _CATEGORY_LABELS = {
@@ -504,14 +510,428 @@ class FileCustomerEngagementRepository:
         return sorted(publications, key=lambda item: item.publication_version)
 
 
+class SqliteCustomerEngagementRepository(WorkspaceSQLite):
+    """Customer conversation, access, and publication records in SQLite."""
+
+    def __init__(self, path: Path | str, *, access_ttl_days: int = 30) -> None:
+        if not 1 <= access_ttl_days <= 3650:
+            raise ValueError("access_ttl_days must be between 1 and 3650")
+        self.access_ttl_days = access_ttl_days
+        super().__init__(path)
+
+    @staticmethod
+    def _validate_project_id(project_id: str) -> None:
+        if not project_id.strip():
+            raise ValueError("project_id must not be blank")
+
+    def register_project(
+        self,
+        project_id: str,
+        *,
+        channel: Literal[
+            "feishu", "customer_portal", "requirement_state"
+        ] = "feishu",
+        tenant_key: str | None = None,
+        chat_id: str | None = None,
+        sender_open_id: str | None = None,
+    ) -> EngagementProject:
+        self._validate_project_id(project_id)
+        with self._lock:
+            try:
+                current = self.get_project(project_id)
+            except FileNotFoundError:
+                current = None
+            timestamp = _now()
+            project = (
+                current.model_copy(
+                    update={
+                        "tenant_key": tenant_key or current.tenant_key,
+                        "chat_id": chat_id or current.chat_id,
+                        "sender_open_id": sender_open_id or current.sender_open_id,
+                        "updated_at": timestamp,
+                    }
+                )
+                if current is not None
+                else EngagementProject(
+                    project_id=project_id,
+                    channel=channel,
+                    tenant_key=tenant_key,
+                    chat_id=chat_id,
+                    sender_open_id=sender_open_id,
+                    created_at=timestamp,
+                    updated_at=timestamp,
+                )
+            )
+            with self.connect() as connection:
+                connection.execute(
+                    "INSERT INTO customer_projects (project_id, updated_at, payload_json) "
+                    "VALUES (?, ?, ?) ON CONFLICT(project_id) DO UPDATE SET "
+                    "updated_at = excluded.updated_at, payload_json = excluded.payload_json",
+                    (
+                        project.project_id,
+                        project.updated_at,
+                        serialize(project.model_dump(mode="json")),
+                    ),
+                )
+            return project
+
+    def get_project(self, project_id: str) -> EngagementProject:
+        self._validate_project_id(project_id)
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT payload_json FROM customer_projects WHERE project_id = ?",
+                (project_id,),
+            ).fetchone()
+        if row is None:
+            raise FileNotFoundError("customer project does not exist")
+        return EngagementProject.model_validate(deserialize(row["payload_json"]))
+
+    def list_projects(self) -> list[EngagementProject]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT payload_json FROM customer_projects ORDER BY updated_at DESC"
+            ).fetchall()
+        return [
+            EngagementProject.model_validate(deserialize(row["payload_json"]))
+            for row in rows
+        ]
+
+    @staticmethod
+    def _session_key(tenant_key: str, chat_id: str) -> str:
+        if not tenant_key.strip() or not chat_id.strip():
+            raise ValueError("tenant_key and chat_id must not be blank")
+        return _digest(f"{tenant_key}|{chat_id}", 64)
+
+    def _load_session(self, tenant_key: str, chat_id: str) -> FeishuChatSession | None:
+        key = self._session_key(tenant_key, chat_id)
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT payload_json FROM feishu_chat_sessions WHERE session_key = ?",
+                (key,),
+            ).fetchone()
+        if row is None:
+            return None
+        return FeishuChatSession.model_validate(deserialize(row["payload_json"]))
+
+    def _save_session(self, session: FeishuChatSession) -> None:
+        key = self._session_key(session.tenant_key, session.chat_id)
+        with self.connect() as connection:
+            connection.execute(
+                "INSERT INTO feishu_chat_sessions "
+                "(session_key, tenant_key, chat_id, payload_json) VALUES (?, ?, ?, ?) "
+                "ON CONFLICT(session_key) DO UPDATE SET payload_json = excluded.payload_json",
+                (
+                    key,
+                    session.tenant_key,
+                    session.chat_id,
+                    serialize(session.model_dump(mode="json")),
+                ),
+            )
+
+    def active_feishu_project_id(self, tenant_key: str, chat_id: str) -> str:
+        with self._lock:
+            current = self._load_session(tenant_key, chat_id)
+            if current is not None:
+                return current.active_project_id
+            project_id = f"feishu:{tenant_key}:{chat_id}"
+            self._save_session(
+                FeishuChatSession(
+                    tenant_key=tenant_key,
+                    chat_id=chat_id,
+                    active_project_id=project_id,
+                    session_number=1,
+                    updated_at=_now(),
+                )
+            )
+            return project_id
+
+    def start_new_feishu_project(
+        self,
+        tenant_key: str,
+        chat_id: str,
+        *,
+        sender_open_id: str | None = None,
+    ) -> str:
+        with self._lock:
+            current_project_id = self.active_feishu_project_id(tenant_key, chat_id)
+            current = self._load_session(tenant_key, chat_id)
+            if current is None:
+                raise RuntimeError("Feishu chat session was not created")
+            session_number = current.session_number + 1
+            project_id = f"feishu:{tenant_key}:{chat_id}:session:{session_number:04d}"
+            self._save_session(
+                current.model_copy(
+                    update={
+                        "active_project_id": project_id,
+                        "session_number": session_number,
+                        "previous_project_ids": list(
+                            dict.fromkeys(
+                                [*current.previous_project_ids, current_project_id]
+                            )
+                        )[-1000:],
+                        "updated_at": _now(),
+                    }
+                )
+            )
+            self.register_project(
+                project_id,
+                channel="feishu",
+                tenant_key=tenant_key,
+                chat_id=chat_id,
+                sender_open_id=sender_open_id,
+            )
+            self.ensure_access(project_id)
+            return project_id
+
+    def append_message(
+        self,
+        *,
+        project_id: str,
+        channel: Literal["feishu", "customer_portal"],
+        role: Literal["customer", "employee", "assistant"],
+        message_id: str,
+        event_id: str,
+        content: str,
+        delivery_status: Literal["received", "replied", "failed"],
+    ) -> EngagementMessage:
+        record_id = _digest(f"{project_id}|{channel}|{message_id}|{role}")
+        message = EngagementMessage(
+            record_id=record_id,
+            project_id=project_id,
+            channel=channel,
+            role=role,
+            message_id=message_id,
+            event_id=event_id,
+            content=content,
+            delivery_status=delivery_status,
+            recorded_at=_now(),
+        )
+        with self._lock, self.connect() as connection:
+            row = connection.execute(
+                "SELECT payload_json FROM customer_messages "
+                "WHERE project_id = ? AND record_id = ?",
+                (project_id, record_id),
+            ).fetchone()
+            if row is not None:
+                existing = EngagementMessage.model_validate(
+                    deserialize(row["payload_json"])
+                )
+                comparable = (
+                    existing.project_id,
+                    existing.channel,
+                    existing.role,
+                    existing.content,
+                )
+                expected = (project_id, channel, role, content)
+                if comparable != expected:
+                    raise ValueError("message idempotency key contains different content")
+                return existing
+            connection.execute(
+                "INSERT INTO customer_messages "
+                "(project_id, record_id, recorded_at, payload_json) VALUES (?, ?, ?, ?)",
+                (
+                    project_id,
+                    record_id,
+                    message.recorded_at,
+                    serialize(message.model_dump(mode="json")),
+                ),
+            )
+        return message
+
+    def list_messages(self, project_id: str) -> list[EngagementMessage]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT payload_json FROM customer_messages "
+                "WHERE project_id = ? ORDER BY recorded_at, record_id",
+                (project_id,),
+            ).fetchall()
+        messages = [
+            EngagementMessage.model_validate(deserialize(row["payload_json"]))
+            for row in rows
+        ]
+        role_order = {"customer": 0, "employee": 0, "assistant": 1}
+        return sorted(
+            messages,
+            key=lambda item: (item.recorded_at, item.message_id, role_order[item.role]),
+        )
+
+    def _expires_at(self, created_at: str) -> str:
+        try:
+            created = datetime.fromisoformat(created_at)
+        except ValueError as error:
+            raise ValueError("invalid customer access created_at") from error
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=UTC)
+        return (created.astimezone(UTC) + timedelta(days=self.access_ttl_days)).isoformat()
+
+    @staticmethod
+    def _access_expired(access: CustomerAccess) -> bool:
+        try:
+            expires_at = datetime.fromisoformat(access.expires_at)
+        except ValueError as error:
+            raise ValueError("invalid customer access expires_at") from error
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=UTC)
+        return expires_at.astimezone(UTC) <= datetime.now(UTC)
+
+    def _new_access(self, project_id: str) -> CustomerAccess:
+        created_at = _now()
+        return CustomerAccess(
+            project_id=project_id,
+            access_id=secrets.token_urlsafe(16),
+            token=secrets.token_urlsafe(32),
+            created_at=created_at,
+            expires_at=self._expires_at(created_at),
+        )
+
+    def _save_access(self, access: CustomerAccess) -> None:
+        with self.connect() as connection:
+            connection.execute(
+                "INSERT INTO customer_access "
+                "(project_id, access_id, token, payload_json) VALUES (?, ?, ?, ?) "
+                "ON CONFLICT(project_id) DO UPDATE SET "
+                "access_id = excluded.access_id, token = excluded.token, "
+                "payload_json = excluded.payload_json",
+                (
+                    access.project_id,
+                    access.access_id,
+                    access.token,
+                    serialize(access.model_dump(mode="json")),
+                ),
+            )
+
+    def _access_for_project(self, project_id: str) -> CustomerAccess | None:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT payload_json FROM customer_access WHERE project_id = ?",
+                (project_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return CustomerAccess.model_validate(deserialize(row["payload_json"]))
+
+    def ensure_access(self, project_id: str) -> CustomerAccess:
+        with self._lock:
+            self.get_project(project_id)
+            current = self._access_for_project(project_id)
+            if current is not None and not self._access_expired(current):
+                return current
+            access = self._new_access(project_id)
+            self._save_access(access)
+            return access
+
+    def rotate_access(self, project_id: str) -> CustomerAccess:
+        with self._lock:
+            self.get_project(project_id)
+            access = self._new_access(project_id)
+            self._save_access(access)
+            return access
+
+    def _all_access(self) -> list[CustomerAccess]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT payload_json FROM customer_access"
+            ).fetchall()
+        return [
+            CustomerAccess.model_validate(deserialize(row["payload_json"]))
+            for row in rows
+        ]
+
+    def project_for_token(self, token: str) -> str:
+        if not token.strip():
+            raise FileNotFoundError("customer access does not exist")
+        for access in self._all_access():
+            if not self._access_expired(access) and hmac.compare_digest(
+                access.token, token
+            ):
+                return access.project_id
+        raise FileNotFoundError("customer access does not exist")
+
+    def project_for_access_id(self, access_id: str) -> str:
+        if not access_id.strip():
+            raise FileNotFoundError("customer access does not exist")
+        for access in self._all_access():
+            if not self._access_expired(access) and hmac.compare_digest(
+                access.access_id, access_id
+            ):
+                return access.project_id
+        raise FileNotFoundError("customer access does not exist")
+
+    def project_for_access(self, access_id: str, token: str) -> str:
+        project_id = self.project_for_access_id(access_id)
+        access = self._access_for_project(project_id)
+        if (
+            access is None
+            or not token.strip()
+            or self._access_expired(access)
+            or not hmac.compare_digest(access.token, token)
+        ):
+            raise FileNotFoundError("customer access does not exist")
+        return project_id
+
+    def save_publication(
+        self,
+        *,
+        project_id: str,
+        baseline_version: int | None,
+        requirement_state_version: int | None = None,
+        publication_basis: Literal[
+            "confirmed_baseline", "latest_requirement_state"
+        ] = "confirmed_baseline",
+        published_by: str,
+        requirements: list[dict[str, Any]],
+        plans: list[dict[str, Any]],
+    ) -> PublishedSolution:
+        with self._lock, self.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT MAX(version) AS version FROM customer_publications "
+                "WHERE project_id = ?",
+                (project_id,),
+            ).fetchone()
+            publication = PublishedSolution(
+                project_id=project_id,
+                publication_version=int(row["version"] or 0) + 1,
+                baseline_version=baseline_version,
+                requirement_state_version=requirement_state_version,
+                publication_basis=publication_basis,
+                published_by=published_by,
+                published_at=_now(),
+                requirements=requirements,
+                plans=plans,
+            )
+            connection.execute(
+                "INSERT INTO customer_publications "
+                "(project_id, version, payload_json) VALUES (?, ?, ?)",
+                (
+                    project_id,
+                    publication.publication_version,
+                    serialize(publication.model_dump(mode="json")),
+                ),
+            )
+        return publication
+
+    def list_publications(self, project_id: str) -> list[PublishedSolution]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT payload_json FROM customer_publications "
+                "WHERE project_id = ? ORDER BY version",
+                (project_id,),
+            ).fetchall()
+        return [
+            PublishedSolution.model_validate(deserialize(row["payload_json"]))
+            for row in rows
+        ]
+
+
 class CustomerEngagementService:
     """Joins durable conversations to Requirement Intelligence and publication."""
 
     def __init__(
         self,
         *,
-        repository: FileCustomerEngagementRepository,
-        requirement_repository: FileRequirementRepository,
+        repository: FileCustomerEngagementRepository | SqliteCustomerEngagementRepository,
+        requirement_repository: FileRequirementRepository | SqliteRequirementRepository,
         internal_console: InternalConsoleService,
         feedback_analyzer: RequirementFeedbackAnalyzer | None = None,
         public_base_url: str = "http://127.0.0.1:8000",
@@ -528,23 +948,10 @@ class CustomerEngagementService:
         *,
         feedback_analyzer: RequirementFeedbackAnalyzer | None = None,
     ) -> "CustomerEngagementService":
-        requirement_root_raw = os.getenv("REQUIREMENT_REPOSITORY_ROOT", "").strip()
-        if not requirement_root_raw:
-            raise RuntimeError(
-                "Customer engagement is not configured; missing REQUIREMENT_REPOSITORY_ROOT"
-            )
         project_root = Path(__file__).parents[3].resolve()
-        requirement_root = Path(requirement_root_raw).expanduser().resolve()
-        if requirement_root == project_root or requirement_root.is_relative_to(project_root):
-            raise RuntimeError("REQUIREMENT_REPOSITORY_ROOT must be outside the Git working tree")
-        engagement_raw = os.getenv("CUSTOMER_ENGAGEMENT_ROOT", "").strip()
-        engagement_root = (
-            Path(engagement_raw).expanduser().resolve()
-            if engagement_raw
-            else requirement_root.parent / f"{requirement_root.name}-engagement"
-        )
-        if engagement_root == project_root or engagement_root.is_relative_to(project_root):
-            raise RuntimeError("CUSTOMER_ENGAGEMENT_ROOT must be outside the Git working tree")
+        from backend.app.solution.agent_configuration import configured_database_path
+
+        database_path = configured_database_path()
         try:
             access_ttl_days = int(
                 os.getenv("CUSTOMER_ACCESS_TTL_DAYS", "30").strip() or "30"
@@ -555,14 +962,14 @@ class CustomerEngagementService:
             raise RuntimeError(
                 "CUSTOMER_ACCESS_TTL_DAYS must be between 1 and 3650"
             )
-        requirement_repository = FileRequirementRepository(requirement_root)
+        requirement_repository = SqliteRequirementRepository(database_path)
         internal_console = InternalConsoleService(
             repository=requirement_repository,
             skill_loader=RequirementSkillLoader(project_root / "data" / "requirement_skills"),
         )
         return cls(
-            repository=FileCustomerEngagementRepository(
-                engagement_root,
+            repository=SqliteCustomerEngagementRepository(
+                database_path,
                 access_ttl_days=access_ttl_days,
             ),
             requirement_repository=requirement_repository,
@@ -682,6 +1089,11 @@ class CustomerEngagementService:
         return f"{self.public_base_url}/presales/workbench"
 
     def _requirement_project_ids(self) -> set[str]:
+        list_project_ids = getattr(
+            self.requirement_repository, "list_project_ids", None
+        )
+        if callable(list_project_ids):
+            return set(list_project_ids())
         project_ids: set[str] = set()
         root = self.requirement_repository._root
         if not root.exists():
@@ -838,6 +1250,15 @@ class CustomerEngagementService:
             demo_preview = (
                 latest_publication.publication_basis == "latest_requirement_state"
             )
+            public_plan = (
+                {
+                    key: value
+                    for key, value in latest_publication.plans[0].items()
+                    if key not in {"solution_id", "recommended"}
+                }
+                if latest_publication.plans
+                else None
+            )
             solution = {
                 "publication_version": latest_publication.publication_version,
                 "baseline_version": latest_publication.baseline_version,
@@ -845,7 +1266,7 @@ class CustomerEngagementService:
                 "publication_basis": latest_publication.publication_basis,
                 "published_at": latest_publication.published_at,
                 "requirements": latest_publication.requirements,
-                "plans": latest_publication.plans,
+                "plan": public_plan,
                 "notice": (
                     "演示预览：本方案基于当前需求理解生成，尚未形成正式客户确认基线；"
                     "方案效果与目标指标仍需在客户环境中验证。"
@@ -853,6 +1274,23 @@ class CustomerEngagementService:
                     else "方案效果与目标指标需在客户环境中验证，不代表已实现业务成果。"
                 ),
             }
+        progress_facts = [
+            ("需求收集", state is not None),
+            ("需求确认", requirements_confirmed),
+            ("方案设计", latest_publication is not None),
+            ("客户发布", latest_publication is not None),
+        ]
+        progress_stages = []
+        current_assigned = False
+        for label, complete in progress_facts:
+            if complete:
+                status = "completed"
+            elif not current_assigned:
+                status = "current"
+                current_assigned = True
+            else:
+                status = "pending"
+            progress_stages.append({"label": label, "status": status})
         return {
             "project": {
                 "channel": project.channel,
@@ -863,6 +1301,12 @@ class CustomerEngagementService:
                 self._confirmation_revision(token, state) if state is not None else None
             ),
             "requirements_confirmed": requirements_confirmed,
+            "progress": {
+                "completed": sum(1 for _, complete in progress_facts if complete),
+                "total": len(progress_facts),
+                "stages": progress_stages,
+                "updated_at": project.updated_at,
+            },
             "solution": solution,
         }
 
@@ -924,6 +1368,7 @@ class CustomerEngagementService:
     @staticmethod
     def _safe_plan(plan, recommended_solution_id: str) -> dict[str, Any]:
         return {
+            "solution_id": plan.solution_id,
             "recommended": plan.solution_id == recommended_solution_id,
             "name": plan.name,
             "summary": plan.summary,
@@ -970,6 +1415,11 @@ class CustomerEngagementService:
         if baseline is None:
             raise ValueError("RequirementBaseline does not exist")
         handoff = self.internal_console.compile(project_id, baseline_version)
+        selected = next(
+            plan
+            for plan in handoff.bundle.plans
+            if plan.solution_id == handoff.bundle.recommended_solution_id
+        )
         publication = self.repository.save_publication(
             project_id=project_id,
             baseline_version=baseline_version,
@@ -977,14 +1427,62 @@ class CustomerEngagementService:
             publication_basis="confirmed_baseline",
             published_by=published_by,
             requirements=[self._safe_requirement(item) for item in baseline.confirmed_items],
-            plans=[
-                self._safe_plan(plan, handoff.bundle.recommended_solution_id)
-                for plan in handoff.bundle.plans
-            ],
+            plans=[self._safe_plan(selected, handoff.bundle.recommended_solution_id)],
         )
         return {
             "publication_version": publication.publication_version,
             "baseline_version": publication.baseline_version,
+            "published_at": publication.published_at,
+            "customer_url": self.customer_portal_url(project_id),
+        }
+
+    def publish_selected_plan(
+        self,
+        project_id: str,
+        *,
+        plan: dict[str, Any],
+        published_by: str,
+        baseline_version: int | None = None,
+        requirement_state_version: int | None = None,
+    ) -> dict[str, Any]:
+        if baseline_version is not None:
+            baseline = self.requirement_repository.load_baseline(
+                project_id, baseline_version
+            )
+            if baseline is None:
+                raise ValueError("RequirementBaseline does not exist")
+            requirements = [
+                self._safe_requirement(item) for item in baseline.confirmed_items
+            ]
+            state_version = baseline.source_state_version
+            basis = "confirmed_baseline"
+        else:
+            if requirement_state_version is None:
+                raise ValueError("requirement_state_version is required")
+            state = self.requirement_repository.load_state(
+                project_id, requirement_state_version
+            )
+            if state is None:
+                raise ValueError("RequirementState does not exist")
+            requirements = [
+                self._safe_requirement(item) for item in self._active_items(state)
+            ]
+            state_version = requirement_state_version
+            basis = "latest_requirement_state"
+        publication = self.repository.save_publication(
+            project_id=project_id,
+            baseline_version=baseline_version,
+            requirement_state_version=state_version,
+            publication_basis=basis,
+            published_by=published_by,
+            requirements=requirements,
+            plans=[plan],
+        )
+        return {
+            "publication_version": publication.publication_version,
+            "baseline_version": publication.baseline_version,
+            "requirement_state_version": publication.requirement_state_version,
+            "publication_basis": publication.publication_basis,
             "published_at": publication.published_at,
             "customer_url": self.customer_portal_url(project_id),
         }

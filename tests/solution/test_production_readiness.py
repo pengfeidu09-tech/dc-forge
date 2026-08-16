@@ -14,8 +14,7 @@ _PRODUCTION_ENV_NAMES = (
     "LLM_API_KEY",
     "LLM_BASE_URL",
     "LLM_MODEL",
-    "REQUIREMENT_REPOSITORY_ROOT",
-    "CUSTOMER_ENGAGEMENT_ROOT",
+    "DCFORGE_DATABASE_PATH",
     "CUSTOMER_PORTAL_BASE_URL",
     "CUSTOMER_ENGAGEMENT_INTERNAL_TOKEN",
     "FEISHU_APP_ID",
@@ -32,17 +31,13 @@ def _clear_production_env(monkeypatch) -> None:
 
 
 def _configured_production_env(monkeypatch, tmp_path: Path) -> None:
-    requirement_root = tmp_path / "requirement-state"
-    engagement_root = tmp_path / "customer-engagement"
-    requirement_root.mkdir()
-    engagement_root.mkdir()
+    database_path = tmp_path / "workspace.sqlite3"
     settings = {
         "DCFORGE_PRODUCTION_MODE": "true",
         "LLM_API_KEY": "sk-production-secret-value",
         "LLM_BASE_URL": "https://api.example.com/v1",
         "LLM_MODEL": "production-model",
-        "REQUIREMENT_REPOSITORY_ROOT": str(requirement_root),
-        "CUSTOMER_ENGAGEMENT_ROOT": str(engagement_root),
+        "DCFORGE_DATABASE_PATH": str(database_path),
         "CUSTOMER_PORTAL_BASE_URL": "https://dcforge.example.com",
         "CUSTOMER_ENGAGEMENT_INTERNAL_TOKEN": "i" * 32,
         "FEISHU_APP_ID": "cli_production",
@@ -105,7 +100,7 @@ def test_complete_single_worker_production_configuration_is_ready(
     assert all(check["status"] != "error" for check in response.json()["checks"])
 
 
-def test_multiple_file_repository_workers_block_production_readiness(
+def test_sqlite_workspace_allows_multiple_production_workers(
     monkeypatch, tmp_path: Path
 ) -> None:
     _clear_production_env(monkeypatch)
@@ -115,8 +110,8 @@ def test_multiple_file_repository_workers_block_production_readiness(
 
     response = client.get("/health/ready")
 
-    assert response.status_code == 503
+    assert response.status_code == 200
     assert any(
-        check["name"] == "worker_model" and check["status"] == "error"
+        check["name"] == "worker_model" and check["status"] == "ok"
         for check in response.json()["checks"]
     )

@@ -67,6 +67,7 @@ const pendingRequirements = computed(() =>
 const hasConflicts = computed(() =>
   pendingRequirements.value.some((item) => item.choice_group),
 )
+const publishedPlan = computed(() => current.value?.solution?.plan || null)
 const selectedKeys = computed(() => [
   ...acceptedKeys.value,
   ...Object.values(selectedGroups).filter(Boolean),
@@ -188,6 +189,23 @@ onMounted(() => {
               :description="current.solution.notice"
             />
 
+            <a-card class="customer-block" title="当前进度" :bordered="false">
+              <template #extra>
+                <a-tag color="processing">
+                  {{ current.progress.completed }} / {{ current.progress.total }} 已完成
+                </a-tag>
+              </template>
+              <a-steps
+                size="small"
+                responsive
+                :current="Math.min(current.progress.completed, current.progress.total - 1)"
+                :items="current.progress.stages.map((stage) => ({
+                  title: stage.label,
+                  status: stage.status === 'completed' ? 'finish' : stage.status === 'current' ? 'process' : 'wait',
+                }))"
+              />
+            </a-card>
+
             <a-card class="customer-block" title="当前需求理解" :bordered="false">
               <template #extra>
                 <a-tag :color="current.requirements_confirmed ? 'success' : 'processing'">
@@ -259,43 +277,35 @@ onMounted(() => {
             </a-card>
 
             <a-card class="customer-block" title="当前解决方案" :bordered="false">
-              <a-empty v-if="!current.solution" description="企业团队尚未发布方案" />
+              <a-empty v-if="!publishedPlan" description="企业团队尚未发布方案" />
               <template v-else>
                 <a-alert type="info" show-icon :message="current.solution.notice" />
-                <a-tabs class="solution-tabs">
-                  <a-tab-pane
-                    v-for="plan in current.solution.plans"
-                    :key="plan.name"
-                    :tab="plan.recommended ? `${plan.name}（推荐）` : plan.name"
-                  >
-                    <a-typography-title :level="4">{{ plan.name }}</a-typography-title>
-                    <a-typography-paragraph>{{ plan.summary }}</a-typography-paragraph>
-                    <a-descriptions bordered size="small" :column="1">
-                      <a-descriptions-item label="方案定位">{{ plan.strategy }}</a-descriptions-item>
-                      <a-descriptions-item label="能力数量">{{ plan.capabilities.length }} 项</a-descriptions-item>
-                    </a-descriptions>
-                    <a-list :data-source="plan.capabilities" class="solution-list" size="small">
-                      <template #header><strong>能力模块</strong></template>
-                      <template #renderItem="{ item }">
-                        <a-list-item><a-list-item-meta :title="item.name" :description="item.reason" /></a-list-item>
-                      </template>
+                <a-typography-title :level="4">{{ publishedPlan.name }}</a-typography-title>
+                <a-typography-paragraph>{{ publishedPlan.summary }}</a-typography-paragraph>
+                <a-descriptions bordered size="small" :column="1">
+                  <a-descriptions-item label="方案定位">{{ publishedPlan.strategy }}</a-descriptions-item>
+                  <a-descriptions-item label="能力数量">{{ publishedPlan.capabilities.length }} 项</a-descriptions-item>
+                </a-descriptions>
+                <a-list :data-source="publishedPlan.capabilities" class="solution-list" size="small">
+                  <template #header><strong>能力模块</strong></template>
+                  <template #renderItem="{ item }">
+                    <a-list-item><a-list-item-meta :title="item.name" :description="item.reason" /></a-list-item>
+                  </template>
+                </a-list>
+                <a-collapse ghost>
+                  <a-collapse-panel key="workflow" header="目标工作流">
+                    <a-steps
+                      direction="vertical"
+                      size="small"
+                      :items="publishedPlan.target_workflow.map((node) => ({ title: node.name, description: `${node.executor}${node.gate_reason ? ` · ${node.gate_reason}` : ''}` }))"
+                    />
+                  </a-collapse-panel>
+                  <a-collapse-panel key="steps" header="实施步骤">
+                    <a-list :data-source="publishedPlan.implementation_steps" size="small" bordered>
+                      <template #renderItem="{ item, index }"><a-list-item>{{ index + 1 }}. {{ item }}</a-list-item></template>
                     </a-list>
-                    <a-collapse ghost>
-                      <a-collapse-panel key="workflow" header="目标工作流">
-                        <a-steps
-                          direction="vertical"
-                          size="small"
-                          :items="plan.target_workflow.map((node) => ({ title: node.name, description: `${node.executor}${node.gate_reason ? ` · ${node.gate_reason}` : ''}` }))"
-                        />
-                      </a-collapse-panel>
-                      <a-collapse-panel key="steps" header="实施步骤">
-                        <a-list :data-source="plan.implementation_steps" size="small" bordered>
-                          <template #renderItem="{ item, index }"><a-list-item>{{ index + 1 }}. {{ item }}</a-list-item></template>
-                        </a-list>
-                      </a-collapse-panel>
-                    </a-collapse>
-                  </a-tab-pane>
-                </a-tabs>
+                  </a-collapse-panel>
+                </a-collapse>
               </template>
             </a-card>
 

@@ -30,7 +30,7 @@ def _check(name: str, ok: bool, detail: str, production_mode: bool) -> dict[str,
     }
 
 
-def _storage_ok(raw_path: str, project_root: Path) -> bool:
+def _database_ok(raw_path: str, project_root: Path) -> bool:
     if not raw_path.strip():
         return False
     try:
@@ -39,7 +39,10 @@ def _storage_ok(raw_path: str, project_root: Path) -> bool:
         return False
     if path == project_root or path.is_relative_to(project_root):
         return False
-    return path.is_dir() and os.access(path, os.W_OK | os.X_OK)
+    if path.exists() and not path.is_file():
+        return False
+    parent = path.parent
+    return parent.is_dir() and os.access(parent, os.W_OK | os.X_OK)
 
 
 def _public_url_ok(raw_url: str) -> bool:
@@ -75,33 +78,15 @@ def evaluate_production_readiness(
         )
     )
 
-    requirement_ok = _storage_ok(
-        values.get("REQUIREMENT_REPOSITORY_ROOT", ""), root
-    )
+    database_ok = _database_ok(values.get("DCFORGE_DATABASE_PATH", ""), root)
     checks.append(
         _check(
-            "requirement_storage",
-            requirement_ok,
+            "workspace_database",
+            database_ok,
             (
-                "需求状态目录位于工作树外且可写"
-                if requirement_ok
-                else "需求状态目录缺失、不可写或位于工作树内"
-            ),
-            production_mode,
-        )
-    )
-
-    engagement_ok = _storage_ok(
-        values.get("CUSTOMER_ENGAGEMENT_ROOT", ""), root
-    )
-    checks.append(
-        _check(
-            "customer_engagement_storage",
-            engagement_ok,
-            (
-                "客户会话目录位于工作树外且可写"
-                if engagement_ok
-                else "客户会话目录缺失、不可写或位于工作树内"
+                "工作区数据库位于 Git 工作树外且父目录可写"
+                if database_ok
+                else "工作区数据库缺失、不可写或位于 Git 工作树内"
             ),
             production_mode,
         )
@@ -181,15 +166,15 @@ def evaluate_production_readiness(
         worker_count = int(raw_workers)
     except ValueError:
         worker_count = 0
-    worker_ok = worker_count == 1
+    worker_ok = worker_count >= 1
     checks.append(
         _check(
             "worker_model",
             worker_ok,
             (
-                "文件仓库按单 worker 运行"
+                f"SQLite 工作区允许 {worker_count} 个 worker"
                 if worker_ok
-                else "文件仓库上线时只支持一个 worker"
+                else "WEB_CONCURRENCY 必须是正整数"
             ),
             production_mode,
         )

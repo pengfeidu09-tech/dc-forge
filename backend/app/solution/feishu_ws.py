@@ -145,9 +145,13 @@ def build_feishu_websocket_client(
 
         provider = OpenAICompatibleProvider()
         repository_root = Path(__file__).resolve().parents[3]
+        dispatcher = MCPDispatcher(EnterpriseKnowledgeService(repository_root))
+        from backend.app.solution.agent_configuration import configured_agent_service
+
         assistant = EnterpriseAssistantService(
-            MCPDispatcher(EnterpriseKnowledgeService(repository_root)),
+            dispatcher,
             provider=provider,
+            capability_policy=configured_agent_service(dispatcher),
         )
         internal_open_ids = {
             value.strip()

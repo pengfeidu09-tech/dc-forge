@@ -434,6 +434,7 @@ button, input, textarea, select { font: inherit; }
 .solution-plan { min-width: 0; padding: 17px; border-right: 1px solid #e6eaf0; }
 .solution-plan:last-child { border-right: 0; }
 .solution-plan.recommended { box-shadow: inset 0 3px #2b7a78; }
+.solution-plan.selected { background: #f4fbfa; box-shadow: inset 0 3px #16776f; }
 .solution-plan header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .solution-plan header span { color: #7a8797; font-size: 10px; }
 .solution-plan h3 { margin: 4px 0 0; color: #253142; font-size: 15px; }
@@ -446,6 +447,31 @@ button, input, textarea, select { font: inherit; }
 .solution-plan li span { display: block; font-size: 10px; }
 .solution-plan li strong { color: #3b4859; }
 .solution-plan li span { margin-top: 3px; color: #7a8797; }
+.solution-plan-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.form-grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.solution-edit-form { max-height: 66vh; margin-top: 16px; padding-right: 6px; overflow-y: auto; }
+
+.agent-workspace { display: grid; gap: 16px; }
+.agent-policy-panel,
+.knowledge-case-panel { background: #fff; border: 1px solid #e1e6ec; }
+.agent-profile-selector { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 16px; border-bottom: 1px solid #e6eaf0; }
+.agent-catalog-grid { display: grid; grid-template-columns: 1fr 1fr; }
+.agent-catalog-grid > div { min-width: 0; padding: 16px; }
+.agent-catalog-grid > div + div { border-left: 1px solid #e6eaf0; }
+.agent-catalog-grid h3 { margin: 0 0 11px; color: #344154; font-size: 12px; }
+.capability-check-list { display: grid; gap: 7px; }
+.capability-check-list .ant-checkbox-wrapper { display: grid; grid-template-columns: 16px 1fr; align-items: start; margin-inline-start: 0; padding: 9px 10px; background: #f6f8fa; border: 1px solid #e5e9ee; border-radius: 6px; }
+.capability-check-list .ant-checkbox { margin-top: 2px; }
+.capability-check-list .ant-checkbox + span { min-width: 0; padding-inline-start: 9px; }
+.capability-check-list strong,
+.capability-check-list small { display: block; overflow-wrap: anywhere; }
+.capability-check-list strong { color: #334154; font-size: 11px; }
+.capability-check-list small { margin-top: 3px; color: #748193; font-size: 9px; line-height: 1.45; }
+.agent-editor-footer { max-width: 360px; padding: 0 16px 2px; }
+.knowledge-case-panel .ant-list { padding: 0 16px; }
+.knowledge-case-panel .ant-list-item p { margin: 0 0 6px; color: #647185; font-size: 11px; }
+.knowledge-case-panel .ant-list-item > strong { color: #354256; font-size: 11px; }
+.case-tags { margin-top: 9px; }
 
 .review-form { margin-top: 16px; }
 .ant-table-wrapper .ant-table { font-size: 11px; }
@@ -483,6 +509,8 @@ button, input, textarea, select { font: inherit; }
   .solution-plan { border-right: 0; border-bottom: 1px solid #e6eaf0; }
   .research-grid { grid-template-columns: 1fr; }
   .research-grid > div + div { border-top: 1px solid #e6eaf0; border-left: 0; }
+  .agent-catalog-grid { grid-template-columns: 1fr; }
+  .agent-catalog-grid > div + div { border-top: 1px solid #e6eaf0; border-left: 0; }
 }
 
 @media (max-width: 620px) {
@@ -498,6 +526,8 @@ button, input, textarea, select { font: inherit; }
   .tab-toolbar .ant-space { width: 100%; }
   .skill-chain { grid-template-columns: 1fr; }
   .skill-chain article { border-right: 0 !important; }
+  .form-grid-two { grid-template-columns: 1fr; gap: 0; }
+  .agent-profile-selector { align-items: flex-start; flex-direction: column; }
   .solution-flow-canvas { height: 520px; }
   .solution-vue-flow .vue-flow__minimap { width: 96px; height: 64px; }
 }

@@ -1821,3 +1821,31 @@ class EnterpriseKnowledgeService:
             }
         )
         return bundle
+
+    def search_solution_cases(
+        self,
+        *,
+        query: str,
+        limit: int = 8,
+    ) -> dict[str, Any]:
+        from backend.app.solution.agent_configuration import configured_case_repository
+
+        if not query.strip():
+            raise ValueError("case knowledge query must not be blank")
+        cases = configured_case_repository().list_cases(query)[: max(1, min(limit, 50))]
+        return {
+            "query": query,
+            "results": [
+                {
+                    "title": case.title,
+                    "industry": case.industry,
+                    "problem": case.problem,
+                    "solution_summary": case.solution_summary,
+                    "tags": case.tags,
+                    "evidence_refs": case.evidence_refs,
+                }
+                for case in cases
+            ],
+            "insufficient_evidence": not cases,
+            "data_classification": "internal_case_knowledge",
+        }

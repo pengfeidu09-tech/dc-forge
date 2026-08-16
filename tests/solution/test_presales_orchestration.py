@@ -24,6 +24,7 @@ from backend.app.solution.customer_engagement_pages import internal_workbench_ht
 from backend.app.solution.llm_provider import LLMResponse
 from backend.app.solution.presales_orchestration import (
     DeliverableContent,
+    EditableSolutionPlan,
     FilePresalesOrchestrationRepository,
     PresalesOrchestrationService,
     PresalesSkillCatalog,
@@ -277,6 +278,73 @@ def test_research_draft_review_edit_reapproval_publish_and_customer_deliverable(
     assert stage_status["feedback_iteration"] == "current"
 
 
+def test_employee_can_select_edit_and_publish_only_one_v2_plan(tmp_path) -> None:
+    service = _orchestration(tmp_path)
+    state, baseline = state_and_baseline()
+    service.engagement_service.requirement_repository.save_state(state)
+    service.engagement_service.requirement_repository.save_baseline(baseline)
+    service.run_research(
+        PROJECT_ID,
+        query="车辆采购方案案例",
+        user_id="user-procurement-owner",
+        as_of="2026-08-15T10:00:00+08:00",
+        generated_by="presales-owner",
+    )
+    draft = service.generate_draft(
+        PROJECT_ID,
+        baseline_version=1,
+        generated_by="presales-owner",
+    )
+    assert draft["selected_solution_id"] == next(
+        plan["solution_id"] for plan in draft["plans"] if plan["recommended"]
+    )
+
+    alternative = next(plan for plan in draft["plans"] if not plan["recommended"])
+    selected = service.select_solution_plan(
+        PROJECT_ID,
+        draft_version=draft["draft_version"],
+        solution_id=alternative["solution_id"],
+        updated_by="solution-owner",
+    )
+    edited_plan = EditableSolutionPlan.model_validate(alternative).model_copy(
+        update={
+            "name": "员工确认后的客户方案",
+            "summary": "按客户当前约束人工修订后的单一交付方案。",
+        }
+    )
+    edited = service.update_solution_plan(
+        PROJECT_ID,
+        draft_version=draft["draft_version"],
+        solution_id=alternative["solution_id"],
+        plan=edited_plan,
+        updated_by="solution-owner",
+    )
+
+    assert selected["solution_revision"] == 2
+    assert edited["solution_revision"] == 3
+    assert [record["action"] for record in edited["solution_edits"]] == [
+        "selected",
+        "edited",
+    ]
+    service.review_draft(
+        PROJECT_ID,
+        draft_version=draft["draft_version"],
+        decision="approved",
+        reviewed_by="review-owner",
+    )
+    service.publish_project(
+        PROJECT_ID,
+        draft_version=draft["draft_version"],
+        published_by="presales-owner",
+    )
+    access = service.engagement_service.ensure_customer_access(PROJECT_ID)
+    customer = service.engagement_service.get_customer_view(access["token"])
+
+    assert customer["solution"]["plan"]["name"] == "员工确认后的客户方案"
+    assert "plans" not in customer["solution"]
+    assert "solution_id" not in customer["solution"]["plan"]
+
+
 def test_demo_draft_uses_latest_requirement_state_without_a_baseline(
     tmp_path,
 ) -> None:
@@ -316,7 +384,7 @@ def test_demo_draft_uses_latest_requirement_state_without_a_baseline(
     )
 
 
-def test_demo_draft_falls_back_to_general_compiler_for_sparse_live_state(
+def test_demo_draft_blocks_when_v2_has_no_executable_asset(
     tmp_path,
 ) -> None:
     service = _orchestration(tmp_path)
@@ -342,44 +410,25 @@ def test_demo_draft_falls_back_to_general_compiler_for_sparse_live_state(
         generated_by="presales-owner",
     )
 
-    draft = service.generate_draft(
-        PROJECT_ID,
-        baseline_version=None,
-        generated_by="demo-workbench",
-    )
-
-    assert len(draft["plans"]) == 3
-    assert any("通用三方案编译器" in warning for warning in draft["warnings"])
-    assert all(plan["capabilities"] for plan in draft["plans"])
-    service.review_draft(
-        PROJECT_ID,
-        draft_version=draft["draft_version"],
-        decision="approved",
-        reviewed_by="solution-owner",
-        note="批准演示预览。",
-    )
-
-    published = service.publish_project(
-        PROJECT_ID,
-        draft_version=draft["draft_version"],
-        published_by="demo-workbench",
-    )
-    access = service.engagement_service.ensure_customer_access(PROJECT_ID)
-    customer_view = service.engagement_service.get_customer_view(access["token"])
-
-    assert published["baseline_version"] is None
-    assert published["requirement_state_version"] == sparse_state.state_version
-    assert published["publication_basis"] == "latest_requirement_state"
-    assert "演示预览" in customer_view["solution"]["notice"]
+    with pytest.raises(
+        ValueError,
+        match="no executable reuse decisions are available for SolutionBundleV2",
+    ):
+        service.generate_draft(
+            PROJECT_ID,
+            baseline_version=None,
+            generated_by="demo-workbench",
+        )
 
 
-def test_demo_workbench_generates_from_current_state_without_version_prompt() -> None:
+def test_v2_workbench_generates_from_current_state_without_version_prompt() -> None:
     html = internal_workbench_html()
 
     assert "prompt('Baseline 版本'" not in html
     assert "baseline_version:Number(raw)" not in html
     assert "生成前需要正式 Baseline" not in html
-    assert "实时读取当前需求并生成演示方案" in html
+    assert "Solution Intelligence V2 方案" in html
+    assert "生成演示方案" not in html
 
 
 def test_unified_presales_pages_and_api_are_the_internal_and_customer_entries(

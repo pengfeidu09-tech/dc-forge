@@ -45,11 +45,19 @@ export const presalesApi = {
   }),
   generateDraft: (projectId) => request(`${projectPath(projectId)}/drafts`, {
     method: 'POST',
-    body: JSON.stringify({ generated_by: 'demo-workbench' }),
+    body: JSON.stringify({ generated_by: 'presales-workbench' }),
   }),
   updateDeliverable: (projectId, draftVersion, payload) => request(
     `${projectPath(projectId)}/drafts/${draftVersion}/deliverable`,
     { method: 'POST', body: JSON.stringify(payload) },
+  ),
+  selectSolution: (projectId, draftVersion, payload) => request(
+    `${projectPath(projectId)}/drafts/${draftVersion}/selection`,
+    { method: 'PUT', body: JSON.stringify(payload) },
+  ),
+  updateSolution: (projectId, draftVersion, solutionId, payload) => request(
+    `${projectPath(projectId)}/drafts/${draftVersion}/plans/${encodeURIComponent(solutionId)}`,
+    { method: 'PUT', body: JSON.stringify(payload) },
   ),
   reviewDraft: (projectId, payload) => request(`${projectPath(projectId)}/reviews`, {
     method: 'POST',
@@ -59,4 +67,16 @@ export const presalesApi = {
     method: 'POST',
     body: JSON.stringify(payload),
   }),
+  getAgentConfig: () => request('/presales/agent-config'),
+  updateAgentConfig: (agentId, payload) => request(
+    `/presales/agent-config/${encodeURIComponent(agentId)}`,
+    { method: 'PUT', body: JSON.stringify(payload) },
+  ),
+  listKnowledgeCases: (query = '') => request(
+    `/presales/knowledge/cases?${new URLSearchParams({ query })}`,
+  ),
+  saveKnowledgeCase: (caseId, payload) => request(
+    `/presales/knowledge/cases/${encodeURIComponent(caseId)}`,
+    { method: 'PUT', body: JSON.stringify(payload) },
+  ),
 }

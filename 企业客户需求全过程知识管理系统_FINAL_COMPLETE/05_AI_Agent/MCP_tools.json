@@ -156,6 +156,49 @@
       ]
     },
     {
+      "name": "search_solution_cases",
+      "version": "3.0.0",
+      "description": "从工作区数据库检索员工维护的历史问题与解决方案案例。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array"
+          },
+          "insufficient_evidence": {
+            "type": "boolean"
+          },
+          "data_classification": {
+            "type": "string"
+          }
+        }
+      },
+      "permission": "agent_profile_allowlist",
+      "audit": "记录查询、命中案例和Agent配置版本",
+      "guardrails": [
+        "只返回数据库中已维护的案例",
+        "没有匹配案例时明确返回insufficient_evidence",
+        "客户Agent仍受Tool白名单上限约束",
+        "不得虚构案例或业务成果"
+      ]
+    },
+    {
       "name": "get_requirement_history",
       "version": "3.0.0",
       "description": "读取需求版本历史和指定时间点适用版本。",

@@ -201,8 +201,9 @@ def test_only_confirmed_baseline_can_be_published_and_customer_gets_safe_solutio
 
     assert publication["publication_version"] == 1
     assert customer["solution"]["baseline_version"] == 1
-    assert len(customer["solution"]["plans"]) == 3
-    assert any(plan["recommended"] for plan in customer["solution"]["plans"])
+    assert customer["solution"]["plan"]["name"]
+    assert "plans" not in customer["solution"]
+    assert customer["progress"]["stages"][-1]["status"] == "completed"
     for internal_name in (
         "review_score",
         "asset_id",
@@ -251,7 +252,7 @@ def test_http_pages_and_api_share_the_same_engagement_service(tmp_path) -> None:
         set_customer_engagement_service(None)
 
     assert workbench_page.status_code == 200
-    assert "客户需求工作台" in workbench_page.text
+    assert "统一售前工作台" in workbench_page.text
     assert projects.json()["projects"][0]["project_id"] == PROJECT_ID
     assert internal.json()["conversation"][0]["content"] == "我们希望缩短采购审查周期"
     assert customer_page.status_code == 200

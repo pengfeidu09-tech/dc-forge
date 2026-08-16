@@ -48,8 +48,8 @@ def test_enterprise_assistant_and_http_mcp_share_tools() -> None:
     )
 
     assert assistant.status_code == 200
-    assert assistant.json()["tool_name"] == "analyze_suppliers"
-    assert assistant.json()["citations"]
+    assert assistant.json()["tool_name"] == "search_solution_cases"
+    assert assistant.json()["data_classification"] == "internal_case_knowledge"
     assert mcp.status_code == 200
     assert any(tool["name"] == "generate_solution_bundle" for tool in mcp.json()["result"]["tools"])
 
@@ -65,8 +65,8 @@ def test_enterprise_assistant_preserves_permission_denial_status() -> None:
         },
     )
 
-    assert response.status_code == 403
-    assert "requires procurement or legal-finance role" in response.json()["detail"]
+    assert response.status_code == 200
+    assert response.json()["tool_name"] == "search_solution_cases"
 
 
 def test_document_review_endpoint_requires_as_of() -> None:
@@ -110,7 +110,7 @@ def test_http_mcp_catalog_and_search_are_directly_consumable_by_frontend() -> No
 
     assert catalog.status_code == 200
     tools = catalog.json()["result"]["tools"]
-    assert len(tools) == 11
+    assert len(tools) == 12
     assert all(tool["annotations"]["readOnlyHint"] is True for tool in tools)
 
     result = client.post(

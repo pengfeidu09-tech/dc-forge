@@ -97,6 +97,8 @@ class FeishuRequirementOrchestratorProtocol(Protocol):
     ):
         ...
 
+    def clarification_context(self, project_id: str) -> dict[str, str]: ...
+
 
 class CustomerEngagementProtocol(Protocol):
     def active_feishu_project_id(self, tenant_key: str, chat_id: str) -> str: ...
@@ -236,14 +238,26 @@ class FeishuCallbackValidation:
     event_id: str | None = None
 
 
+class FeishuEventClaimStore(Protocol):
+    def claim(self, event_id: str) -> bool: ...
+
+
 class FeishuEventDeduplicator:
-    def __init__(self, max_entries: int = 2048) -> None:
+    def __init__(
+        self,
+        max_entries: int = 2048,
+        *,
+        claim_store: FeishuEventClaimStore | None = None,
+    ) -> None:
         self._max_entries = max_entries
+        self._claim_store = claim_store
         self._order: deque[str] = deque()
         self._seen: set[str] = set()
         self._lock = Lock()
 
     def claim(self, event_id: str) -> bool:
+        if self._claim_store is not None and not self._claim_store.claim(event_id):
+            return False
         with self._lock:
             if event_id in self._seen:
                 return False
@@ -320,9 +334,19 @@ class FeishuBotService:
         from backend.app.solution.mcp_server import MCPDispatcher
 
         repository_root = Path(__file__).resolve().parents[3]
+        dispatcher = MCPDispatcher(EnterpriseKnowledgeService(repository_root))
+        from backend.app.solution.agent_configuration import (
+            configured_agent_service,
+            configured_database_path,
+        )
+        from backend.app.solution.workspace_database import (
+            SqliteFeishuEventClaimStore,
+        )
+
         assistant = EnterpriseAssistantService(
-            MCPDispatcher(EnterpriseKnowledgeService(repository_root)),
+            dispatcher,
             provider=provider,
+            capability_policy=configured_agent_service(dispatcher),
         )
         internal_open_ids = {
             value.strip()
@@ -356,6 +380,11 @@ class FeishuBotService:
             ),
             internal_open_ids=internal_open_ids,
             engagement_service=engagement_service,
+            deduplicator=FeishuEventDeduplicator(
+                claim_store=SqliteFeishuEventClaimStore(
+                    configured_database_path()
+                )
+            ),
         )
 
     def _verify_token(self, token: object) -> None:
@@ -743,11 +772,12 @@ class FeishuBotService:
                 state = self._requirement_orchestrator.snapshot(project_id)
             except Exception:
                 logger.warning("Requirement state snapshot unavailable")
+        conversation_history = self._memory.history(project_id) or persistent_history
         request = ChatAgentRequest(
             project_id=project_id,
             message_id=event_id,
             message=text,
-            history=self._memory.history(project_id) or persistent_history,
+            history=conversation_history,
             state=state,
         )
         response = run_chat_agent(request, provider=self._provider)
@@ -784,6 +814,21 @@ class FeishuBotService:
             )
         ) and self._enterprise_assistant is not None:
             try:
+                clarification: dict[str, str] = {}
+                if self._requirement_orchestrator is not None:
+                    context_loader = getattr(
+                        self._requirement_orchestrator,
+                        "clarification_context",
+                        None,
+                    )
+                    if callable(context_loader):
+                        clarification = context_loader(project_id)
+                if (
+                    not clarification.get("question")
+                    and state is not None
+                    and state.pending_questions
+                ):
+                    clarification["question"] = state.pending_questions[0]
                 knowledge_result = self._enterprise_assistant.answer(
                     EnterpriseAssistantRequest(
                         project_id="PUBLIC-CAPABILITIES",
@@ -791,6 +836,12 @@ class FeishuBotService:
                         as_of=self._enterprise_as_of,
                         message=text,
                         audience="customer",
+                        history=conversation_history,
+                        requirement_summary=(
+                            state.requirement_summary if state is not None else None
+                        ),
+                        clarification_topic=clarification.get("topic"),
+                        clarification_question=clarification.get("question"),
                     )
                 )
                 answer = knowledge_result.answer

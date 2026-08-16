@@ -4,10 +4,12 @@ import { Modal, message } from 'ant-design-vue'
 import {
   AppstoreOutlined,
   AuditOutlined,
+  BookOutlined,
   CheckCircleOutlined,
   CloudSyncOutlined,
   FileAddOutlined,
   FileSearchOutlined,
+  EditOutlined,
   FolderOpenOutlined,
   KeyOutlined,
   MenuFoldOutlined,
@@ -19,6 +21,7 @@ import {
   SafetyCertificateOutlined,
   SendOutlined,
   SettingOutlined,
+  SwapOutlined,
   TeamOutlined,
   WarningOutlined,
 } from '@ant-design/icons-vue'
@@ -36,21 +39,26 @@ const actionLoading = ref('')
 const siderCollapsed = ref(false)
 const tokenInput = ref(getStoredToken())
 const projectsError = ref('')
-const selectedFlowPlanName = ref('')
+const selectedFlowPlanId = ref('')
+const agentConfig = ref(null)
+const knowledgeCases = ref([])
+const selectedAgentId = ref('feishu-customer')
+const agentLoading = ref(false)
 
 const dialogs = reactive({
   create: false,
   source: false,
   research: false,
   deliverable: false,
+  solution: false,
   review: false,
+  knowledgeCase: false,
 })
 
 const createForm = reactive({
   title: '',
   owner: 'presales-owner',
   industry: '',
-  reference_project_id: '',
 })
 const sourceForm = reactive({
   source_type: 'customer_document',
@@ -61,7 +69,7 @@ const sourceForm = reactive({
   added_by: 'presales-owner',
 })
 const researchForm = reactive({
-  query: '汽车制造企业供应商准入、询比价与采购合规',
+  query: '',
   user_id: 'user-procurement-owner',
   generated_by: 'presales-owner',
 })
@@ -74,6 +82,34 @@ const reviewForm = reactive({
   decision: 'approved',
   reviewed_by: 'solution-owner',
   note: '方案结构和风险边界可以对客展示。',
+})
+const solutionForm = reactive({
+  solution_id: '',
+  name: '',
+  summary: '',
+  strategy: '',
+  capabilities: '',
+  target_workflow: '',
+  implementation_steps: '',
+  data_requirements: '',
+  system_integrations: '',
+  assumptions: '',
+  risks: '',
+  updated_by: 'presales-owner',
+})
+const agentForm = reactive({
+  enabled_tools: [],
+  enabled_skills: [],
+  updated_by: 'agent-owner',
+})
+const caseForm = reactive({
+  case_id: '',
+  title: '',
+  industry: '',
+  problem: '',
+  solution_summary: '',
+  tags: '',
+  evidence_refs: '',
 })
 
 const sourceTypes = [
@@ -135,11 +171,12 @@ const blockingGaps = computed(() => gaps.value.filter((gap) => gap.blocking))
 const latestResearch = computed(() => workspace.value?.research_snapshots?.at(-1) || null)
 const latestDraft = computed(() => workspace.value?.drafts?.at(-1) || null)
 const flowPlanOptions = computed(() => (latestDraft.value?.plans || []).map((plan) => ({
-  label: plan.recommended ? `${plan.name} · 推荐` : plan.name,
-  value: plan.name,
+  label: [plan.name, plan.recommended ? '系统推荐' : '', plan.solution_id === latestDraft.value?.selected_solution_id ? '当前选定' : ''].filter(Boolean).join(' · '),
+  value: plan.solution_id,
 })))
 const selectedFlowPlan = computed(() =>
-  latestDraft.value?.plans?.find((plan) => plan.name === selectedFlowPlanName.value)
+  latestDraft.value?.plans?.find((plan) => plan.solution_id === selectedFlowPlanId.value)
+    || latestDraft.value?.plans?.find((plan) => plan.solution_id === latestDraft.value?.selected_solution_id)
     || latestDraft.value?.plans?.find((plan) => plan.recommended)
     || latestDraft.value?.plans?.[0]
     || null,
@@ -153,9 +190,21 @@ const latestDraftApproved = computed(() => {
   return (workspace.value?.reviews || []).some((review) =>
     review.draft_version === draft.draft_version
       && review.deliverable_revision === draft.deliverable_revision
+      && (review.solution_revision || 1) === (draft.solution_revision || 1)
       && review.decision === 'approved',
   )
 })
+const selectedAgentProfile = computed(() =>
+  agentConfig.value?.profiles?.find((profile) => profile.agent_id === selectedAgentId.value) || null,
+)
+const toolOptions = computed(() => (agentConfig.value?.tools || []).map((tool) => ({
+  label: tool.name,
+  value: tool.name,
+})))
+const skillOptions = computed(() => (agentConfig.value?.skills || []).map((skill) => ({
+  label: skill.name,
+  value: skill.name,
+})))
 const stageItems = computed(() => (workspace.value?.stages || []).map((stage) => ({
   title: stage.label,
   status: stage.status === 'completed' ? 'finish' : stage.status === 'current' ? 'process' : 'wait',
@@ -200,9 +249,18 @@ const projectMetrics = computed(() => [
 
 watch(latestDraft, (draft) => {
   const plans = draft?.plans || []
-  if (!plans.some((plan) => plan.name === selectedFlowPlanName.value)) {
-    selectedFlowPlanName.value = plans.find((plan) => plan.recommended)?.name || plans[0]?.name || ''
+  if (!plans.some((plan) => plan.solution_id === selectedFlowPlanId.value)) {
+    selectedFlowPlanId.value = draft?.selected_solution_id
+      || plans.find((plan) => plan.recommended)?.solution_id
+      || plans[0]?.solution_id
+      || ''
   }
+}, { immediate: true })
+
+watch(selectedAgentProfile, (profile) => {
+  if (!profile) return
+  agentForm.enabled_tools = [...profile.enabled_tools]
+  agentForm.enabled_skills = [...profile.enabled_skills]
 }, { immediate: true })
 
 function displayProjectTitle(project) {
@@ -325,14 +383,13 @@ async function submitCreateProject() {
       title: createForm.title.trim(),
       owner: createForm.owner.trim(),
       industry: createForm.industry.trim() || null,
-      reference_project_id: createForm.reference_project_id.trim() || null,
     }),
     '售前项目已创建',
     false,
   )
   if (!created) return
   dialogs.create = false
-  Object.assign(createForm, { title: '', owner: 'presales-owner', industry: '', reference_project_id: '' })
+  Object.assign(createForm, { title: '', owner: 'presales-owner', industry: '' })
   await loadProjects(created.project_id)
 }
 
@@ -434,6 +491,171 @@ async function submitDeliverable() {
   if (result) dialogs.deliverable = false
 }
 
+function textLines(value) {
+  return String(value || '').split('\n').map((item) => item.trim()).filter(Boolean)
+}
+
+function openSolutionDialog(plan) {
+  Object.assign(solutionForm, {
+    solution_id: plan.solution_id,
+    name: plan.name || '',
+    summary: plan.summary || '',
+    strategy: plan.strategy || '',
+    capabilities: (plan.capabilities || []).map((item) => `${item.name}｜${item.reason || ''}`).join('\n'),
+    target_workflow: (plan.target_workflow || []).map((item) => [
+      item.name,
+      item.executor || '系统',
+      item.human_gate ? '是' : '否',
+      item.gate_reason || '',
+    ].join('｜')).join('\n'),
+    implementation_steps: (plan.implementation_steps || []).join('\n'),
+    data_requirements: (plan.data_requirements || []).join('\n'),
+    system_integrations: (plan.system_integrations || []).join('\n'),
+    assumptions: (plan.assumptions || []).join('\n'),
+    risks: (plan.risks || []).join('\n'),
+    updated_by: 'presales-owner',
+  })
+  dialogs.solution = true
+}
+
+async function selectCustomerPlan(plan) {
+  const draft = latestDraft.value
+  if (!draft?.draft_version || !plan.solution_id) return
+  await runAction(
+    'select-solution',
+    () => presalesApi.selectSolution(selectedProjectId.value, draft.draft_version, {
+      solution_id: plan.solution_id,
+      updated_by: 'presales-owner',
+    }),
+    `已选择“${plan.name}”作为客户方案，原批准状态已失效`,
+  )
+}
+
+async function submitSolution() {
+  const draft = latestDraft.value
+  if (!draft || !solutionForm.name.trim() || !solutionForm.summary.trim() || !solutionForm.updated_by.trim()) {
+    message.warning('请填写方案名称、摘要和编辑人')
+    return
+  }
+  const capabilities = textLines(solutionForm.capabilities).map((line) => {
+    const [name, ...reason] = line.split(/[｜|]/)
+    return { name: name.trim(), reason: reason.join('｜').trim() }
+  }).filter((item) => item.name)
+  const targetWorkflow = textLines(solutionForm.target_workflow).map((line) => {
+    const [name, executor = '系统', gate = '否', ...reason] = line.split(/[｜|]/)
+    const humanGate = ['是', 'true', 'yes', '1'].includes(gate.trim().toLocaleLowerCase())
+    return {
+      name: name.trim(),
+      executor: executor.trim() || '系统',
+      human_gate: humanGate,
+      gate_reason: humanGate ? reason.join('｜').trim() || null : null,
+    }
+  }).filter((item) => item.name)
+  const existing = draft.plans.find((plan) => plan.solution_id === solutionForm.solution_id)
+  const result = await runAction(
+    'solution-edit',
+    () => presalesApi.updateSolution(
+      selectedProjectId.value,
+      draft.draft_version,
+      solutionForm.solution_id,
+      {
+        plan: {
+          solution_id: solutionForm.solution_id,
+          recommended: existing?.recommended === true,
+          name: solutionForm.name.trim(),
+          summary: solutionForm.summary.trim(),
+          strategy: solutionForm.strategy.trim() || '人工修订',
+          capabilities,
+          target_workflow: targetWorkflow,
+          implementation_steps: textLines(solutionForm.implementation_steps),
+          data_requirements: textLines(solutionForm.data_requirements),
+          system_integrations: textLines(solutionForm.system_integrations),
+          assumptions: textLines(solutionForm.assumptions),
+          risks: textLines(solutionForm.risks),
+        },
+        updated_by: solutionForm.updated_by.trim(),
+      },
+    ),
+    '方案修订已保存，原批准状态已失效',
+  )
+  if (result) dialogs.solution = false
+}
+
+async function loadAgentWorkspace() {
+  agentLoading.value = true
+  try {
+    const [config, cases] = await Promise.all([
+      presalesApi.getAgentConfig(),
+      presalesApi.listKnowledgeCases(),
+    ])
+    agentConfig.value = config
+    knowledgeCases.value = cases.cases || []
+  } catch (error) {
+    message.error(error.message)
+  } finally {
+    agentLoading.value = false
+  }
+}
+
+function showAgentWorkspace() {
+  activeTab.value = 'agent'
+  loadAgentWorkspace()
+}
+
+async function saveAgentProfile() {
+  if (!agentForm.updated_by.trim()) {
+    message.warning('请填写配置人')
+    return
+  }
+  const updated = await runAction(
+    'agent-config',
+    () => presalesApi.updateAgentConfig(selectedAgentId.value, {
+      enabled_tools: agentForm.enabled_tools,
+      enabled_skills: agentForm.enabled_skills,
+      updated_by: agentForm.updated_by.trim(),
+    }),
+    'Agent Tool 与 Skill 配置已保存',
+    false,
+  )
+  if (!updated || !agentConfig.value) return
+  agentConfig.value.profiles = agentConfig.value.profiles.map((profile) =>
+    profile.agent_id === updated.agent_id ? updated : profile,
+  )
+}
+
+function openCaseDialog() {
+  Object.assign(caseForm, {
+    case_id: '', title: '', industry: '', problem: '', solution_summary: '', tags: '', evidence_refs: '',
+  })
+  dialogs.knowledgeCase = true
+}
+
+async function saveKnowledgeCase() {
+  if (!caseForm.case_id.trim() || !caseForm.title.trim() || !caseForm.problem.trim() || !caseForm.solution_summary.trim()) {
+    message.warning('请填写案例 ID、标题、问题和解决方案摘要')
+    return
+  }
+  const payload = {
+    case_id: caseForm.case_id.trim(),
+    title: caseForm.title.trim(),
+    industry: caseForm.industry.trim() || null,
+    problem: caseForm.problem.trim(),
+    solution_summary: caseForm.solution_summary.trim(),
+    tags: caseForm.tags.split(/[,，\n]/).map((item) => item.trim()).filter(Boolean),
+    evidence_refs: textLines(caseForm.evidence_refs),
+  }
+  const saved = await runAction(
+    'knowledge-case',
+    () => presalesApi.saveKnowledgeCase(payload.case_id, payload),
+    '案例知识已保存到数据库',
+    false,
+  )
+  if (!saved) return
+  dialogs.knowledgeCase = false
+  const cases = await presalesApi.listKnowledgeCases()
+  knowledgeCases.value = cases.cases || []
+}
+
 function openReviewDialog(decision) {
   Object.assign(reviewForm, {
     decision,
@@ -469,7 +691,7 @@ function confirmPublish() {
   if (!draft || !latestDraftApproved.value) return
   Modal.confirm({
     title: '发布当前客户成果？',
-    content: `将发布草稿 v${draft.draft_version}、成果修订 ${draft.deliverable_revision}。`,
+    content: `将只发布当前选定方案，草稿 v${draft.draft_version}、方案修订 ${draft.solution_revision || 1}、成果修订 ${draft.deliverable_revision}。`,
     okText: '确认发布',
     cancelText: '取消',
     async onOk() {
@@ -485,7 +707,10 @@ function confirmPublish() {
   })
 }
 
-onMounted(() => loadProjects())
+onMounted(() => {
+  if (new URLSearchParams(location.search).get('view') === 'agent') showAgentWorkspace()
+  loadProjects()
+})
 </script>
 
 <template>
@@ -554,6 +779,10 @@ onMounted(() => loadProjects())
           </div>
         </div>
         <div class="topbar-actions">
+          <a-button @click="activeTab === 'agent' ? activeTab = 'overview' : showAgentWorkspace()">
+            <template #icon><SettingOutlined /></template>
+            {{ activeTab === 'agent' ? '返回项目' : 'Tool 与 Skill' }}
+          </a-button>
           <a-popover placement="bottomRight" trigger="click">
             <template #content>
               <div class="token-popover">
@@ -572,8 +801,80 @@ onMounted(() => loadProjects())
       </a-layout-header>
 
       <a-layout-content class="workbench-content">
+        <section v-if="activeTab === 'agent'" class="agent-workspace">
+          <div class="tab-toolbar">
+            <div><strong>Tool 与 Skill</strong><span>配置飞书客户 Agent 和内部 Agent 的执行边界</span></div>
+            <a-space>
+              <a-button @click="openCaseDialog"><template #icon><BookOutlined /></template>新增案例</a-button>
+              <a-button type="primary" :loading="actionLoading === 'agent-config'" @click="saveAgentProfile">保存配置</a-button>
+            </a-space>
+          </div>
+          <a-spin :spinning="agentLoading">
+            <section class="workspace-panel agent-policy-panel">
+              <div class="panel-heading">
+                <div><strong>飞书 Agent 权限</strong><span>白名单在 Agent 调用 Tool 前强制执行</span></div>
+                <SettingOutlined />
+              </div>
+              <div class="agent-profile-selector">
+                <a-segmented
+                  v-model:value="selectedAgentId"
+                  :options="[
+                    { label: '客户 Agent', value: 'feishu-customer' },
+                    { label: '内部 Agent', value: 'feishu-internal' },
+                  ]"
+                />
+                <a-tag>{{ selectedAgentProfile?.updated_by || '尚未配置' }} · {{ formatTime(selectedAgentProfile?.updated_at) }}</a-tag>
+              </div>
+              <div class="agent-catalog-grid">
+                <div>
+                  <h3>可用 Tool</h3>
+                  <a-checkbox-group v-model:value="agentForm.enabled_tools" class="capability-check-list">
+                    <a-checkbox
+                      v-for="tool in agentConfig?.tools || []"
+                      :key="tool.name"
+                      :value="tool.name"
+                      :disabled="selectedAgentId === 'feishu-customer' && !['search_knowledge', 'search_solution_cases'].includes(tool.name)"
+                    >
+                      <strong>{{ tool.name }}</strong><small>{{ tool.description }}</small>
+                    </a-checkbox>
+                  </a-checkbox-group>
+                </div>
+                <div>
+                  <h3>可用 Skill</h3>
+                  <a-checkbox-group v-model:value="agentForm.enabled_skills" class="capability-check-list">
+                    <a-checkbox v-for="skill in agentConfig?.skills || []" :key="skill.name" :value="skill.name">
+                      <strong>{{ skill.name }}</strong><small>{{ skill.description }}</small>
+                    </a-checkbox>
+                  </a-checkbox-group>
+                </div>
+              </div>
+              <a-form layout="vertical" class="agent-editor-footer">
+                <a-form-item label="配置人" required><a-input v-model:value="agentForm.updated_by" /></a-form-item>
+              </a-form>
+            </section>
+
+            <section class="workspace-panel knowledge-case-panel">
+              <div class="panel-heading">
+                <div><strong>历年解决案例</strong><span>{{ knowledgeCases.length }} 条数据库记录</span></div>
+                <BookOutlined />
+              </div>
+              <a-empty v-if="!knowledgeCases.length" description="数据库中尚无案例记录" />
+              <a-list v-else :data-source="knowledgeCases" item-layout="vertical">
+                <template #renderItem="{ item }">
+                  <a-list-item>
+                    <a-list-item-meta :title="item.title" :description="`${item.case_id}${item.industry ? ` · ${item.industry}` : ''}`" />
+                    <p>{{ item.problem }}</p>
+                    <strong>解决方案：{{ item.solution_summary }}</strong>
+                    <div class="case-tags"><a-tag v-for="tag in item.tags" :key="tag">{{ tag }}</a-tag></div>
+                  </a-list-item>
+                </template>
+              </a-list>
+            </section>
+          </a-spin>
+        </section>
+
         <a-result
-          v-if="projectsError && !loadingProjects"
+          v-else-if="projectsError && !loadingProjects"
           status="error"
           title="售前项目服务暂不可用"
           :sub-title="projectsError"
@@ -847,16 +1148,33 @@ onMounted(() => loadProjects())
                   <section class="solution-flow-section">
                     <header>
                       <div><span>目标工作流</span><strong>{{ selectedFlowPlan?.name }}</strong></div>
-                      <a-segmented v-model:value="selectedFlowPlanName" :options="flowPlanOptions" />
+                      <a-segmented v-model:value="selectedFlowPlanId" :options="flowPlanOptions" />
                     </header>
                     <SolutionWorkflowGraph :plan="selectedFlowPlan" />
                   </section>
                   <div class="solution-grid">
-                    <article v-for="plan in latestDraft.plans" :key="plan.solution_id || plan.name" :class="['solution-plan', { recommended: plan.recommended }]">
-                      <header><div><span>{{ plan.recommended ? '推荐方案' : '备选方案' }}</span><h3>{{ plan.name }}</h3></div><CheckCircleOutlined v-if="plan.recommended" /></header>
+                    <article v-for="plan in latestDraft.plans" :key="plan.solution_id || plan.name" :class="['solution-plan', { recommended: plan.recommended, selected: plan.solution_id === latestDraft.selected_solution_id }]">
+                      <header>
+                        <div>
+                          <span>{{ plan.solution_id === latestDraft.selected_solution_id ? '当前客户方案' : plan.recommended ? '系统推荐' : '内部备选' }}</span>
+                          <h3>{{ plan.name }}</h3>
+                        </div>
+                        <CheckCircleOutlined v-if="plan.solution_id === latestDraft.selected_solution_id" />
+                      </header>
                       <p>{{ plan.summary }}</p>
                       <h4>能力模块</h4>
                       <ul><li v-for="capability in plan.capabilities || []" :key="capabilityName(capability)"><strong>{{ capabilityName(capability) }}</strong><span>{{ capabilityReason(capability) }}</span></li></ul>
+                      <footer class="solution-plan-actions">
+                        <a-button size="small" @click="openSolutionDialog(plan)"><template #icon><EditOutlined /></template>编辑</a-button>
+                        <a-button
+                          v-if="plan.solution_id !== latestDraft.selected_solution_id"
+                          size="small"
+                          type="primary"
+                          ghost
+                          :loading="actionLoading === 'select-solution'"
+                          @click="selectCustomerPlan(plan)"
+                        ><template #icon><SwapOutlined /></template>设为客户方案</a-button>
+                      </footer>
                     </article>
                   </div>
                 </template>
@@ -912,7 +1230,6 @@ onMounted(() => loadProjects())
         <a-form-item label="项目名称" required><a-input v-model:value="createForm.title" placeholder="客户或机会名称" /></a-form-item>
         <a-form-item label="项目负责人" required><a-input v-model:value="createForm.owner" /></a-form-item>
         <a-form-item label="所属行业"><a-input v-model:value="createForm.industry" /></a-form-item>
-        <a-form-item label="参考项目 ID"><a-input v-model:value="createForm.reference_project_id" /></a-form-item>
       </a-form>
     </a-modal>
 
@@ -945,8 +1262,43 @@ onMounted(() => loadProjects())
       </a-form>
     </a-modal>
 
+    <a-modal v-model:open="dialogs.solution" title="编辑方案" width="780px" :confirm-loading="actionLoading === 'solution-edit'" ok-text="保存方案修订" @ok="submitSolution">
+      <a-alert type="warning" show-icon message="保存后方案修订号递增，当前批准状态自动失效。" />
+      <a-form class="solution-edit-form" layout="vertical">
+        <div class="form-grid-two">
+          <a-form-item label="方案名称" required><a-input v-model:value="solutionForm.name" /></a-form-item>
+          <a-form-item label="方案定位"><a-input v-model:value="solutionForm.strategy" /></a-form-item>
+        </div>
+        <a-form-item label="方案摘要" required><a-textarea v-model:value="solutionForm.summary" :rows="4" /></a-form-item>
+        <a-form-item label="能力模块（每行：名称｜选择理由）"><a-textarea v-model:value="solutionForm.capabilities" :rows="5" /></a-form-item>
+        <a-form-item label="目标工作流（每行：节点｜执行者｜是否人工门｜原因）"><a-textarea v-model:value="solutionForm.target_workflow" :rows="6" /></a-form-item>
+        <div class="form-grid-two">
+          <a-form-item label="实施步骤（每行一项）"><a-textarea v-model:value="solutionForm.implementation_steps" :rows="5" /></a-form-item>
+          <a-form-item label="数据要求（每行一项）"><a-textarea v-model:value="solutionForm.data_requirements" :rows="5" /></a-form-item>
+          <a-form-item label="系统集成（每行一项）"><a-textarea v-model:value="solutionForm.system_integrations" :rows="5" /></a-form-item>
+          <a-form-item label="待确认假设（每行一项）"><a-textarea v-model:value="solutionForm.assumptions" :rows="5" /></a-form-item>
+        </div>
+        <a-form-item label="风险与边界（每行一项）"><a-textarea v-model:value="solutionForm.risks" :rows="5" /></a-form-item>
+        <a-form-item label="编辑人" required><a-input v-model:value="solutionForm.updated_by" /></a-form-item>
+      </a-form>
+    </a-modal>
+
+    <a-modal v-model:open="dialogs.knowledgeCase" title="新增或更新案例知识" width="720px" :confirm-loading="actionLoading === 'knowledge-case'" ok-text="保存到数据库" @ok="saveKnowledgeCase">
+      <a-form layout="vertical">
+        <div class="form-grid-two">
+          <a-form-item label="案例 ID" required><a-input v-model:value="caseForm.case_id" /></a-form-item>
+          <a-form-item label="行业"><a-input v-model:value="caseForm.industry" /></a-form-item>
+        </div>
+        <a-form-item label="案例标题" required><a-input v-model:value="caseForm.title" /></a-form-item>
+        <a-form-item label="客户问题" required><a-textarea v-model:value="caseForm.problem" :rows="4" /></a-form-item>
+        <a-form-item label="解决方案摘要" required><a-textarea v-model:value="caseForm.solution_summary" :rows="5" /></a-form-item>
+        <a-form-item label="标签（逗号或换行分隔）"><a-textarea v-model:value="caseForm.tags" :rows="2" /></a-form-item>
+        <a-form-item label="证据引用（每行一项）"><a-textarea v-model:value="caseForm.evidence_refs" :rows="3" /></a-form-item>
+      </a-form>
+    </a-modal>
+
     <a-modal v-model:open="dialogs.review" :title="reviewForm.decision === 'approved' ? '批准方案草稿' : '驳回方案草稿'" :confirm-loading="actionLoading === 'review'" :ok-text="reviewForm.decision === 'approved' ? '确认批准' : '确认驳回'" :ok-button-props="{ danger: reviewForm.decision === 'rejected' }" @ok="submitReview">
-      <a-alert :type="reviewForm.decision === 'approved' ? 'info' : 'warning'" show-icon :message="`草稿 v${latestDraft?.draft_version || '-'} · 成果修订 ${latestDraft?.deliverable_revision || '-'}`" />
+      <a-alert :type="reviewForm.decision === 'approved' ? 'info' : 'warning'" show-icon :message="`草稿 v${latestDraft?.draft_version || '-'} · 方案修订 ${latestDraft?.solution_revision || 1} · 成果修订 ${latestDraft?.deliverable_revision || '-'}`" />
       <a-form class="review-form" layout="vertical">
         <a-form-item label="评审人" required><a-input v-model:value="reviewForm.reviewed_by" /></a-form-item>
         <a-form-item label="评审意见"><a-textarea v-model:value="reviewForm.note" :rows="5" /></a-form-item>
