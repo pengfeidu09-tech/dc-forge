@@ -11,12 +11,10 @@ defineProps({
 </script>
 
 <template>
-  <article class="metric-tile">
-    <div class="metric-tile__icon" :class="`tone--${tone}`"><AppIcon :name="icon" /></div>
-    <div>
-      <span>{{ label }}</span>
-      <strong>{{ value }}</strong>
-      <small v-if="hint">{{ hint }}</small>
-    </div>
-  </article>
+  <a-card class="metric-tile" size="small" :bordered="false">
+    <a-statistic :title="label" :value="value">
+      <template #prefix><AppIcon :name="icon" /></template>
+      <template v-if="hint" #suffix><a-tooltip :title="hint">?</a-tooltip></template>
+    </a-statistic>
+  </a-card>
 </template>

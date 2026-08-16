@@ -1,0 +1,1536 @@
+{
+  "llm_calls": 0,
+  "source_window": {
+    "previous": [
+      "SRC-TENDER-001",
+      "SRC-TENDER-002",
+      "SRC-TENDER-003",
+      "SRC-TENDER-004",
+      "SRC-TENDER-005",
+      "SRC-TENDER-006",
+      "SRC-TENDER-007",
+      "SRC-TENDER-008",
+      "SRC-TENDER-009",
+      "SRC-TENDER-010",
+      "SRC-TENDER-011",
+      "SRC-TENDER-012",
+      "SRC-TENDER-013",
+      "SRC-TENDER-014",
+      "SRC-TENDER-015",
+      "SRC-TENDER-016"
+    ],
+    "feedback": [
+      "SRC-TENDER-017",
+      "SRC-TENDER-018",
+      "SRC-TENDER-019",
+      "SRC-TENDER-020",
+      "SRC-TENDER-021",
+      "SRC-TENDER-022",
+      "SRC-TENDER-023",
+      "SRC-TENDER-024",
+      "SRC-TENDER-025",
+      "SRC-TENDER-026"
+    ]
+  },
+  "baseline_transition": {
+    "previous_baseline_id": "baseline-cbd314bda882",
+    "previous_baseline_version": 1,
+    "current_baseline_id": "baseline-c455ce8cabec",
+    "current_baseline_version": 2,
+    "previous_item_count": 70,
+    "current_item_count": 106
+  },
+  "change_set": {
+    "project_id": "PRJ-TENDER-001",
+    "previous_baseline_id": "baseline-cbd314bda882",
+    "previous_baseline_version": 1,
+    "source_state_version": 2,
+    "items": [
+      {
+        "candidate_requirement_id": "req-0215b9413f05",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "data_handling_policy",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "Must distinguish between original quotes, human confirmation, and internal analysis; do not use later versions to overwrite historical time points",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-018",
+            "locator": "全文",
+            "excerpt": "抽取时必须区分原话、人工确认和内部分析，不得用后续版本覆盖历史时间点"
+          }
+        ],
+        "confidence": 0.9,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-032486b515ac",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "CONFLICT",
+        "category": "target_metric",
+        "subject": "delivery_performance",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "交付及时率",
+        "proposed_parameters": {
+          "year_2025": "97.8%",
+          "year_2026_h1": "96.2%"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-025",
+            "locator": "全文",
+            "excerpt": "2025年度动力电池包交付及时率97.8%、质量500 PPM；2026年上半年及时率96.2%、质量580 PPM。"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "open",
+        "review_disposition": "PENDING_CLARIFICATION"
+      },
+      {
+        "candidate_requirement_id": "req-115dc0ba2f5a",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "CONFLICT",
+        "category": "target_metric",
+        "subject": "quality_performance",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "390 PPM",
+        "proposed_parameters": {
+          "period": "2026年上半年",
+          "metric_type": "defect_rate"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-017",
+            "locator": "全文",
+            "excerpt": "质量表现为390 PPM"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "open",
+        "review_disposition": "PENDING_CLARIFICATION"
+      },
+      {
+        "candidate_requirement_id": "req-17e5fcfcf513",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "CONFLICT",
+        "category": "target_metric",
+        "subject": "delivery_performance",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "98.6%",
+        "proposed_parameters": {
+          "year": "2025",
+          "metric_type": "timely_delivery_rate"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-017",
+            "locator": "全文",
+            "excerpt": "2025年同类电池包交付及时率98.6%"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "open",
+        "review_disposition": "PENDING_CLARIFICATION"
+      },
+      {
+        "candidate_requirement_id": "req-19fe091b7fef",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "available_data",
+        "subject": "production_capacity",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "18,000套/年",
+        "proposed_parameters": {
+          "unit": "sets/year"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-017",
+            "locator": "全文",
+            "excerpt": "工厂申报年产能18,000套"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-1f0737ea7e76",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "CONFLICT",
+        "category": "scope",
+        "subject": "data_applicability",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "履约、质量、诉讼和信用信息只适用于所列工厂、动力电池包品类及明确时间段",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-026",
+            "locator": "全文",
+            "excerpt": "本记录的履约、质量、诉讼和信用信息只适用于所列工厂、动力电池包品类及明确时间段"
+          }
+        ],
+        "confidence": 0.9,
+        "conflict_status": "open",
+        "review_disposition": "PENDING_CLARIFICATION"
+      },
+      {
+        "candidate_requirement_id": "req-2316ece1900b",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "CONFLICT",
+        "category": "existing_system",
+        "subject": "certification",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "IATF 16949及ISO 14001证书",
+        "proposed_parameters": {
+          "valid_until": "2027-05-31",
+          "factory": "天津Pack工厂"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-025",
+            "locator": "全文",
+            "excerpt": "SUP-BAT-004北辰动力（模拟）的天津Pack工厂IATF 16949及ISO 14001证书有效至2027-05-31。"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "open",
+        "review_disposition": "PENDING_CLARIFICATION"
+      },
+      {
+        "candidate_requirement_id": "req-24291238ce84",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "approval",
+        "subject": "supplier_qualification_status",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "not yet approved by procurement personnel",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-019",
+            "locator": "全文",
+            "excerpt": "采购人员尚未批准其资格"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-24743b1cbf46",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "CONFLICT",
+        "category": "target_metric",
+        "subject": "delivery_performance",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "98.1%",
+        "proposed_parameters": {
+          "period": "2026年上半年",
+          "metric_type": "timely_delivery_rate"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-017",
+            "locator": "全文",
+            "excerpt": "2026年上半年及时率98.1%"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "open",
+        "review_disposition": "PENDING_CLARIFICATION"
+      },
+      {
+        "candidate_requirement_id": "req-2ecc3d144d61",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "security",
+        "subject": "access_control",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "record_viewable_by_procurement_lead_and_supplier_quality_role_only",
+        "proposed_parameters": {
+          "roles": [
+            "procurement_lead",
+            "supplier_quality"
+          ]
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-023",
+            "locator": "全文",
+            "excerpt": "该记录仅供采购负责人和供应商质量角色查看"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-37835a728b6c",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "bidding_decision",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "评分不能自动形成中标",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-026",
+            "locator": "全文",
+            "excerpt": "评分不能自动形成中标"
+          }
+        ],
+        "confidence": 0.9,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-47cfc051874a",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "ppt_metrics_labeling",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "PPT中的60%、50%、95%、6倍和86%只能标成source_claim，不得作为当前项目成果",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-024",
+            "locator": "全文",
+            "excerpt": "PPT中的60%、50%、95%、6倍和86%只能标成source_claim，不得作为当前项目成果。"
+          }
+        ],
+        "confidence": 0.9,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-4fa845e1012e",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "ocr_data_interpretation",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "header year '2028' is template version number, not certificate expiry year",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-019",
+            "locator": "全文",
+            "excerpt": "OCR页眉中的“2028”是模板版本号，不得误识别为证书到期年份"
+          }
+        ],
+        "confidence": 0.9,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-5a5d1159f2fe",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "CONFLICT",
+        "category": "target_metric",
+        "subject": "quality_performance",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "质量PPM",
+        "proposed_parameters": {
+          "year_2025": "500 PPM",
+          "year_2026_h1": "580 PPM"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-025",
+            "locator": "全文",
+            "excerpt": "2025年度动力电池包交付及时率97.8%、质量500 PPM；2026年上半年及时率96.2%、质量580 PPM。"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "open",
+        "review_disposition": "PENDING_CLARIFICATION"
+      },
+      {
+        "candidate_requirement_id": "req-5a7474bf7606",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "evaluation_scope",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "Evaluation must not be extrapolated to other factories of the supplier or non-power battery categories",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-018",
+            "locator": "全文",
+            "excerpt": "评价不得外推到供应商其他工厂或非动力电池品类"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-60fbeeb4e592",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "security",
+        "subject": "data_residency_and_privacy",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "本材料属于 synthetic_demo，仅用于智能招采系统的需求理解、引用追溯、权限、时间点和审查能力测试。文中企业、人员、金额、资质、风险和结果均为模拟信息",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-024",
+            "locator": "全文",
+            "excerpt": "证据使用说明：本材料属于 synthetic_demo，仅用于智能招采系统的需求理解、引用追溯、权限、时间点和审查能力测试。文中企业、人员、金额、资质、风险和结果均为模拟信息"
+          }
+        ],
+        "confidence": 0.85,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-616539a083c6",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "scope",
+        "subject": "acceptance_results",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "正常回答、失败或冲突识别、证据不足、权限拒绝",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-024",
+            "locator": "全文",
+            "excerpt": "客户确认验收集必须覆盖四类结果：正常回答、失败或冲突识别、证据不足、权限拒绝。"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-6253e2d4aaf7",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "payment_terms",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "30%预付款、到货验收后60天支付70%",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-022",
+            "locator": "全文",
+            "excerpt": "付款条件为30%预付款、到货验收后60天支付70%"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-62aa5635bf00",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "credit_interpretation",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "信用提示不等于真实企业失信",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-026",
+            "locator": "全文",
+            "excerpt": "信用提示不等于真实企业失信"
+          }
+        ],
+        "confidence": 0.9,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-660ac63ae5a3",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "CONFLICT",
+        "category": "target_metric",
+        "subject": "quality_performance",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "420 PPM",
+        "proposed_parameters": {
+          "year": "2025",
+          "metric_type": "defect_rate"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-017",
+            "locator": "全文",
+            "excerpt": "质量表现为420 PPM"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "open",
+        "review_disposition": "PENDING_CLARIFICATION"
+      },
+      {
+        "candidate_requirement_id": "req-691d742b0099",
+        "matched_baseline_requirement_id": "req-a479c611c487",
+        "suggested_change_type": "PENDING_CLARIFICATION",
+        "category": "industry",
+        "subject": "domain",
+        "previous_value": "汽车制造",
+        "previous_parameters": {},
+        "proposed_value": "智能招采",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-024",
+            "locator": "全文",
+            "excerpt": "仅用于智能招采系统的需求理解"
+          }
+        ],
+        "confidence": 0.9,
+        "conflict_status": "none",
+        "review_disposition": "PENDING_CLARIFICATION"
+      },
+      {
+        "candidate_requirement_id": "req-6cb33f4715d1",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "approval",
+        "subject": "supplier_qualification",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "requires human review for expired certificate alerts",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-019",
+            "locator": "全文",
+            "excerpt": "应提示expired_certificate并转人工复核"
+          }
+        ],
+        "confidence": 0.9,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-6cdf2f050956",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "scope",
+        "subject": "supply_coverage",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "双供应源覆盖合肥和武汉",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-020",
+            "locator": "全文",
+            "excerpt": "双供应源覆盖合肥和武汉"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-841a2341c488",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "approval",
+        "subject": "final_decision_authority",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "采购委员会人工批准",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-021",
+            "locator": "全文",
+            "excerpt": "最终由采购委员会人工批准"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-90234c15b0ed",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "security",
+        "subject": "data_access_expiration",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "temporary_quality_user_access_revoked_after_expiry",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-023",
+            "locator": "全文",
+            "excerpt": "临时质量用户授权到期后不得继续检索"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-923c0b19937e",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "scoring_disclosure",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "评分必须披露缺失值处理和人工减2分的理由",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-026",
+            "locator": "全文",
+            "excerpt": "评分必须披露缺失值处理和人工减2分的理由"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-96bcb83da0ca",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "risk",
+        "subject": "litigation_risk",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "设备采购合同诉讼",
+        "proposed_parameters": {
+          "status": "尚未判决",
+          "action": "标记litigation并交人工复核"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-025",
+            "locator": "全文",
+            "excerpt": "公开风险核验模拟记录显示其存在一项设备采购合同诉讼，状态为尚未判决，因此只能标记litigation并交人工复核，不能推断败诉或失信。"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-a1e8fb1136a1",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "CONFLICT",
+        "category": "scope",
+        "subject": "data_applicability",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "只适用于所列工厂、动力电池包品类及明确时间段",
+        "proposed_parameters": {
+          "factory": "天津Pack工厂",
+          "category": "动力电池包"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-025",
+            "locator": "全文",
+            "excerpt": "本记录的履约、质量、诉讼和信用信息只适用于所列工厂、动力电池包品类及明确时间段。"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "open",
+        "review_disposition": "PENDING_CLARIFICATION"
+      },
+      {
+        "candidate_requirement_id": "req-a7d6e2192fa7",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "scoring_scope",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "评分只适用于合肥工厂和动力电池包品类",
+        "proposed_parameters": {
+          "location": "合肥工厂",
+          "product_category": "动力电池包"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-017",
+            "locator": "全文",
+            "excerpt": "评分只适用于合肥工厂和动力电池包品类"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-aa0229c8f4ce",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "security",
+        "subject": "data_usage_restriction",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "Material is for testing requirement understanding, citation tracing, permissions, time points, and review capabilities only",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-018",
+            "locator": "全文",
+            "excerpt": "本材料属于 synthetic_demo，仅用于智能招采系统的需求理解、引用追溯、权限、时间点和审查能力测试"
+          }
+        ],
+        "confidence": 0.9,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-b2a6d3f6073a",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "time",
+        "subject": "bid_deadline",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "2026-09-20 17:00",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-020",
+            "locator": "全文",
+            "excerpt": "投标截止时间为2026-09-20 17:00"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-bb16aa14a5c4",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "approval",
+        "subject": "litigation_review",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "人工复核",
+        "proposed_parameters": {
+          "condition": "存在未决诉讼"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-025",
+            "locator": "全文",
+            "excerpt": "因此只能标记litigation并交人工复核"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-bbecec83babe",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "data",
+        "subject": "technical_specification",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "75kWh、400V、IP68、快充30分钟以内和循环寿命不少于2500次",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-020",
+            "locator": "全文",
+            "excerpt": "技术条件包括75kWh、400V、IP68、快充30分钟以内和循环寿命不少于2500次"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-c3e9e0f5b677",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "missing_data_handling",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "不允许用集团均值替代缺失的工厂级PPM数据",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-026",
+            "locator": "全文",
+            "excerpt": "2024年工厂级PPM缺失，不允许用集团均值替代"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-c4766da37881",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "temporal_data_handling",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "晚于2026-08-14的事项属于 simulated_future_scenario，不代表真实事件或已实现成果。抽取时必须区分原话、人工确认和内部分析，不得用后续版本覆盖历史时间点",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-024",
+            "locator": "全文",
+            "excerpt": "晚于2026-08-14的事项属于 simulated_future_scenario，不代表真实事件或已实现成果。抽取时必须区分原话、人工确认和内部分析，不得用后续版本覆盖历史时间点。"
+          }
+        ],
+        "confidence": 0.85,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-c85e55ae8945",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "closure_condition",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "conditional_closure_requires_third_batch_verification_before_mass_production",
+        "proposed_parameters": {
+          "condition": "complete_third_batch_verification",
+          "deadline_context": "before_mass_production"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-023",
+            "locator": "全文",
+            "excerpt": "状态为有条件关闭，量产前仍需完成第三批验证"
+          }
+        ],
+        "confidence": 0.9,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-ca9fc50cfef3",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "data",
+        "subject": "machine_evaluation_fields",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "query、project_id、user_context、as_of、expected_facts、expected_source_ids、forbidden_claims、expected_refusal、expected_masked_fields和grading_rules",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-024",
+            "locator": "全文",
+            "excerpt": "机器评测题需保存query、project_id、user_context、as_of、expected_facts、expected_source_ids、forbidden_claims、expected_refusal、expected_masked_fields和grading_rules。"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-ccbbe374cef3",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "available_data",
+        "subject": "traceability_scheme",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "电芯批次到整包序列号追溯方案",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-017",
+            "locator": "全文",
+            "excerpt": "已提供电芯批次到整包序列号追溯方案"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-d03c5ab29384",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "security",
+        "subject": "field_access_restriction",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "合同单价和供应商评分属于受限字段，仅授权采购与法务财务角色查看",
+        "proposed_parameters": {
+          "restricted_fields": [
+            "合同单价",
+            "供应商评分"
+          ],
+          "authorized_roles": [
+            "采购",
+            "法务",
+            "财务"
+          ]
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-022",
+            "locator": "全文",
+            "excerpt": "合同单价和供应商评分属于受限字段，仅授权采购与法务财务角色查看"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-d106141303d9",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "scoring_limitation",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "评分不能自动形成中标",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-025",
+            "locator": "全文",
+            "excerpt": "评分不能自动形成中标。"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-d1a03444f6e9",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "litigation_interpretation",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "未决诉讼不等于供应商败诉",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-026",
+            "locator": "全文",
+            "excerpt": "未决诉讼不等于供应商败诉"
+          }
+        ],
+        "confidence": 0.9,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-d206f35a84fb",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "budget",
+        "subject": "total_contract_amount",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "1,229,880,000元",
+        "proposed_parameters": {
+          "status": "within_limit"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-022",
+            "locator": "全文",
+            "excerpt": "两份采购合同总额合计1,229,880,000元，未超过预算上限"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-d91bc42a33e6",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "approval",
+        "subject": "high_risk_deviation_review",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "专家人工复核",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-020",
+            "locator": "全文",
+            "excerpt": "高风险偏差由专家人工复核"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-e4401b0d1a8e",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "qualification_requirement",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "有效IATF 16949和环境管理证书",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-020",
+            "locator": "全文",
+            "excerpt": "资格条件包括有效IATF 16949和环境管理证书"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-e57968c36a86",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "risk",
+        "subject": "logistics_risk",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "运输半径较长",
+        "proposed_parameters": {
+          "route": "天津至武汉",
+          "action": "作为交付风险监控项"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-025",
+            "locator": "全文",
+            "excerpt": "天津至武汉运输半径较长，需作为交付风险监控项。"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-e72794a65929",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "CONFLICT",
+        "category": "existing_system",
+        "subject": "certification",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "IATF 16949",
+        "proposed_parameters": {
+          "valid_until": "2028-06-30",
+          "location": "合肥Pack工厂"
+        },
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-017",
+            "locator": "全文",
+            "excerpt": "合肥Pack工厂IATF 16949有效期至2028-06-30"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "open",
+        "review_disposition": "PENDING_CLARIFICATION"
+      },
+      {
+        "candidate_requirement_id": "req-e73b359cfa49",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "pain_point",
+        "subject": "cooling_plate_leakage",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "一次冷却板渗漏投诉",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-017",
+            "locator": "全文",
+            "excerpt": "一次冷却板渗漏投诉已于2026-05完成8D整改"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-e813aef234a0",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "scoring_weights",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "质量25%、交付20%、技术15%、价格15%、产能10%、信用10%、合规5%",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-021",
+            "locator": "全文",
+            "excerpt": "评审组按质量25%、交付20%、技术15%、价格15%、产能10%、信用10%、合规5%计算基础分"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-e87be6707b55",
+        "matched_baseline_requirement_id": "req-a479c611c487",
+        "suggested_change_type": "PENDING_CLARIFICATION",
+        "category": "industry",
+        "subject": "supplier_industry",
+        "previous_value": "汽车制造",
+        "previous_parameters": {},
+        "proposed_value": "动力电池包",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-025",
+            "locator": "全文",
+            "excerpt": "动力电池包"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "PENDING_CLARIFICATION"
+      },
+      {
+        "candidate_requirement_id": "req-ed300ed17241",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "data",
+        "subject": "product_quantity",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "12,000套磷酸铁锂动力电池包",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-020",
+            "locator": "全文",
+            "excerpt": "招标文件TENDER-V3要求12,000套磷酸铁锂动力电池包"
+          }
+        ],
+        "confidence": 1.0,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-ef58e8f6f0a9",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "document_review_samples",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "至少包含4份无问题控制样本、6份故意缺陷样本",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-024",
+            "locator": "全文",
+            "excerpt": "文档审查至少包含4份无问题控制样本、6份故意缺陷样本。"
+          }
+        ],
+        "confidence": 0.9,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      },
+      {
+        "candidate_requirement_id": "req-fe1518953866",
+        "matched_baseline_requirement_id": null,
+        "suggested_change_type": "ADDED",
+        "category": "business_rule",
+        "subject": "certificate_validity",
+        "previous_value": null,
+        "previous_parameters": {},
+        "proposed_value": "both certificates must be valid on the bid submission deadline",
+        "proposed_parameters": {},
+        "source_refs": [
+          {
+            "source_id": "SRC-TENDER-019",
+            "locator": "全文",
+            "excerpt": "招标文件要求两项证书均在投标截止日有效"
+          }
+        ],
+        "confidence": 0.95,
+        "conflict_status": "none",
+        "review_disposition": "ACCEPT"
+      }
+    ]
+  },
+  "review": {
+    "accepted": 36,
+    "rejected": 16,
+    "formal_removals": 0
+  },
+  "diff": {
+    "project_id": "PRJ-TENDER-001",
+    "previous_baseline_id": "baseline-cbd314bda882",
+    "current_baseline_id": "baseline-c455ce8cabec",
+    "added_requirement_ids": [
+      "req-0215b9413f05",
+      "req-19fe091b7fef",
+      "req-2ecc3d144d61",
+      "req-37835a728b6c",
+      "req-47cfc051874a",
+      "req-4fa845e1012e",
+      "req-5a7474bf7606",
+      "req-616539a083c6",
+      "req-6253e2d4aaf7",
+      "req-62aa5635bf00",
+      "req-6cb33f4715d1",
+      "req-6cdf2f050956",
+      "req-841a2341c488",
+      "req-90234c15b0ed",
+      "req-923c0b19937e",
+      "req-96bcb83da0ca",
+      "req-a7d6e2192fa7",
+      "req-b2a6d3f6073a",
+      "req-bb16aa14a5c4",
+      "req-bbecec83babe",
+      "req-c3e9e0f5b677",
+      "req-c4766da37881",
+      "req-c85e55ae8945",
+      "req-ca9fc50cfef3",
+      "req-ccbbe374cef3",
+      "req-d03c5ab29384",
+      "req-d106141303d9",
+      "req-d1a03444f6e9",
+      "req-d91bc42a33e6",
+      "req-e4401b0d1a8e",
+      "req-e57968c36a86",
+      "req-e73b359cfa49",
+      "req-e813aef234a0",
+      "req-ed300ed17241",
+      "req-ef58e8f6f0a9",
+      "req-fe1518953866"
+    ],
+    "removed_requirement_ids": [],
+    "changed_requirement_ids": [],
+    "changes": [
+      {
+        "requirement_id": "req-841a2341c488",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"approval\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"final_decision_authority\",\"value\":\"采购委员会人工批准\"}",
+        "explanation": "added approval semantic requirement"
+      },
+      {
+        "requirement_id": "req-d91bc42a33e6",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"approval\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"high_risk_deviation_review\",\"value\":\"专家人工复核\"}",
+        "explanation": "added approval semantic requirement"
+      },
+      {
+        "requirement_id": "req-bb16aa14a5c4",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"approval\",\"pain_point_detail\":null,\"parameters\":{\"condition\":\"存在未决诉讼\"},\"process_detail\":null,\"subject\":\"litigation_review\",\"value\":\"人工复核\"}",
+        "explanation": "added approval semantic requirement"
+      },
+      {
+        "requirement_id": "req-6cb33f4715d1",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"approval\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"supplier_qualification\",\"value\":\"requires human review for expired certificate alerts\"}",
+        "explanation": "added approval semantic requirement"
+      },
+      {
+        "requirement_id": "req-19fe091b7fef",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"available_data\",\"pain_point_detail\":null,\"parameters\":{\"unit\":\"sets/year\"},\"process_detail\":null,\"subject\":\"production_capacity\",\"value\":\"18,000套/年\"}",
+        "explanation": "added available_data semantic requirement"
+      },
+      {
+        "requirement_id": "req-ccbbe374cef3",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"available_data\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"traceability_scheme\",\"value\":\"电芯批次到整包序列号追溯方案\"}",
+        "explanation": "added available_data semantic requirement"
+      },
+      {
+        "requirement_id": "req-c85e55ae8945",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{\"condition\":\"complete_third_batch_verification\",\"deadline_context\":\"before_mass_production\"},\"process_detail\":null,\"subject\":\"closure_condition\",\"value\":\"conditional_closure_requires_third_batch_verification_before_mass_production\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-a7d6e2192fa7",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{\"location\":\"合肥工厂\",\"product_category\":\"动力电池包\"},\"process_detail\":null,\"subject\":\"scoring_scope\",\"value\":\"评分只适用于合肥工厂和动力电池包品类\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-37835a728b6c",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"bidding_decision\",\"value\":\"评分不能自动形成中标\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-fe1518953866",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"certificate_validity\",\"value\":\"both certificates must be valid on the bid submission deadline\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-62aa5635bf00",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"credit_interpretation\",\"value\":\"信用提示不等于真实企业失信\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-0215b9413f05",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"data_handling_policy\",\"value\":\"must distinguish between original quotes, human confirmation, and internal analysis; do not use later versions to overwrite historical time points\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-ef58e8f6f0a9",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"document_review_samples\",\"value\":\"至少包含4份无问题控制样本、6份故意缺陷样本\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-5a7474bf7606",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"evaluation_scope\",\"value\":\"evaluation must not be extrapolated to other factories of the supplier or non-power battery categories\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-d1a03444f6e9",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"litigation_interpretation\",\"value\":\"未决诉讼不等于供应商败诉\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-c3e9e0f5b677",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"missing_data_handling\",\"value\":\"不允许用集团均值替代缺失的工厂级ppm数据\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-4fa845e1012e",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"ocr_data_interpretation\",\"value\":\"header year '2028' is template version number, not certificate expiry year\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-6253e2d4aaf7",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"payment_terms\",\"value\":\"30%预付款、到货验收后60天支付70%\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-47cfc051874a",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"ppt_metrics_labeling\",\"value\":\"ppt中的60%、50%、95%、6倍和86%只能标成source_claim，不得作为当前项目成果\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-e4401b0d1a8e",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"qualification_requirement\",\"value\":\"有效iatf 16949和环境管理证书\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-923c0b19937e",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"scoring_disclosure\",\"value\":\"评分必须披露缺失值处理和人工减2分的理由\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-d106141303d9",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"scoring_limitation\",\"value\":\"评分不能自动形成中标\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-e813aef234a0",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"scoring_weights\",\"value\":\"质量25%、交付20%、技术15%、价格15%、产能10%、信用10%、合规5%\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-c4766da37881",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"business_rule\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"temporal_data_handling\",\"value\":\"晚于2026-08-14的事项属于 simulated_future_scenario，不代表真实事件或已实现成果。抽取时必须区分原话、人工确认和内部分析，不得用后续版本覆盖历史时间点\"}",
+        "explanation": "added business_rule semantic requirement"
+      },
+      {
+        "requirement_id": "req-ca9fc50cfef3",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"data\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"machine_evaluation_fields\",\"value\":\"query、project_id、user_context、as_of、expected_facts、expected_source_ids、forbidden_claims、expected_refusal、expected_masked_fields和grading_rules\"}",
+        "explanation": "added data semantic requirement"
+      },
+      {
+        "requirement_id": "req-ed300ed17241",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"data\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"product_quantity\",\"value\":\"12,000套磷酸铁锂动力电池包\"}",
+        "explanation": "added data semantic requirement"
+      },
+      {
+        "requirement_id": "req-bbecec83babe",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"data\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"technical_specification\",\"value\":\"75kwh、400v、ip68、快充30分钟以内和循环寿命不少于2500次\"}",
+        "explanation": "added data semantic requirement"
+      },
+      {
+        "requirement_id": "req-e73b359cfa49",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"pain_point\",\"pain_point_detail\":{\"affected_process_node_ids\":[],\"description\":\"冷却板渗漏\",\"pain_point_id\":\"pp-001\",\"severity\":\"medium\"},\"parameters\":{},\"process_detail\":null,\"subject\":\"cooling_plate_leakage\",\"value\":\"一次冷却板渗漏投诉\"}",
+        "explanation": "added pain_point semantic requirement"
+      },
+      {
+        "requirement_id": "req-96bcb83da0ca",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"risk\",\"pain_point_detail\":null,\"parameters\":{\"action\":\"标记litigation并交人工复核\",\"status\":\"尚未判决\"},\"process_detail\":null,\"subject\":\"litigation_risk\",\"value\":\"设备采购合同诉讼\"}",
+        "explanation": "added risk semantic requirement"
+      },
+      {
+        "requirement_id": "req-e57968c36a86",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"risk\",\"pain_point_detail\":null,\"parameters\":{\"action\":\"作为交付风险监控项\",\"route\":\"天津至武汉\"},\"process_detail\":null,\"subject\":\"logistics_risk\",\"value\":\"运输半径较长\"}",
+        "explanation": "added risk semantic requirement"
+      },
+      {
+        "requirement_id": "req-616539a083c6",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"scope\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"acceptance_results\",\"value\":\"正常回答、失败或冲突识别、证据不足、权限拒绝\"}",
+        "explanation": "added scope semantic requirement"
+      },
+      {
+        "requirement_id": "req-6cdf2f050956",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"scope\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"supply_coverage\",\"value\":\"双供应源覆盖合肥和武汉\"}",
+        "explanation": "added scope semantic requirement"
+      },
+      {
+        "requirement_id": "req-2ecc3d144d61",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"security\",\"pain_point_detail\":null,\"parameters\":{\"roles\":[\"procurement_lead\",\"supplier_quality\"]},\"process_detail\":null,\"subject\":\"access_control\",\"value\":\"record_viewable_by_procurement_lead_and_supplier_quality_role_only\"}",
+        "explanation": "added security semantic requirement"
+      },
+      {
+        "requirement_id": "req-90234c15b0ed",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"security\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"data_access_expiration\",\"value\":\"temporary_quality_user_access_revoked_after_expiry\"}",
+        "explanation": "added security semantic requirement"
+      },
+      {
+        "requirement_id": "req-d03c5ab29384",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"security\",\"pain_point_detail\":null,\"parameters\":{\"authorized_roles\":[\"采购\",\"法务\",\"财务\"],\"restricted_fields\":[\"合同单价\",\"供应商评分\"]},\"process_detail\":null,\"subject\":\"field_access_restriction\",\"value\":\"合同单价和供应商评分属于受限字段，仅授权采购与法务财务角色查看\"}",
+        "explanation": "added security semantic requirement"
+      },
+      {
+        "requirement_id": "req-b2a6d3f6073a",
+        "change_type": "added",
+        "before_value": null,
+        "after_value": "{\"category\":\"time\",\"pain_point_detail\":null,\"parameters\":{},\"process_detail\":null,\"subject\":\"bid_deadline\",\"value\":\"2026-09-20 17:00\"}",
+        "explanation": "added time semantic requirement"
+      }
+    ]
+  },
+  "route": {
+    "decision": "full_solution_recompile",
+    "changed_categories": [
+      "approval",
+      "available_data",
+      "business_rule",
+      "data",
+      "pain_point",
+      "risk",
+      "scope",
+      "security",
+      "time"
+    ],
+    "explanation": "Structural or mixed requirement change requires full solution compile.",
+    "new_constraints": []
+  },
+  "solution_update": {
+    "decision": "full_solution_recompile",
+    "solution_id": "PRJ-TENDER-001-balanced-v2",
+    "blueprint_id": "PRJ-TENDER-001-balanced-v2-demo",
+    "bundle_regenerated": true,
+    "incremental_recompile": false
+  },
+  "guards": {
+    "stable_previous_ids_retained": 70,
+    "old_active_residue": 0,
+    "previous_snapshot_validated_by_service": true,
+    "removal": "DATA_GAP: no post-baseline evidence explicitly requests formal removal"
+  }
+}

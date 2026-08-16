@@ -1,0 +1,56 @@
+{
+  "package_name": "DCForge 企业智能招采与采购合规解决方案交付包",
+  "package_version": "1.0",
+  "document_status": "客户交流与试点立项建议稿",
+  "generated_at": "2026-08-15T10:42:12.092076+00:00",
+  "business_results_status": "未验证",
+  "intended_use": [
+    "客户正式汇报",
+    "技术交流",
+    "试点立项",
+    "验收口径讨论"
+  ],
+  "content_boundary": [
+    "本材料基于前期场景描述整理，尚未替代双方签署的需求确认文件。",
+    "材料中的指标是建议验收口径，不是当前客户已经取得的业务成果。",
+    "实施周期是建议排期，需根据数据、接口、安全评审和人员安排确认。",
+    "正式范围、价格、服务等级和责任边界以双方合同及附件为准。"
+  ],
+  "files": [
+    {
+      "name": "01_DCFORGE_大型汽车制造企业智能招采与采购合规解决方案.pptx",
+      "size_bytes": 74862,
+      "sha256": "058198a23b9d8024f6a5417313661ce3ee65373ef2bfc179e30bb4f863b5e016"
+    },
+    {
+      "name": "02_DCFORGE_解决方案建议书.pdf",
+      "size_bytes": 19285,
+      "sha256": "d2968b8c3c5270eb6e3c3d60f7d78fb601effe0eb1ad0e7d9abbc5beee4660a8"
+    },
+    {
+      "name": "03_DCFORGE_解决方案建议书.html",
+      "size_bytes": 16104,
+      "sha256": "ace1e9865844bbc758766592e04abd678d52c6f2c42457ef766b6c9b6703b088"
+    },
+    {
+      "name": "04_DCFORGE_实施与验收计划.xlsx",
+      "size_bytes": 11366,
+      "sha256": "a2acb92e2ec6ab824ab573d7ff77210fcab0e0cc3a4cc0695123b4df2e0f2d80"
+    },
+    {
+      "name": "05_DCFORGE_部署安全与集成边界.md",
+      "size_bytes": 3136,
+      "sha256": "000d964c87d1703705f96406784a22970829aee776d483e540cb493cbebd5d5c"
+    },
+    {
+      "name": "06_DCFORGE_演示与操作手册.md",
+      "size_bytes": 3403,
+      "sha256": "0e1b7cdfb6be0a5d06cfd27f78133a65416584c601439435154fd46b9551e551"
+    },
+    {
+      "name": "README_交付说明.md",
+      "size_bytes": 1912,
+      "sha256": "6525828b8adb06d9a25df590a14ef737f52038524cb3e7afb29521f3993c2cf8"
+    }
+  ]
+}

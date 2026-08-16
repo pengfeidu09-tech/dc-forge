@@ -7,62 +7,32 @@ defineProps({
 </script>
 
 <template>
-  <div class="detail-grid">
-    <section class="detail-card detail-card--steps">
-      <div class="section-heading section-heading--compact">
-        <span class="section-heading__icon"><AppIcon name="flow" /></span>
-        <div>
-          <small>DELIVERY PATH</small>
-          <h3>实施路线</h3>
-        </div>
-      </div>
-      <ol class="implementation-list">
-        <li v-for="(step, index) in plan.implementation_steps" :key="step">
-          <span>{{ index + 1 }}</span>
-          <p>{{ step }}</p>
-        </li>
-      </ol>
-    </section>
-
-    <div class="detail-stack">
-      <section class="detail-card">
-        <div class="section-heading section-heading--compact">
-          <span class="section-heading__icon section-heading__icon--green"><AppIcon name="target" /></span>
-          <div>
-            <small>VALUE PROOF</small>
-            <h3>预期指标</h3>
-          </div>
-        </div>
-        <div class="tag-cloud">
-          <span v-for="metric in plan.expected_metrics" :key="metric">{{ metric }}</span>
-        </div>
-      </section>
-
-      <section v-if="plan.assumptions?.length" class="detail-card">
-        <div class="section-heading section-heading--compact">
-          <span class="section-heading__icon section-heading__icon--amber"><AppIcon name="warning" /></span>
-          <div>
-            <small>TO BE CONFIRMED</small>
-            <h3>待确认事项</h3>
-          </div>
-        </div>
-        <ul class="plain-list">
-          <li v-for="item in plan.assumptions" :key="item">{{ item.replace(/^待确认:\s*/, '') }}</li>
-        </ul>
-      </section>
-    </div>
-
-    <section v-if="plan.warnings?.length" class="detail-card detail-card--warning">
-      <div class="section-heading section-heading--compact">
-        <span class="section-heading__icon section-heading__icon--red"><AppIcon name="warning" /></span>
-        <div>
-          <small>QUALITY NOTICE</small>
-          <h3>质量提示</h3>
-        </div>
-      </div>
-      <ul class="warning-list">
-        <li v-for="warning in plan.warnings" :key="warning">{{ warning }}</li>
-      </ul>
-    </section>
-  </div>
+  <a-row class="detail-grid" :gutter="[16, 16]">
+    <a-col :xs="24" :lg="14">
+      <a-card class="detail-card detail-card--steps" title="实施路线" :bordered="false">
+        <a-timeline>
+          <a-timeline-item v-for="(step, index) in plan.implementation_steps" :key="step">
+            <strong>{{ index + 1 }}</strong> · {{ step }}
+          </a-timeline-item>
+        </a-timeline>
+      </a-card>
+    </a-col>
+    <a-col :xs="24" :lg="10">
+      <a-card class="detail-card" title="预期指标" :bordered="false">
+        <a-space wrap><a-tag v-for="metric in plan.expected_metrics" :key="metric" color="green">{{ metric }}</a-tag></a-space>
+      </a-card>
+      <a-card v-if="plan.assumptions?.length" class="detail-card" title="待确认事项" :bordered="false">
+        <a-list :data-source="plan.assumptions" size="small">
+          <template #renderItem="{ item }"><a-list-item>{{ item.replace(/^待确认:\s*/, '') }}</a-list-item></template>
+        </a-list>
+      </a-card>
+    </a-col>
+    <a-col v-if="plan.warnings?.length" :span="24">
+      <a-alert type="warning" show-icon message="质量提示">
+        <template #description>
+          <ul class="warning-list"><li v-for="warning in plan.warnings" :key="warning">{{ warning }}</li></ul>
+        </template>
+      </a-alert>
+    </a-col>
+  </a-row>
 </template>

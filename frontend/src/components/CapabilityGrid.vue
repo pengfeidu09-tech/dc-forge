@@ -22,29 +22,33 @@ const capabilityIcons = {
 </script>
 
 <template>
-  <div class="capability-grid">
-    <article
+  <a-row class="capability-grid" :gutter="[14, 14]">
+    <a-col
       v-for="(item, index) in components"
       :key="item.component_id"
-      class="capability-card"
-      :class="{ 'capability-card--expanded': expandedId === item.component_id }"
-      @click="expandedId = expandedId === item.component_id ? '' : item.component_id"
+      :xs="24"
+      :md="12"
+      :xl="8"
     >
-      <div class="capability-card__head">
-        <span class="capability-card__icon" :style="{ '--delay': `${index * 40}ms` }">
+      <a-card
+        class="capability-card"
+        hoverable
+        :class="{ 'capability-card--expanded': expandedId === item.component_id }"
+        @click="expandedId = expandedId === item.component_id ? '' : item.component_id"
+      >
+        <template #title>
+          <a-space>
           <AppIcon :name="capabilityIcons[item.component_id] || 'layers'" />
-        </span>
-        <span class="capability-card__index">{{ String(index + 1).padStart(2, '0') }}</span>
-      </div>
-      <strong>{{ item.name }}</strong>
-      <small>{{ item.component_id }}</small>
-      <p>{{ item.reason }}</p>
-      <div class="capability-card__data">
-        <span>需要数据</span>
-        <div>
-          <em v-for="data in item.required_data" :key="data">{{ data }}</em>
-        </div>
-      </div>
-    </article>
-  </div>
+            <span>{{ String(index + 1).padStart(2, '0') }} · {{ item.name }}</span>
+          </a-space>
+        </template>
+        <template #extra><a-tag>{{ item.component_id }}</a-tag></template>
+        <a-typography-paragraph>{{ item.reason }}</a-typography-paragraph>
+        <a-divider orientation="left" plain>需要数据</a-divider>
+        <a-space wrap>
+          <a-tag v-for="data in item.required_data" :key="data" color="blue">{{ data }}</a-tag>
+        </a-space>
+      </a-card>
+    </a-col>
+  </a-row>
 </template>

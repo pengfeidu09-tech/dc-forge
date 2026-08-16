@@ -133,3 +133,79 @@ def test_openai_provider_merges_extraction_request_options_without_core_override
 def test_openai_provider_rejects_core_payload_overrides(reserved: str) -> None:
     with pytest.raises(ValueError, match=reserved):
         OpenAICompatibleProvider(request_options={reserved: "forbidden"})
+
+
+class _RetryResponse:
+    def __init__(self, status_code: int, *, retry_after: str | None = None) -> None:
+        self.status_code = status_code
+        self.headers = {"Retry-After": retry_after} if retry_after else {}
+
+    def json(self):
+        return {"choices": [{"message": {"content": "recovered"}}]}
+
+
+class _RetryClient:
+    responses: list[_RetryResponse] = []
+    calls = 0
+
+    def __init__(self, *, timeout):
+        self.timeout = timeout
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+    def post(self, url, *, json, headers):
+        response = self.__class__.responses[self.__class__.calls]
+        self.__class__.calls += 1
+        return response
+
+
+def test_openai_provider_retries_transient_status_and_caps_retry_after(monkeypatch) -> None:
+    from backend.app.solution import llm_provider
+
+    _RetryClient.responses = [
+        _RetryResponse(429, retry_after="120"),
+        _RetryResponse(503),
+        _RetryResponse(200),
+    ]
+    _RetryClient.calls = 0
+    delays: list[float] = []
+    monkeypatch.setattr(llm_provider.httpx, "Client", _RetryClient)
+    provider = OpenAICompatibleProvider(
+        api_key="test-key",
+        base_url="https://example.test/v1",
+        model="test-model",
+        max_retries=2,
+        sleep=delays.append,
+    )
+
+    result = provider.complete([{"role": "user", "content": "test"}])
+
+    assert result.content == "recovered"
+    assert _RetryClient.calls == 3
+    assert delays
+    assert max(delays) <= 2.0
+
+
+def test_openai_provider_handles_every_non_success_status_without_response_body(
+    monkeypatch,
+) -> None:
+    from backend.app.solution import llm_provider
+
+    _RetryClient.responses = [_RetryResponse(418)]
+    _RetryClient.calls = 0
+    monkeypatch.setattr(llm_provider.httpx, "Client", _RetryClient)
+    provider = OpenAICompatibleProvider(
+        api_key="test-key",
+        base_url="https://example.test/v1",
+        model="test-model",
+        max_retries=0,
+    )
+
+    result = provider.complete([{"role": "user", "content": "test"}])
+
+    assert result.content == ""
+    assert result.warnings == ["LLM 请求失败: 418"]

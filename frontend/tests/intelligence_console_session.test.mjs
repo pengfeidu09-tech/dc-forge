@@ -8,7 +8,7 @@ import {
   capturePreviousSolutionSnapshot,
   hasCompletePreviousSolutionSnapshot,
   processOrSolutionThreshold,
-} from '../src/session_state.js'
+} from '../src/utils/intelligenceConsoleSession.js'
 
 function sessionV1() {
   return {

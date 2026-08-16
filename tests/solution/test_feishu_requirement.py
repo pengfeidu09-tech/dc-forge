@@ -239,7 +239,7 @@ def test_first_feishu_turn_creates_automotive_requirement_state_v1(
     assert result.completeness_score > 0
     assert result.next_question is not None
     assert result.next_question in result.answer
-    assert result.answer.startswith("感谢您的说明。")
+    assert result.answer == f"我先确认一个信息：{result.next_question}"
     for internal_term in (
         "需求状态池",
         "版本",
@@ -251,6 +251,15 @@ def test_first_feishu_turn_creates_automotive_requirement_state_v1(
         "候选",
     ):
         assert internal_term not in result.answer
+
+
+def test_customer_answer_is_direct_when_no_more_question_is_needed() -> None:
+    answer = FeishuRequirementOrchestrator._format_customer_answer(None)
+
+    assert answer == (
+        "目前的信息足够形成初步理解。您可以继续补充审批规则、数据范围或部署要求。"
+    )
+    assert "感谢您的说明" not in answer
 
 
 def test_second_turn_loads_v1_and_persists_v2(tmp_path: Path) -> None:

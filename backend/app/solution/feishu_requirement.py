@@ -325,11 +325,11 @@ class FeishuRequirementOrchestrator:
     @staticmethod
     def _format_customer_answer(next_question: str | None) -> str:
         if next_question:
-            return (
-                "感谢您的说明。为了进一步梳理适合贵司的方案，"
-                f"{next_question}"
-            )
-        return "感谢您的说明。我们会结合您提供的信息，进一步梳理适合贵司的方案。"
+            return f"我先确认一个信息：{next_question}"
+        return (
+            "目前的信息足够形成初步理解。"
+            "您可以继续补充审批规则、数据范围或部署要求。"
+        )
 
     @staticmethod
     def _label(category: str) -> str:

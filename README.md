@@ -38,6 +38,7 @@ ProcessSpec → SolutionBundle → RunReport
 | **跨场景自适应** | 7 种场景识别（incident_response / fraud_risk / identity_account / dispute_investigation / customer_service / procurement_exception / generic） |
 | **human_gate 人工审批语义** | human-approval 节点统一 `human_gate=true`，gate_reason 按场景生成 |
 | **企业招采可视化门户** | 三项目可浏览，完整展示需求版本、采购主链、供应商风险、文档审查、方案和AI助手 |
+| **权威资料目录** | 只读扫描FINAL_COMPLETE资料包，按项目、资料类型和需求ID查询会议、沟通及业务文档 |
 | **MCP 服务** | stdio与HTTP JSON-RPC，11个受ACL和as_of约束的只读工具 |
 | **FastAPI 服务接口** | 统一托管门户、企业知识API、方案接口、AI机器人和飞书事件 |
 

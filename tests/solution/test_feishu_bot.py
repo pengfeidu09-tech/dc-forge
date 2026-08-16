@@ -45,6 +45,13 @@ class RecordingEnterpriseAssistant:
 
     def answer(self, request):
         self.requests.append(request)
+        if request.audience == "customer":
+            return EnterpriseAssistantResponse(
+                answer="我们可提供需求结构化、规则审查和证据追溯能力。",
+                tool_name="search_knowledge",
+                tool_call={"method": "tools/call"},
+                citations=["CAP-SMART-PROCUREMENT"],
+            )
         return EnterpriseAssistantResponse(
             answer="供应商三因模拟环境证书过期未进入推荐。",
             tool_name="analyze_suppliers",
@@ -308,6 +315,7 @@ def test_explicit_mcp_command_routes_feishu_bot_to_enterprise_assistant() -> Non
         enterprise_project_id="PRJ-TENDER-001",
         enterprise_user_id="user-procurement-owner",
         enterprise_as_of="2026-10-30T23:59:59+08:00",
+        internal_open_ids={"ou-owner"},
     )
 
     result = service.process_event(
@@ -317,9 +325,150 @@ def test_explicit_mcp_command_routes_feishu_bot_to_enterprise_assistant() -> Non
     assert result == "replied"
     assert provider.calls == []
     assert assistant.requests[0].message == "供应商三为什么未进入推荐？"
+    assert assistant.requests[0].audience == "internal"
     assert client.replies == [
         (
             "message-001",
             "供应商三因模拟环境证书过期未进入推荐。\n\n来源：SRC-TENDER-019、SRC-TENDER-021",
         )
+    ]
+
+
+def test_allowlisted_bot_creator_can_use_explicit_mcp_without_internal_mode() -> None:
+    provider = RecordingProvider()
+    client = RecordingReplyClient()
+    assistant = RecordingEnterpriseAssistant()
+    service = FeishuBotService(
+        config=FeishuBotConfig(
+            app_id="cli_test",
+            app_secret="secret-test-value",
+            verification_token="verification-test",
+            allowed_open_id="ou-owner",
+        ),
+        reply_client=client,
+        provider=provider,
+        enterprise_assistant=assistant,
+        internal_open_ids=set(),
+    )
+
+    result = service.process_event(
+        _event(text="/mcp 供应商三为什么未进入推荐？")
+    )
+
+    assert result == "replied"
+    assert assistant.requests[0].audience == "internal"
+    assert provider.calls == []
+
+
+def test_internal_employee_natural_message_routes_to_agent_without_mcp_prefix() -> None:
+    provider = RecordingProvider()
+    client = RecordingReplyClient()
+    assistant = RecordingEnterpriseAssistant()
+    service = FeishuBotService(
+        config=FeishuBotConfig(
+            app_id="cli_test",
+            app_secret="secret-test-value",
+            verification_token="verification-test",
+        ),
+        reply_client=client,
+        provider=provider,
+        enterprise_assistant=assistant,
+        internal_open_ids={"ou-owner"},
+    )
+
+    result = service.process_event(
+        _event(text="供应商三为什么未进入推荐，相关沟通怎么说？")
+    )
+
+    assert result == "replied"
+    assert provider.calls == []
+    assert assistant.requests[0].audience == "internal"
+    assert assistant.requests[0].message.startswith("供应商三为什么")
+    assert "SRC-TENDER-019" in client.replies[0][1]
+
+
+def test_customer_general_question_uses_only_customer_knowledge_agent() -> None:
+    provider = RecordingProvider(
+        responses=[
+            '{"intent":"general","answer":"我们可以进一步介绍相关能力。"}'
+        ]
+    )
+    client = RecordingReplyClient()
+    assistant = RecordingEnterpriseAssistant()
+    service = FeishuBotService(
+        config=FeishuBotConfig(
+            app_id="cli_test",
+            app_secret="secret-test-value",
+            verification_token="verification-test",
+        ),
+        reply_client=client,
+        provider=provider,
+        enterprise_assistant=assistant,
+        internal_open_ids=set(),
+    )
+
+    result = service.process_event(_event(text="你们有哪些智能招采能力？"))
+
+    assert result == "replied"
+    assert assistant.requests[0].audience == "customer"
+    assert assistant.requests[0].project_id == "PUBLIC-CAPABILITIES"
+    assert client.replies == [
+        (
+            "message-001",
+            "我们可提供需求结构化、规则审查和证据追溯能力。\n\n"
+            "来源：CAP-SMART-PROCUREMENT",
+        )
+    ]
+
+
+def test_customer_capability_question_uses_public_knowledge_when_model_calls_it_solution_request() -> None:
+    provider = RecordingProvider(
+        responses=[
+            '{"intent":"solution_request","answer":"我可以介绍方案能力。"}'
+        ]
+    )
+    client = RecordingReplyClient()
+    assistant = RecordingEnterpriseAssistant()
+    service = FeishuBotService(
+        config=FeishuBotConfig(
+            app_id="cli_test",
+            app_secret="secret-test-value",
+            verification_token="verification-test",
+        ),
+        reply_client=client,
+        provider=provider,
+        enterprise_assistant=assistant,
+        internal_open_ids=set(),
+    )
+
+    result = service.process_event(_event(text="你们有哪些智能招采能力？"))
+
+    assert result == "replied"
+    assert assistant.requests[0].audience == "customer"
+    assert assistant.requests[0].project_id == "PUBLIC-CAPABILITIES"
+    assert "CAP-SMART-PROCUREMENT" in client.replies[0][1]
+
+
+def test_customer_cannot_use_explicit_mcp_command() -> None:
+    provider = RecordingProvider()
+    client = RecordingReplyClient()
+    assistant = RecordingEnterpriseAssistant()
+    service = FeishuBotService(
+        config=FeishuBotConfig(
+            app_id="cli_test",
+            app_secret="secret-test-value",
+            verification_token="verification-test",
+        ),
+        reply_client=client,
+        provider=provider,
+        enterprise_assistant=assistant,
+        internal_open_ids=set(),
+    )
+
+    result = service.process_event(_event(text="/mcp 查询供应商评分"))
+
+    assert result == "replied"
+    assert assistant.requests == []
+    assert client.replies == [
+        ("message-001", "该指令仅供已授权的企业内部人员使用。")
     ]

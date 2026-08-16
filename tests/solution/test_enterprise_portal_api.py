@@ -100,3 +100,38 @@ def test_fastapi_can_serve_built_enterprise_portal_without_hiding_api(tmp_path) 
     assert "DCForge Enterprise Portal" in home.text
     assert projects.status_code == 200
     assert len(projects.json()["projects"]) == 3
+
+
+def test_http_mcp_catalog_and_search_are_directly_consumable_by_frontend() -> None:
+    catalog = client.post(
+        "/mcp",
+        json={"jsonrpc": "2.0", "id": 21, "method": "tools/list", "params": {}},
+    )
+
+    assert catalog.status_code == 200
+    tools = catalog.json()["result"]["tools"]
+    assert len(tools) == 11
+    assert all(tool["annotations"]["readOnlyHint"] is True for tool in tools)
+
+    result = client.post(
+        "/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 22,
+            "method": "tools/call",
+            "params": {
+                "name": "search_knowledge",
+                "arguments": {
+                    "project_id": "PRJ-TENDER-001",
+                    "query": "年需求量",
+                    "user_id": "user-procurement-owner",
+                    "as_of": "2026-10-30T23:59:59+08:00",
+                },
+            },
+        },
+    )
+
+    assert result.status_code == 200
+    payload = result.json()["result"]
+    assert payload["isError"] is False
+    assert payload["structuredContent"]["results"][0]["source_id"]

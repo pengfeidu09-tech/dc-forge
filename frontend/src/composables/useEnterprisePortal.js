@@ -40,6 +40,18 @@ export function useEnterprisePortal() {
   const loading = ref(false)
   const error = ref('')
   const assistantLoading = ref(false)
+  const knowledgeQuery = ref('')
+  const knowledgeResults = ref([])
+  const knowledgeMeta = ref(null)
+  const knowledgeLoading = ref(false)
+  const knowledgeError = ref('')
+  const mcpTools = ref([])
+  const selectedMcpToolName = ref('')
+  const mcpArguments = ref({})
+  const mcpResult = ref(null)
+  const mcpLoading = ref(false)
+  const mcpError = ref('')
+  const mcpConnected = ref(false)
   const assistantMessages = ref([
     {
       role: 'assistant',
@@ -56,6 +68,171 @@ export function useEnterprisePortal() {
     roleOptions.find((role) => role.userId === selectedUserId.value),
   )
   const solutionBundle = computed(() => dashboard.value?.solution_bundle || null)
+  const selectedMcpTool = computed(() =>
+    mcpTools.value.find((tool) => tool.name === selectedMcpToolName.value) || null,
+  )
+
+  let mcpRequestId = 100
+
+  async function callMcp(method, params = {}) {
+    mcpRequestId += 1
+    const response = await requestJson('/mcp', {
+      method: 'POST',
+      body: JSON.stringify({ jsonrpc: '2.0', id: mcpRequestId, method, params }),
+    })
+    if (response.error) {
+      throw new Error(`MCP ${response.error.code}：${response.error.message}`)
+    }
+    return response.result
+  }
+
+  function defaultRequirementId() {
+    return {
+      'PRJ-TENDER-001': 'REQ-BAT-001',
+      'PRJ-AUTO-001': 'REQ-AUTO-001',
+      'PRJ-KM-001': 'REQ-001',
+    }[selectedProjectId.value] || ''
+  }
+
+  function defaultMcpArgument(name, schema) {
+    if (name === 'project_id') return selectedProjectId.value
+    if (name === 'user_id') return selectedUserId.value
+    if (name === 'as_of') return toApiTime(asOf.value)
+    if (name === 'query') return '年需求量'
+    if (name === 'requirement_id') return defaultRequirementId()
+    if (name === 'document_id') return 'DEFECT-01'
+    if (name === 'decision_or_object_id') return 'SUP-BAT-003'
+    if (name === 'object_id' || name === 'contract_id') return 'CON-BAT-001'
+    if (name === 'direction') return 'both'
+    if (name === 'limit') return 8
+    if (name === 'max_depth') return 2
+    return schema.type === 'integer' ? 1 : ''
+  }
+
+  function selectMcpTool(toolName) {
+    selectedMcpToolName.value = toolName
+    const tool = mcpTools.value.find((item) => item.name === toolName)
+    if (!tool) {
+      mcpArguments.value = {}
+      return
+    }
+    mcpArguments.value = Object.fromEntries(
+      Object.entries(tool.inputSchema?.properties || {}).map(([name, schema]) => [
+        name,
+        defaultMcpArgument(name, schema),
+      ]),
+    )
+    mcpResult.value = null
+    mcpError.value = ''
+  }
+
+  function syncMcpContext() {
+    if ('project_id' in mcpArguments.value) {
+      mcpArguments.value.project_id = selectedProjectId.value
+    }
+    if ('user_id' in mcpArguments.value) {
+      mcpArguments.value.user_id = selectedUserId.value
+    }
+    if ('as_of' in mcpArguments.value) {
+      mcpArguments.value.as_of = toApiTime(asOf.value)
+    }
+    if ('requirement_id' in mcpArguments.value) {
+      mcpArguments.value.requirement_id = defaultRequirementId()
+    }
+  }
+
+  async function loadMcpTools() {
+    mcpLoading.value = true
+    mcpError.value = ''
+    try {
+      const result = await callMcp('tools/list')
+      mcpTools.value = result.tools || []
+      mcpConnected.value = true
+      const preferred = mcpTools.value.some((tool) => tool.name === selectedMcpToolName.value)
+        ? selectedMcpToolName.value
+        : 'search_knowledge'
+      selectMcpTool(preferred)
+    } catch (reason) {
+      mcpTools.value = []
+      mcpConnected.value = false
+      mcpError.value = reason instanceof Error ? reason.message : String(reason)
+    } finally {
+      mcpLoading.value = false
+    }
+  }
+
+  async function searchKnowledge() {
+    const query = knowledgeQuery.value.trim()
+    if (!query || knowledgeLoading.value) return
+    knowledgeLoading.value = true
+    knowledgeError.value = ''
+    knowledgeMeta.value = null
+    try {
+      const params = new URLSearchParams({
+        query,
+        user_id: selectedUserId.value,
+        as_of: toApiTime(asOf.value),
+        limit: '8',
+      })
+      const response = await requestJson(
+        `/enterprise/projects/${encodeURIComponent(selectedProjectId.value)}/search?${params}`,
+      )
+      knowledgeResults.value = response.results || []
+      knowledgeMeta.value = response
+    } catch (reason) {
+      knowledgeResults.value = []
+      knowledgeError.value = reason instanceof Error ? reason.message : String(reason)
+    } finally {
+      knowledgeLoading.value = false
+    }
+  }
+
+  async function runMcpTool() {
+    const tool = selectedMcpTool.value
+    if (!tool || mcpLoading.value) return
+    const required = new Set(tool.inputSchema?.required || [])
+    const argumentsPayload = {}
+    for (const [name, schema] of Object.entries(tool.inputSchema?.properties || {})) {
+      const value = mcpArguments.value[name]
+      if (value === '' || value === null || value === undefined) {
+        if (required.has(name)) {
+          mcpError.value = `请填写必填参数：${name}`
+          return
+        }
+        continue
+      }
+      if (schema.type === 'integer') {
+        const parsed = Number.parseInt(value, 10)
+        if (!Number.isInteger(parsed)) {
+          mcpError.value = `${name} 必须是整数`
+          return
+        }
+        argumentsPayload[name] = parsed
+      } else {
+        argumentsPayload[name] = value
+      }
+    }
+
+    mcpLoading.value = true
+    mcpError.value = ''
+    mcpResult.value = null
+    try {
+      const result = await callMcp('tools/call', {
+        name: tool.name,
+        arguments: argumentsPayload,
+      })
+      mcpResult.value = {
+        tool: tool.name,
+        arguments: argumentsPayload,
+        structuredContent: result.structuredContent,
+        isError: result.isError === true,
+      }
+    } catch (reason) {
+      mcpError.value = reason instanceof Error ? reason.message : String(reason)
+    } finally {
+      mcpLoading.value = false
+    }
+  }
 
   async function loadProjects() {
     const body = await requestJson('/enterprise/projects')
@@ -84,10 +261,18 @@ export function useEnterprisePortal() {
 
   async function selectProject(projectId) {
     selectedProjectId.value = projectId
+    knowledgeResults.value = []
+    knowledgeMeta.value = null
+    mcpResult.value = null
+    syncMcpContext()
     await loadDashboard()
   }
 
   async function updateViewer() {
+    knowledgeResults.value = []
+    knowledgeMeta.value = null
+    mcpResult.value = null
+    syncMcpContext()
     await loadDashboard()
   }
 
@@ -141,9 +326,26 @@ export function useEnterprisePortal() {
     error,
     assistantLoading,
     assistantMessages,
+    knowledgeQuery,
+    knowledgeResults,
+    knowledgeMeta,
+    knowledgeLoading,
+    knowledgeError,
+    mcpTools,
+    selectedMcpTool,
+    selectedMcpToolName,
+    mcpArguments,
+    mcpResult,
+    mcpLoading,
+    mcpError,
+    mcpConnected,
     loadDashboard,
+    loadMcpTools,
     selectProject,
+    selectMcpTool,
     updateViewer,
+    searchKnowledge,
+    runMcpTool,
     askAssistant,
   }
 }

@@ -1,13 +1,13 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { consoleApi } from './api'
+import { consoleApi } from '../services/intelligenceConsoleApi'
 import {
   buildRecompilePayload,
   captureFeedbackCycleSnapshot,
   capturePreviousSolutionSnapshot,
   hasCompletePreviousSolutionSnapshot,
   processOrSolutionThreshold,
-} from './session_state'
+} from '../utils/intelligenceConsoleSession'
 
 const STORAGE_KEY = 'dcforge-intelligence-console-v1'
 const tabs = ['Requirement', 'Solution', 'Feedback & Diff']
@@ -73,6 +73,14 @@ const changeTypeLabels = { updated: '已更新', added: '新增', removed: '移�
 const priorityLabels = { critical: '紧急', high: '高', medium: '中', low: '低' }
 const nodeTypeLabels = { transform: '处理节点', human_gate: '人工审批节点', report: '验证报告节点' }
 const executorLabels = { system: '系统执行', ai: 'AI 执行', human: '人工执行' }
+const reviewDispositionOptions = [
+  { value: 'ACCEPT', label: '接受' },
+  { value: 'REJECT', label: '拒绝候选' },
+  { value: 'MODIFY', label: '修改后接受' },
+  { value: 'PENDING_CLARIFICATION', label: '等待澄清' },
+  { value: 'REMOVE', label: '移除正式需求' },
+  { value: 'NOT_APPLICABLE', label: '标记为不适用' },
+]
 
 const categoryLabel = (value) => value?.startsWith('ext:') ? '扩展信息' : (categoryLabels[value] || value)
 const formatMoney = (value) => Number.isFinite(Number(value)) ? `${Number(value) / 10000} 万元` : '—'
@@ -181,6 +189,12 @@ function loadGolden() {
   activeTab.value = 'Requirement'
   error.value = ''
   success.value = '汽车采购示例原始资料已加载'
+}
+
+function setRequirementSelected(requirementId, checked) {
+  selectedIds.value = checked
+    ? [...new Set([...selectedIds.value, requirementId])]
+    : selectedIds.value.filter((item) => item !== requirementId)
 }
 
 function sourceRecords() {
@@ -343,52 +357,47 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="console-shell">
-    <header class="topbar">
+  <a-layout class="console-shell">
+    <a-card class="topbar" :bordered="false">
       <div>
         <div class="title-line">
           <h1>DCForge Intelligence Console</h1>
-          <span class="badge badge--internal">内部工具 <small>INTERNAL</small></span>
+          <a-tag color="blue">内部工具 · INTERNAL</a-tag>
         </div>
         <p>智能引擎内部调试与演示工作台 <small>ENGINE DEBUG TOOL</small> · 非最终客户展示界面</p>
       </div>
       <div class="header-status">
-        <label>项目 ID<input v-model="session.projectId" :disabled="Boolean(currentState)" /></label>
-        <span :class="['health', `health--${health.status}`]">{{ health.status === 'ok' ? '后端已连接' : health.status === 'offline' ? '后端未连接' : '正在连接后端' }}</span>
-        <span>需求状态 v{{ currentState?.state_version || '—' }}</span>
-        <span>需求基线 v{{ session.baseline?.baseline_version || '—' }}</span>
-        <button class="button button--secondary" @click="rawOpen = true">原始 JSON</button>
+        <label>项目 ID<a-input v-model:value="session.projectId" :disabled="Boolean(currentState)" /></label>
+        <a-tag :color="health.status === 'ok' ? 'green' : health.status === 'offline' ? 'red' : 'orange'">{{ health.status === 'ok' ? '后端已连接' : health.status === 'offline' ? '后端未连接' : '正在连接后端' }}</a-tag>
+        <a-tag>需求状态 v{{ currentState?.state_version || '—' }}</a-tag>
+        <a-tag>需求基线 v{{ session.baseline?.baseline_version || '—' }}</a-tag>
+        <a-button @click="rawOpen = true">原始 JSON</a-button>
       </div>
-    </header>
+    </a-card>
 
-    <div v-if="error" class="error-banner"><strong>请求失败</strong>{{ error }}</div>
-    <div v-else-if="success" class="success-banner"><strong>操作成功</strong>{{ success }}</div>
-    <div v-if="session.extractionWarnings.length" class="warning-banner">
-      <strong>需求提取提示</strong>
-      <span v-for="warning in session.extractionWarnings" :key="`${warning.source_id}-${warning.code}-${warning.locator || ''}`">
-        {{ warning.source_id }} · {{ warning.code }} · {{ warning.message }}
-      </span>
-    </div>
-    <nav class="tabs">
-      <button v-for="tab in tabs" :key="tab" :class="{ active: activeTab === tab }" @click="activeTab = tab">{{ tabLabels[tab] }}</button>
-    </nav>
+    <a-alert v-if="error" class="error-banner" type="error" show-icon message="请求失败" :description="error" />
+    <a-alert v-else-if="success" class="success-banner" type="success" show-icon message="操作成功" :description="success" />
+    <a-alert v-if="session.extractionWarnings.length" class="warning-banner" type="warning" show-icon message="需求提取提示">
+      <template #description><div v-for="warning in session.extractionWarnings" :key="`${warning.source_id}-${warning.code}-${warning.locator || ''}`">{{ warning.source_id }} · {{ warning.code }} · {{ warning.message }}</div></template>
+    </a-alert>
+    <a-segmented class="tabs" v-model:value="activeTab" :options="tabs.map((tab) => ({ label: tabLabels[tab], value: tab }))" block />
 
-    <main>
+    <a-layout-content class="console-main">
       <section v-if="activeTab === 'Requirement'" class="tab-layout">
-        <aside class="panel source-panel">
+        <a-card class="panel source-panel" title="客户上下文">
           <div class="panel-heading"><div><small>客户原始资料</small><h2>客户上下文</h2></div></div>
-          <label>会议纪要<textarea v-model="session.sources.meeting" rows="7" /></label>
-          <label>客户邮件<textarea v-model="session.sources.email" rows="4" /></label>
-          <label>需求 / 招标材料<textarea v-model="session.sources.document" rows="7" /></label>
-          <label>销售备注<textarea v-model="session.sources.sales" rows="3" /></label>
+          <label>会议纪要<a-textarea v-model:value="session.sources.meeting" :rows="7" /></label>
+          <label>客户邮件<a-textarea v-model:value="session.sources.email" :rows="4" /></label>
+          <label>需求 / 招标材料<a-textarea v-model:value="session.sources.document" :rows="7" /></label>
+          <label>销售备注<a-textarea v-model:value="session.sources.sales" :rows="3" /></label>
           <div class="button-row">
-            <button class="button button--secondary" @click="loadGolden">加载汽车采购示例</button>
-            <button class="button" :disabled="loading || !Object.values(session.sources).some(Boolean) || Boolean(currentState)" @click="analyzeRequirements">
+            <a-button @click="loadGolden">加载汽车采购示例</a-button>
+            <a-button type="primary" :loading="loading === 'analyze'" :disabled="loading || !Object.values(session.sources).some(Boolean) || Boolean(currentState)" @click="analyzeRequirements">
               {{ loading === 'analyze' ? '正在分析客户需求…' : '开始需求分析' }}
-            </button>
+            </a-button>
           </div>
           <p class="hint">示例仅加载客户原始资料，不会加载已确认的需求状态或需求基线。</p>
-        </aside>
+        </a-card>
 
         <div class="content-stack">
           <section class="panel">
@@ -404,21 +413,55 @@ onMounted(async () => {
 
           <section v-if="currentState" class="panel">
             <div class="panel-heading"><div><small>客户需求候选</small><h2>已识别需求</h2></div><span>{{ currentState.items.length }} 条需求</span></div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>选择</th><th>类别</th><th>主题</th><th>当前内容</th><th>状态</th><th>确认级别</th><th>来源类型</th><th>详情</th></tr></thead>
-                <tbody>
-                  <tr v-for="item in currentState.items" :key="item.requirement_id">
-                    <td><input v-model="selectedIds" type="checkbox" :value="item.requirement_id" :disabled="['rejected','superseded'].includes(item.status) || (item.status === 'confirmed' && item.confirmation_level === 'customer')" /></td>
-                    <td><b>{{ categoryLabel(item.category) }}</b><code>{{ item.category }}</code></td><td>{{ item.subject }}</td><td>{{ item.value }}</td>
-                    <td><span :class="['status', `status--${item.status}`]">{{ statusLabels[item.status] || item.status }}</span><code>{{ item.status }}</code></td>
-                    <td><b>{{ confirmationLabels[item.confirmation_level] || item.confirmation_level }}</b><code>{{ item.confirmation_level }}</code></td>
-                    <td><b>{{ provenanceLabels[item.provenance] || item.provenance }}</b><code>{{ item.provenance }}</code></td>
-                    <td><details><summary>查看详情</summary><dl class="requirement-detail"><div><dt>需求 ID</dt><dd>{{ item.requirement_id }}</dd></div><div><dt>AI 置信度</dt><dd>{{ item.confidence }}</dd></div><div><dt>结构化参数</dt><dd><pre>{{ JSON.stringify(item.parameters, null, 2) }}</pre></dd></div><div v-for="source in item.source_refs" :key="`${item.requirement_id}-${source.source_id}-${source.locator || ''}`"><dt>证据来源</dt><dd>{{ source.source_id }}<code v-if="source.locator">{{ source.locator }}</code></dd><dt>原文证据</dt><dd>{{ source.excerpt }}</dd></div></dl></details></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <a-table
+              class="table-wrap"
+              :data-source="currentState.items"
+              row-key="requirement_id"
+              :pagination="false"
+              :scroll="{ x: 1180 }"
+              size="small"
+            >
+              <a-table-column title="选择" key="selection" :width="70" fixed="left">
+                <template #default="{ record: item }">
+                  <a-checkbox
+                    :checked="selectedIds.includes(item.requirement_id)"
+                    :disabled="['rejected','superseded'].includes(item.status) || (item.status === 'confirmed' && item.confirmation_level === 'customer')"
+                    @change="setRequirementSelected(item.requirement_id, $event.target.checked)"
+                  />
+                </template>
+              </a-table-column>
+              <a-table-column title="类别" key="category" :width="140">
+                <template #default="{ record: item }"><strong>{{ categoryLabel(item.category) }}</strong><code>{{ item.category }}</code></template>
+              </a-table-column>
+              <a-table-column title="主题" data-index="subject" key="subject" :width="180" />
+              <a-table-column title="当前内容" data-index="value" key="value" :width="300" />
+              <a-table-column title="状态" key="status" :width="130">
+                <template #default="{ record: item }"><a-tag :color="item.status === 'confirmed' ? 'green' : item.status === 'conflicted' ? 'red' : 'blue'">{{ statusLabels[item.status] || item.status }}</a-tag><code>{{ item.status }}</code></template>
+              </a-table-column>
+              <a-table-column title="确认级别" key="confirmation" :width="130">
+                <template #default="{ record: item }"><strong>{{ confirmationLabels[item.confirmation_level] || item.confirmation_level }}</strong><code>{{ item.confirmation_level }}</code></template>
+              </a-table-column>
+              <a-table-column title="来源类型" key="provenance" :width="150">
+                <template #default="{ record: item }"><strong>{{ provenanceLabels[item.provenance] || item.provenance }}</strong><code>{{ item.provenance }}</code></template>
+              </a-table-column>
+              <a-table-column title="详情" key="details" :width="100" fixed="right">
+                <template #default="{ record: item }">
+                  <a-popover title="需求证据与参数" trigger="click" placement="leftTop" :overlay-style="{ width: '520px' }">
+                    <template #content>
+                      <a-descriptions bordered size="small" :column="1">
+                        <a-descriptions-item label="需求 ID">{{ item.requirement_id }}</a-descriptions-item>
+                        <a-descriptions-item label="AI 置信度">{{ item.confidence }}</a-descriptions-item>
+                        <a-descriptions-item label="结构化参数"><pre>{{ JSON.stringify(item.parameters, null, 2) }}</pre></a-descriptions-item>
+                        <a-descriptions-item v-for="source in item.source_refs" :key="`${item.requirement_id}-${source.source_id}-${source.locator || ''}`" label="证据来源">
+                          {{ source.source_id }}<code v-if="source.locator">{{ source.locator }}</code><br />{{ source.excerpt }}
+                        </a-descriptions-item>
+                      </a-descriptions>
+                    </template>
+                    <a-button type="link" size="small">查看详情</a-button>
+                  </a-popover>
+                </template>
+              </a-table-column>
+            </a-table>
           </section>
 
           <div v-if="currentState" class="three-columns">
@@ -429,23 +472,23 @@ onMounted(async () => {
 
           <section v-if="currentState" class="panel confirmation-panel">
             <div><small>显式人工操作</small><h2>需求确认</h2></div>
-            <label>确认级别<select v-model="confirmationLevel"><option value="internal">内部确认</option><option value="customer">客户确认</option></select></label>
-            <label>确认人<input v-model="confirmedBy" /></label>
-            <label>确认备注<input v-model="confirmationNote" /></label>
-            <button class="button" :disabled="loading || !selectedIds.length" @click="confirmSelected">{{ loading === 'confirm' ? '正在确认需求…' : `确认所选需求（${selectedIds.length}）` }}</button>
+            <label>确认级别<a-select v-model:value="confirmationLevel" :options="[{ value: 'internal', label: '内部确认' }, { value: 'customer', label: '客户确认' }]" /></label>
+            <label>确认人<a-input v-model:value="confirmedBy" /></label>
+            <label>确认备注<a-input v-model:value="confirmationNote" /></label>
+            <a-button type="primary" :loading="loading === 'confirm'" :disabled="loading || !selectedIds.length" @click="confirmSelected">{{ loading === 'confirm' ? '正在确认需求…' : `确认所选需求（${selectedIds.length}）` }}</a-button>
             <strong v-if="session.baseline" class="success">需求基线 v{{ session.baseline.baseline_version }} 已生成</strong>
           </section>
         </div>
       </section>
 
-      <section v-else-if="activeTab === 'Solution'" class="content-stack">
+        <section v-else-if="activeTab === 'Solution'" class="content-stack">
         <section class="panel action-panel">
           <div><small>冻结引擎交接</small><h2>需求基线 → B-M8 方案生成</h2><p v-if="!session.baseline">尚未形成客户确认的正式需求基线，暂不能生成解决方案。</p></div>
-          <button class="button" :disabled="loading || !session.baseline" @click="compileSolution">{{ loading === 'compile' ? '正在生成解决方案…' : '生成解决方案' }}</button>
+          <a-button type="primary" :loading="loading === 'compile'" :disabled="loading || !session.baseline" @click="compileSolution">{{ loading === 'compile' ? '正在生成解决方案…' : '生成解决方案' }}</a-button>
         </section>
 
         <section v-if="session.processSpec" class="panel">
-          <div class="panel-heading"><div><small>售前流程规格 · ProcessSpec V1</small><h2>结构化交接</h2></div><button class="link" @click="rawKey='ProcessSpec'; rawOpen=true">原始 JSON</button></div>
+          <div class="panel-heading"><div><small>售前流程规格 · ProcessSpec V1</small><h2>结构化交接</h2></div><a-button type="link" @click="rawKey='ProcessSpec'; rawOpen=true">原始 JSON</a-button></div>
           <dl class="definition-grid">
             <div v-for="field in ['industry','department','business_goal','roles','available_data','existing_systems','constraints','target_metrics','readiness_score']" :key="field"><dt>{{ processFieldLabels[field] }}<code>{{ field }}</code></dt><dd>{{ typeof session.processSpec[field] === 'object' ? JSON.stringify(session.processSpec[field]) : session.processSpec[field] }}</dd></div>
           </dl>
@@ -454,10 +497,19 @@ onMounted(async () => {
         <section v-if="session.solutionBundle" class="panel">
           <div class="panel-heading"><div><small>方案包 V2 · SolutionBundleV2</small><h2>三套冻结策略方案</h2></div></div>
           <div class="plan-grid">
-            <button v-for="plan in session.solutionBundle.plans" :key="plan.solution_id" :class="['plan-card', { selected: currentPlan?.solution_id === plan.solution_id }]" @click="selectedPlanId = plan.solution_id">
+            <a-card
+              v-for="plan in session.solutionBundle.plans"
+              :key="plan.solution_id"
+              hoverable
+              role="button"
+              tabindex="0"
+              :class="['plan-card', { selected: currentPlan?.solution_id === plan.solution_id }]"
+              @click="selectedPlanId = plan.solution_id"
+              @keydown.enter="selectedPlanId = plan.solution_id"
+            >
               <span v-if="plan.solution_id === session.solutionBundle.recommended_solution_id" class="badge">推荐方案</span>
               <small>{{ plan.display_strategy }}</small><h3>{{ strategyLabels[plan.display_strategy] || plan.name }}</h3><p>{{ strategyLabels[plan.display_strategy] || plan.name }}：基于已选复用决策生成的确定性方案。</p><strong>{{ plan.review_score }}</strong><span>{{ plan.primary_asset_ids.join(', ') }}</span>
-            </button>
+            </a-card>
           </div>
         </section>
 
@@ -474,7 +526,7 @@ onMounted(async () => {
         </section>
 
         <section v-if="session.blueprint" class="panel">
-          <div class="panel-heading"><div><small>推荐方案</small><h2>演示流程蓝图 · DemoBlueprint</h2></div><button class="link" @click="rawKey='DemoBlueprint'; rawOpen=true">原始 JSON</button></div>
+          <div class="panel-heading"><div><small>推荐方案</small><h2>演示流程蓝图 · DemoBlueprint</h2></div><a-button type="link" @click="rawKey='DemoBlueprint'; rawOpen=true">原始 JSON</a-button></div>
           <div class="node-list"><article v-for="node in session.blueprint.nodes" :key="node.id" :class="['node', { 'node--gate': node.human_gate }]"><small>{{ nodeTypeLabels[node.node_type] || node.node_type }} · {{ executorLabels[node.executor] || node.executor }}</small><code>{{ node.node_type }} · {{ node.executor }}</code><strong>{{ node.name }}</strong><span>{{ node.id }}</span></article></div>
         </section>
 
@@ -487,25 +539,66 @@ onMounted(async () => {
       <section v-else class="content-stack">
         <section class="panel action-panel">
           <div><small>客户最新反馈</small><h2>客户需求变更</h2><p>当前需求基线 v{{ session.baseline?.baseline_version || '—' }}；一段反馈可识别 0..N 条独立变化。</p></div>
-          <textarea v-model="session.feedback" rows="3" />
-          <button class="button" :disabled="loading || !session.baseline || !session.analysis" @click="analyzeFeedback">{{ loading === 'feedback' ? '正在分析客户反馈…' : '分析客户反馈' }}</button>
+          <a-textarea v-model:value="session.feedback" :rows="3" />
+          <a-button type="primary" :loading="loading === 'feedback'" :disabled="loading || !session.baseline || !session.analysis" @click="analyzeFeedback">{{ loading === 'feedback' ? '正在分析客户反馈…' : '分析客户反馈' }}</a-button>
         </section>
 
         <section v-if="session.changeSet" class="panel">
           <div class="panel-heading"><div><small>Generic RequirementChangeSet</small><h2>AI 识别的需求变化</h2></div><span>{{ session.changeSet.items.length }} 条独立变化</span></div>
           <p v-if="!session.changeSet.items.length" class="empty">未检测到实质需求变化；不会生成新的 Baseline 或重编译方案。</p>
-          <div v-else class="table-wrap"><table><thead><tr><th>变化</th><th>类别 / 主题</th><th>旧值 → 新值</th><th>参数</th><th>证据 / 置信度</th><th>冲突</th><th>审核操作</th></tr></thead><tbody>
-            <tr v-for="item in session.changeSet.items" :key="item.candidate_requirement_id">
-              <td><b>{{ item.suggested_change_type }}</b><code>{{ item.suggested_change_type }}</code></td>
-              <td><b>{{ categoryLabel(item.category) }}</b><code>{{ item.category }}</code><span>{{ item.subject }}</span></td>
-              <td><span>{{ item.previous_value || '—' }}</span><i>→</i><strong>{{ item.proposed_value }}</strong></td>
-              <td><details><summary>旧 / 新 parameters</summary><pre>{{ JSON.stringify({ previous: item.previous_parameters, proposed: item.proposed_parameters }, null, 2) }}</pre></details></td>
-              <td><span v-for="source in item.source_refs" :key="`${item.candidate_requirement_id}-${source.source_id}`">{{ source.source_id }}：{{ source.excerpt }}</span><code>{{ item.confidence }}</code></td>
-              <td><span>{{ item.conflict_status }}</span></td>
-              <td><select v-model="item.review_disposition"><option value="ACCEPT">ACCEPT</option><option value="REJECT">REJECT</option><option value="MODIFY">MODIFY</option><option value="PENDING_CLARIFICATION">PENDING_CLARIFICATION</option><option value="REMOVE" :disabled="!item.matched_baseline_requirement_id">REMOVE</option><option value="NOT_APPLICABLE" :disabled="!item.matched_baseline_requirement_id">NOT_APPLICABLE</option></select></td>
-            </tr>
-          </tbody></table></div>
-          <div class="button-row"><label>确认级别<select v-model="confirmationLevel"><option value="internal">内部确认</option><option value="customer">客户确认</option></select></label><label>确认人<input v-model="confirmedBy" /></label><button class="button" :disabled="loading || !session.changeSet.items.length" @click="reviewChangeSet">{{ loading === 'confirm' ? '正在提交审核…' : '提交变化审核' }}</button><span>REJECT 只拒绝候选；REMOVE / NOT_APPLICABLE 仅对旧正式需求生效并须通过证据 guard。</span></div>
+          <a-table
+            v-else
+            class="table-wrap"
+            :data-source="session.changeSet.items"
+            row-key="candidate_requirement_id"
+            :pagination="false"
+            :scroll="{ x: 1260 }"
+            size="small"
+          >
+            <a-table-column title="变化" key="change" :width="130">
+              <template #default="{ record: item }"><a-tag color="blue">{{ item.suggested_change_type }}</a-tag><code>{{ item.suggested_change_type }}</code></template>
+            </a-table-column>
+            <a-table-column title="类别 / 主题" key="topic" :width="190">
+              <template #default="{ record: item }"><strong>{{ categoryLabel(item.category) }}</strong><code>{{ item.category }}</code><span>{{ item.subject }}</span></template>
+            </a-table-column>
+            <a-table-column title="旧值 → 新值" key="value" :width="260">
+              <template #default="{ record: item }"><span>{{ item.previous_value || '—' }}</span><i> → </i><strong>{{ item.proposed_value }}</strong></template>
+            </a-table-column>
+            <a-table-column title="参数" key="parameters" :width="110">
+              <template #default="{ record: item }">
+                <a-popover title="参数变化" trigger="click" placement="leftTop" :overlay-style="{ width: '480px' }">
+                  <template #content><pre>{{ JSON.stringify({ previous: item.previous_parameters, proposed: item.proposed_parameters }, null, 2) }}</pre></template>
+                  <a-button type="link" size="small">查看参数</a-button>
+                </a-popover>
+              </template>
+            </a-table-column>
+            <a-table-column title="证据 / 置信度" key="evidence" :width="300">
+              <template #default="{ record: item }"><span v-for="source in item.source_refs" :key="`${item.candidate_requirement_id}-${source.source_id}`">{{ source.source_id }}：{{ source.excerpt }}</span><a-tag>{{ item.confidence }}</a-tag></template>
+            </a-table-column>
+            <a-table-column title="冲突" key="conflict" :width="110">
+              <template #default="{ record: item }"><a-tag :color="item.conflict_status === 'none' ? 'green' : 'orange'">{{ item.conflict_status }}</a-tag></template>
+            </a-table-column>
+            <a-table-column title="审核操作" key="review" :width="190" fixed="right">
+              <template #default="{ record: item }">
+                <a-select v-model:value="item.review_disposition" style="width: 170px">
+                  <a-select-option
+                    v-for="option in reviewDispositionOptions"
+                    :key="option.value"
+                    :value="option.value"
+                    :disabled="['REMOVE', 'NOT_APPLICABLE'].includes(option.value) && !item.matched_baseline_requirement_id"
+                  >{{ option.label }}</a-select-option>
+                </a-select>
+              </template>
+            </a-table-column>
+          </a-table>
+          <a-form class="button-row" layout="inline">
+            <a-form-item label="确认级别">
+              <a-select v-model:value="confirmationLevel" style="width: 120px" :options="[{ value: 'internal', label: '内部确认' }, { value: 'customer', label: '客户确认' }]" />
+            </a-form-item>
+            <a-form-item label="确认人"><a-input v-model:value="confirmedBy" /></a-form-item>
+            <a-form-item><a-button type="primary" :loading="loading === 'confirm'" :disabled="Boolean(loading) || !session.changeSet.items.length" @click="reviewChangeSet">提交变化审核</a-button></a-form-item>
+          </a-form>
+          <a-alert type="info" show-icon message="审核规则" description="拒绝只影响本轮候选；移除或标记不适用仅对已有正式需求开放，并受证据校验保护。" />
         </section>
 
         <section v-if="session.requirementDiff" class="panel">
@@ -518,7 +611,7 @@ onMounted(async () => {
           </div>
           <div class="change-summary"><article v-for="change in session.requirementDiff.changes" :key="change.requirement_id"><b>{{ changeTypeLabels[change.change_type] || change.change_type }}</b><code>{{ change.change_type }}</code><span>{{ change.requirement_id }}</span></article></div>
           <div class="detail-columns"><div><h3>需求变化 · RequirementDiff</h3><pre>{{ JSON.stringify(session.requirementDiff, null, 2) }}</pre></div><div><h3>ProcessSpec / constraints change</h3><pre>{{ JSON.stringify(session.route.new_constraints, null, 2) }}</pre></div><div><h3>方案影响</h3><pre>{{ JSON.stringify({ assets: session.recompileResult?.recompile_result?.diff?.changed_asset_ids || [], modules: session.recompileResult?.recompile_result?.diff?.changed_module_ids || [], blueprint: session.recompileResult?.recompile_result?.diff?.changed_demo_node_ids || [], value_claims: session.recompileResult?.recompile_result?.diff?.value_claim_changes || [] }, null, 2) }}</pre></div></div>
-          <button class="button" :disabled="loading || !session.route || !canRecompile" @click="recompileSolution">{{ loading === 'recompile' ? '正在更新解决方案…' : '更新解决方案' }}</button>
+          <a-button type="primary" :loading="loading === 'recompile'" :disabled="loading || !session.route || !canRecompile" @click="recompileSolution">{{ loading === 'recompile' ? '正在更新解决方案…' : '更新解决方案' }}</a-button>
         </section>
 
         <section v-if="session.recompileResult" class="panel">
@@ -531,10 +624,129 @@ onMounted(async () => {
           </dl>
         </section>
       </section>
-    </main>
+    </a-layout-content>
 
-    <div v-if="rawOpen" class="drawer-backdrop" @click.self="rawOpen = false">
-      <aside class="drawer"><header><div><small>只读</small><h2>原始 JSON</h2></div><button class="button button--secondary" @click="rawOpen=false">关闭</button></header><label>数据对象<select v-model="rawKey"><option v-for="(_, key) in rawArtifacts" :key="key" :value="key">{{ artifactLabels[key] }} · {{ key }}</option></select></label><pre>{{ JSON.stringify(rawValue, null, 2) }}</pre></aside>
-    </div>
-  </div>
+    <a-drawer v-model:open="rawOpen" title="原始 JSON（只读）" width="min(720px, 80vw)">
+      <a-select v-model:value="rawKey" style="width: 100%; margin-bottom: 12px">
+        <a-select-option v-for="(_, key) in rawArtifacts" :key="key" :value="key">{{ artifactLabels[key] }} · {{ key }}</a-select-option>
+      </a-select>
+      <pre>{{ JSON.stringify(rawValue, null, 2) }}</pre>
+    </a-drawer>
+  </a-layout>
 </template>
+
+<style scoped>
+button, input, textarea, select { font: inherit; }
+button { cursor: pointer; }
+.console-shell {
+  min-height: calc(100vh - 72px);
+  color: #172033;
+  background: #eef1f5;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+}
+.console-shell,
+.console-shell * { box-sizing: border-box; }
+.topbar { display: flex; justify-content: space-between; gap: 28px; align-items: center; padding: 20px 28px; background: #fff; border-bottom: 1px solid #dce2ea; position: sticky; top: 72px; z-index: 5; }
+.title-line { display: flex; align-items: center; gap: 12px; }
+h1, h2, h3, p { margin-top: 0; }
+h1 { margin-bottom: 4px; font-size: 22px; }
+h2 { margin-bottom: 4px; font-size: 18px; }
+h3 { font-size: 14px; }
+.topbar p, .hint, .empty { margin: 0; color: #707b8f; font-size: 12px; }
+.badge { display: inline-flex; padding: 3px 7px; border-radius: 5px; background: #dce9ff; color: #1556b6; font-size: 10px; font-weight: 800; letter-spacing: .06em; }
+.badge--internal { color: #fff; background: #1f64d3; }
+.badge--internal small { margin-left: 5px; opacity: .72; font-size: 8px; }
+.topbar p small { margin-left: 5px; color: #8993a5; font-size: 9px; letter-spacing: .04em; }
+code { display: block; margin-top: 3px; color: #8993a5; background: transparent; font: 9px/1.35 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; }
+.header-status { display: flex; gap: 10px; align-items: end; font-size: 12px; color: #5e687a; }
+.header-status label { width: 230px; }
+label { display: grid; gap: 6px; color: #566176; font-size: 12px; font-weight: 650; }
+input, textarea, select { width: 100%; border: 1px solid #cfd7e3; border-radius: 6px; background: #fff; padding: 9px 10px; color: #172033; outline: none; }
+input:focus, textarea:focus, select:focus { border-color: #3478df; box-shadow: 0 0 0 2px #3478df20; }
+textarea { resize: vertical; line-height: 1.5; }
+.health { padding: 8px 9px; border-radius: 6px; background: #f1f3f6; }
+.health--ok { color: #117548; background: #e4f5ed; }
+.health--offline { color: #b42318; background: #feeceb; }
+.tabs { display: flex; gap: 0; padding: 0 28px; background: #fff; border-bottom: 1px solid #dce2ea; }
+.tabs button { padding: 14px 22px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: #647087; font-weight: 700; }
+.tabs button.active { color: #1f64d3; border-color: #1f64d3; }
+.console-main { padding: 22px 28px 40px; }
+.tab-layout { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 18px; align-items: start; }
+.content-stack { display: grid; gap: 18px; }
+.panel { background: #fff; border: 1px solid #dce2ea; border-radius: 9px; padding: 18px; box-shadow: 0 2px 8px #1d2a3b08; }
+.source-panel { display: grid; gap: 14px; position: sticky; top: 132px; }
+.panel-heading { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; margin-bottom: 14px; }
+.panel-heading small, .panel > small, .action-panel small { color: #748097; font-size: 10px; font-weight: 800; letter-spacing: .1em; }
+.button-row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.button { border: 1px solid #1f64d3; border-radius: 6px; padding: 9px 13px; color: #fff; background: #1f64d3; font-weight: 700; font-size: 12px; }
+.button--secondary { color: #24446f; background: #fff; border-color: #bdc9da; }
+.button:disabled { cursor: not-allowed; opacity: .45; }
+.link { border: 0; background: transparent; color: #1f64d3; font-weight: 700; }
+.error-banner { margin: 16px 28px 0; padding: 12px 15px; border: 1px solid #f0aaa5; border-radius: 7px; background: #fff0ef; color: #9d241c; display: flex; gap: 12px; }
+.success-banner, .warning-banner { margin: 16px 28px 0; padding: 12px 15px; border-radius: 7px; display: flex; gap: 12px; }
+.success-banner { border: 1px solid #9bd5ba; background: #effaf4; color: #117548; }
+.warning-banner { border: 1px solid #e6c16b; background: #fff8e8; color: #76540c; flex-direction: column; }
+.metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.metric-grid > div { padding: 13px; border: 1px solid #e0e5ed; border-radius: 7px; background: #f8fafc; display: grid; gap: 5px; }
+.metric-grid small { color: #707b8f; }
+.metric-grid strong { font-size: 16px; overflow-wrap: anywhere; }
+.table-wrap { overflow: auto; max-height: 520px; border: 1px solid #e0e5ed; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; }
+th { position: sticky; top: 0; background: #f3f6fa; color: #58647a; text-align: left; }
+th, td { padding: 8px; border-bottom: 1px solid #e5e9ef; vertical-align: top; }
+td pre, details pre { max-width: 400px; max-height: 220px; overflow: auto; }
+.requirement-detail { min-width: 330px; max-width: 470px; display: grid; gap: 8px; padding: 10px; background: #f7f9fc; border: 1px solid #e1e6ed; border-radius: 6px; }
+.requirement-detail > div { display: grid; gap: 4px; }
+.requirement-detail pre { max-width: 420px; }
+.status { display: inline-flex; padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: 800; }
+.status--confirmed { color: #117548; background: #e4f5ed; }
+.status--pending { color: #9a6200; background: #fff0c7; }
+.status--conflicted { color: #b42318; background: #fee4e2; }
+.status--superseded, .status--rejected { color: #667085; background: #eaecf0; }
+.three-columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.compact { max-height: 350px; overflow: auto; }
+.record { display: grid; gap: 4px; padding: 9px 0; border-top: 1px solid #e6eaf0; font-size: 11px; }
+.record span { color: #647087; }
+.record--danger b { color: #b42318; }
+.confirmation-panel, .action-panel { display: flex; align-items: end; gap: 14px; }
+.confirmation-panel > div, .action-panel > div { margin-right: auto; }
+.confirmation-panel label { min-width: 150px; }
+.success { color: #117548; }
+.definition-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #dfe4eb; border: 1px solid #dfe4eb; }
+.definition-grid > div { background: #fff; padding: 10px; }
+dt { color: #69758a; font-size: 10px; font-weight: 800; }
+dd { margin: 5px 0 0; font-size: 11px; overflow-wrap: anywhere; }
+.plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.plan-card { display: grid; gap: 7px; text-align: left; padding: 15px; border: 1px solid #d8dfe9; border-radius: 8px; background: #fff; color: inherit; }
+.plan-card.selected { border-color: #3478df; box-shadow: 0 0 0 2px #3478df18; }
+.plan-card p { color: #657187; font-size: 11px; }
+.plan-card > strong { color: #1f64d3; font-size: 20px; }
+.plan-card > span:last-child { font-size: 10px; color: #69758a; }
+.detail-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.detail-columns > div { min-width: 0; padding: 12px; background: #f7f9fc; border: 1px solid #e2e7ee; border-radius: 7px; }
+pre { margin: 0; padding: 10px; border-radius: 5px; background: #172033; color: #d8e5f7; font: 10px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.detail-columns pre { max-height: 300px; }
+.node-list { display: flex; gap: 8px; overflow: auto; }
+.node { min-width: 190px; display: grid; gap: 5px; padding: 12px; border: 1px solid #d9e1eb; border-radius: 7px; background: #f8fafc; }
+.node small, .node span { color: #6d788b; font-size: 10px; }
+.node--gate { border-color: #e5ab48; background: #fff8e8; }
+.trace { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; gap: 8px; align-items: center; }
+.trace > div { min-height: 105px; padding: 12px; border: 1px solid #cfd9e6; border-radius: 7px; display: grid; gap: 6px; align-content: start; background: #f8fafc; }
+.trace small, .trace span { color: #69758a; font-size: 10px; overflow-wrap: anywhere; }
+.trace i { color: #1f64d3; font-style: normal; font-size: 20px; }
+.action-panel textarea { max-width: 600px; }
+.feedback-compare { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.feedback-compare > div { display: grid; gap: 6px; padding: 12px; background: #f8fafc; border: 1px solid #dde4ec; border-radius: 7px; }
+.feedback-compare small { color: #6c788d; }
+.change-summary, .impact-summary { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+.change-summary article, .impact-summary span { display: grid; gap: 3px; padding: 9px 11px; border: 1px solid #dce3ec; border-radius: 6px; background: #f8fafc; font-size: 11px; }
+.change-summary article span { color: #667085; }
+.impact-summary span { display: block; }
+.diff-grid { margin: 14px 0; }
+.drawer-backdrop { position: fixed; inset: 0; z-index: 20; background: #17203355; display: flex; justify-content: flex-end; }
+.drawer { width: min(720px, 70vw); height: 100%; padding: 20px; background: #fff; display: grid; grid-template-rows: auto auto 1fr; gap: 12px; box-shadow: -10px 0 30px #17203322; }
+.drawer header { display: flex; justify-content: space-between; align-items: start; }
+.drawer pre { overflow: auto; }
+@media (max-width: 1300px) { .header-status { flex-wrap: wrap; justify-content: flex-end; } .metric-grid { grid-template-columns: repeat(2, 1fr); } }
+</style>

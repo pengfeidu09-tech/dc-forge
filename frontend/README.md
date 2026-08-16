@@ -18,7 +18,17 @@ npm ci
 npm run dev
 ```
 
-Vite 会把 `/enterprise` 和 `/mcp` 代理到 `http://127.0.0.1:8000`。
+Vite 会把 `/health`、`/enterprise`、`/mcp`、`/internal-console` 和 `/presales/projects` 代理到 `http://127.0.0.1:8000`。
+
+门户包含独立的`知识检索`和`MCP 工具箱`视图。知识检索直接调用项目搜索API；MCP工具箱从运行时`tools/list`生成目录和参数表单，并可执行`tools/call`。两者都使用页面顶部当前选择的项目、角色和`as_of`时间点。
+
+门户侧边栏还包含`智能引擎控制台`内部视图，提供需求分析、显式确认、方案编译、客户反馈差异和重编译工作流。该视图沿用后端的条件启用规则；需要在启动后端前设置：
+
+```bash
+export DCFORGE_ENABLE_INTERNAL_CONSOLE=true
+```
+
+未启用时，控制台会显示请求失败，不会模拟成功结果。
 
 生产构建：
 
@@ -30,7 +40,10 @@ npm run build
 
 ```text
 http://127.0.0.1:8000/
+http://127.0.0.1:8000/presales/workbench
 ```
+
+`/presales/workbench` 是同一 Vite 工程的 Ant Design Vue 多页面入口，提供项目导航、需求与缺口、资料研究、方案编排、内部评审和客户发布操作，不需要单独安装或启动另一套前端。
 
 ## 数据与权限
 
@@ -61,6 +74,7 @@ PYTHONPATH=. python -m backend.app.solution.mcp_server
 src/
 ├── components/      # 可复用展示与交互组件
 ├── composables/     # 企业门户API、角色、时间点和AI助手状态
+├── presales/        # Ant Design Vue 统一售前工作台
 ├── styles/          # 设计变量、全局样式和响应式布局
 ├── App.vue          # 工作台编排
 └── main.js

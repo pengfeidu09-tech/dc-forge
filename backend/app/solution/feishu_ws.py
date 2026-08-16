@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
+import os
 from concurrent.futures import Executor, ThreadPoolExecutor
+from pathlib import Path
 from typing import Any
 
 from backend.app.solution.feishu_bot import (
@@ -134,16 +136,51 @@ def build_feishu_websocket_client(
     """Build the official SDK client while keeping the business service injectable."""
     lark = sdk or _load_lark_sdk()
     if service is None:
+        from backend.app.solution.enterprise_assistant import EnterpriseAssistantService
+        from backend.app.solution.enterprise_portal import EnterpriseKnowledgeService
         from backend.app.solution.feishu_requirement import (
             FeishuRequirementOrchestrator,
         )
+        from backend.app.solution.mcp_server import MCPDispatcher
 
         provider = OpenAICompatibleProvider()
+        repository_root = Path(__file__).resolve().parents[3]
+        assistant = EnterpriseAssistantService(
+            MCPDispatcher(EnterpriseKnowledgeService(repository_root)),
+            provider=provider,
+        )
+        internal_open_ids = {
+            value.strip()
+            for value in os.getenv("FEISHU_INTERNAL_OPEN_IDS", "").split(",")
+            if value.strip()
+        }
+        requirement_orchestrator = FeishuRequirementOrchestrator.from_env()
+        from backend.app.solution.customer_engagement import CustomerEngagementService
+
+        try:
+            engagement_service = CustomerEngagementService.from_env(
+                feedback_analyzer=requirement_orchestrator
+            )
+        except RuntimeError:
+            logger.warning("Customer engagement persistence is not configured")
+            engagement_service = None
         active_service = FeishuBotService(
             config,
             FeishuAPIClient(config),
             provider=provider,
-            requirement_orchestrator=FeishuRequirementOrchestrator.from_env(),
+            requirement_orchestrator=requirement_orchestrator,
+            enterprise_assistant=assistant,
+            enterprise_project_id=os.getenv(
+                "FEISHU_ENTERPRISE_PROJECT_ID", "PRJ-TENDER-001"
+            ),
+            enterprise_user_id=os.getenv(
+                "FEISHU_ENTERPRISE_USER_ID", "user-procurement-owner"
+            ),
+            enterprise_as_of=os.getenv(
+                "FEISHU_ENTERPRISE_AS_OF", "2026-10-30T23:59:59+08:00"
+            ),
+            internal_open_ids=internal_open_ids,
+            engagement_service=engagement_service,
         )
     else:
         active_service = service

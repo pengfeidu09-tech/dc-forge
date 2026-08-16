@@ -146,7 +146,7 @@ def test_model_answer_with_internal_requirement_metadata_is_not_delivered() -> N
 
     assert result.status == "ok"
     assert result.intent == "general"
-    assert result.answer == "感谢您的关注。请继续告诉我您希望重点了解的业务环节。"
+    assert result.answer == "我还缺少足够信息来回答。请告诉我您想了解的业务环节或当前做法。"
     assert "state_version" not in result.answer
     assert "DISCOVERY" not in result.answer
     assert "automotive-procurement-v1" not in result.answer

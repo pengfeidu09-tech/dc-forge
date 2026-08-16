@@ -168,3 +168,56 @@ def test_build_client_registers_message_handler_and_feishu_domain() -> None:
         "domain": "https://open.feishu.cn",
     }
     assert callable(captured["handler"])
+
+
+def test_default_websocket_service_loads_enterprise_agent_and_internal_ids(
+    monkeypatch,
+) -> None:
+    from backend.app.solution import feishu_ws
+    from backend.app.solution.feishu_requirement import FeishuRequirementOrchestrator
+
+    captured: dict[str, object] = {}
+
+    class CapturingBotService:
+        def __init__(self, *args, **kwargs):
+            captured["service_args"] = args
+            captured["service_kwargs"] = kwargs
+
+    class FakeBuilder:
+        def register_p2_im_message_receive_v1(self, handler):
+            return self
+
+        def build(self):
+            return "dispatcher"
+
+    class FakeEventDispatcherHandler:
+        @staticmethod
+        def builder(encrypt_key: str, verification_token: str):
+            return FakeBuilder()
+
+    class FakeWSClient:
+        def __init__(self, app_id: str, app_secret: str, **kwargs):
+            pass
+
+    fake_sdk = SimpleNamespace(
+        EventDispatcherHandler=FakeEventDispatcherHandler,
+        LogLevel=SimpleNamespace(WARNING="warning"),
+        ws=SimpleNamespace(Client=FakeWSClient),
+    )
+    monkeypatch.setattr(feishu_ws, "FeishuBotService", CapturingBotService)
+    monkeypatch.setattr(FeishuRequirementOrchestrator, "from_env", lambda: "requirements")
+    monkeypatch.setenv("FEISHU_INTERNAL_OPEN_IDS", "ou-internal-1, ou-internal-2")
+
+    build_feishu_websocket_client(
+        FeishuBotConfig(
+            app_id="cli_created",
+            app_secret="created-secret-value",
+        ),
+        sdk=fake_sdk,
+        executor=InlineExecutor(),
+    )
+
+    kwargs = captured["service_kwargs"]
+    assert kwargs["requirement_orchestrator"] == "requirements"
+    assert kwargs["enterprise_assistant"] is not None
+    assert kwargs["internal_open_ids"] == {"ou-internal-1", "ou-internal-2"}

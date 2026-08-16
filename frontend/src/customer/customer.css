@@ -1,0 +1,27 @@
+:root {
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #172033;
+  background: #f3f5f8;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; background: #f3f5f8; }
+.customer-shell { min-height: 100vh; background: #f3f5f8; }
+.customer-header { height: auto; padding: 0; color: #fff; background: linear-gradient(135deg, #102a56, #1768d4); }
+.customer-header__inner { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 30px 0; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.customer-header .ant-typography { margin: 0; color: #fff; }
+.customer-header .ant-typography-secondary { color: #d9e8ff; }
+.customer-content { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 24px 0 48px; }
+.customer-block { margin-bottom: 18px; box-shadow: 0 8px 28px rgba(20, 45, 80, .06); }
+.requirement-grid { margin-top: 16px; }
+.requirement-card { height: 100%; border-color: #e1e6ee; }
+.requirement-card__head { display: flex; align-items: center; gap: 8px; }
+.requirement-card .ant-typography { margin-bottom: 6px; }
+.customer-action { margin-top: 16px; }
+.solution-tabs { margin-top: 14px; }
+.solution-list { margin: 16px 0; }
+
+@media (max-width: 640px) {
+  .customer-header__inner { align-items: flex-start; flex-direction: column; }
+  .customer-content { width: min(100% - 24px, 1120px); padding-top: 12px; }
+}

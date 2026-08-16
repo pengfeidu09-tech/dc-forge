@@ -70,3 +70,21 @@ def test_vite_proxies_enterprise_and_mcp_to_fastapi() -> None:
     assert "'/enterprise'" in config
     assert "'/mcp'" in config
     assert "http://127.0.0.1:8000" in config
+
+
+def test_frontend_exposes_direct_knowledge_search_and_mcp_tool_workbench() -> None:
+    app = (FRONTEND / "src/App.vue").read_text(encoding="utf-8")
+    composable = (FRONTEND / "src/composables/useEnterprisePortal.js").read_text(
+        encoding="utf-8"
+    )
+
+    assert "知识检索" in app
+    assert "MCP 工具箱" in app
+    assert "source_id" in app
+    assert "insufficient_evidence" in app
+    assert "inputSchema" in app
+    assert "structuredContent" in app
+    assert "/search?" in composable
+    assert "tools/list" in composable
+    assert "tools/call" in composable
+    assert "mcpTools" in composable

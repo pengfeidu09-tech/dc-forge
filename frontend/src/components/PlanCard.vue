@@ -29,26 +29,19 @@ const planMeta = {
 </script>
 
 <template>
-  <button
+  <a-card
     class="plan-card"
     :class="[`plan-card--${plan.plan_type}`, { 'plan-card--active': active }]"
+    hoverable
     @click="$emit('select')"
   >
-    <span v-if="recommended" class="plan-card__recommended">推荐</span>
-    <span class="plan-card__icon"><AppIcon :name="planMeta[plan.plan_type]?.icon || 'spark'" /></span>
-    <span class="plan-card__content">
-      <span class="plan-card__eyebrow">{{ planMeta[plan.plan_type]?.label }}</span>
-      <strong>{{ plan.name }}</strong>
-      <small>{{ planMeta[plan.plan_type]?.description }}</small>
-    </span>
-    <span class="plan-card__score">
-      <strong>{{ plan.review_score?.toFixed(1) }}</strong>
-      <small>评分</small>
-    </span>
-    <span class="plan-card__stats">
-      <span><b>{{ plan.selected_components?.length || 0 }}</b> 能力组件</span>
-      <span><b>{{ plan.to_be_nodes?.length || 0 }}</b> 流程节点</span>
-    </span>
-    <span class="plan-card__check"><AppIcon name="check" :size="14" /></span>
-  </button>
+    <template #title><a-space><AppIcon :name="planMeta[plan.plan_type]?.icon || 'spark'" /><span>{{ plan.name }}</span></a-space></template>
+    <template #extra><a-tag v-if="recommended" color="blue">推荐</a-tag></template>
+    <a-typography-text type="secondary">{{ planMeta[plan.plan_type]?.label }} · {{ planMeta[plan.plan_type]?.description }}</a-typography-text>
+    <a-row :gutter="12" class="plan-card__stats">
+      <a-col :span="8"><a-statistic title="评分" :value="plan.review_score || 0" :precision="1" /></a-col>
+      <a-col :span="8"><a-statistic title="能力组件" :value="plan.selected_components?.length || 0" /></a-col>
+      <a-col :span="8"><a-statistic title="流程节点" :value="plan.to_be_nodes?.length || 0" /></a-col>
+    </a-row>
+  </a-card>
 </template>

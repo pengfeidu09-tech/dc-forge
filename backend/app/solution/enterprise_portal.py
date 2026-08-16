@@ -9,6 +9,9 @@ from pathlib import Path
 import re
 from typing import Any
 
+from backend.app.solution.authoritative_knowledge import (
+    AuthoritativeKnowledgeCatalog,
+)
 from backend.app.solution.knowledge_package_adapter import (
     SmartProcurementKnowledgeAdapter,
 )
@@ -27,6 +30,7 @@ class EnterpriseKnowledgeService:
         if not self.tender_root.is_dir():
             raise ValueError(f"DATA-M3 project is missing: {self.tender_root}")
         self.adapter = SmartProcurementKnowledgeAdapter(self.tender_root)
+        self.authoritative_catalog = AuthoritativeKnowledgeCatalog(self.package_root)
 
     @staticmethod
     def _read_json(path: Path) -> dict[str, Any]:
@@ -104,6 +108,70 @@ class EnterpriseKnowledgeService:
             "masked_fields": [],
             "fields": {},
         }
+
+    def _public_capability_search(
+        self, *, query: str, limit: int
+    ) -> list[dict[str, Any]]:
+        documents = (
+            (
+                "CAP-AI-PROCESS",
+                self.package_root / "01_公司能力知识库/AI_Process能力.md",
+            ),
+            (
+                "CAP-SMART-PROCUREMENT",
+                self.package_root / "01_公司能力知识库/智能招采能力.md",
+            ),
+            (
+                "SOL-AUTOMOTIVE-PROCUREMENT",
+                self.package_root / "02_行业解决方案库/汽车采购解决方案.md",
+            ),
+        )
+        ranked: list[tuple[int, dict[str, Any]]] = []
+        for source_id, path in documents:
+            title = path.stem
+            chunk_index = 0
+            for block in re.split(r"\n\s*\n", path.read_text(encoding="utf-8")):
+                content = block.strip()
+                if not content:
+                    continue
+                if content.startswith("#") and "\n" not in content:
+                    title = content.lstrip("# ").strip() or title
+                    continue
+                lines = content.splitlines()
+                if lines[0].startswith("#"):
+                    title = lines[0].lstrip("# ").strip() or title
+                    content = "\n".join(lines[1:]).strip()
+                if not content:
+                    continue
+                chunk_index += 1
+                score = self._query_score(query, title, content, path.stem)
+                if not score:
+                    continue
+                ranked.append(
+                    (
+                        score,
+                        {
+                            "chunk_id": f"{source_id}-{chunk_index:03d}",
+                            "source_id": source_id,
+                            "source_path": str(path.relative_to(self.package_root)),
+                            "title": title,
+                            "content": content,
+                            "source_version": "current",
+                            "occurred_at": None,
+                            "recorded_at": None,
+                            "valid_from": None,
+                            "valid_to": None,
+                            "permission_version": "public-curated-v1",
+                            "masked_fields": [],
+                            "fields": {
+                                "is_real_business_result": False,
+                                "human_review_required_for_high_impact_decisions": True,
+                            },
+                        },
+                    )
+                )
+        ranked.sort(key=lambda item: (-item[0], item[1]["source_id"], item[1]["chunk_id"]))
+        return [row for _, row in ranked[:limit]]
 
     def _knowledge_management_search(
         self, *, query: str, as_of: str, limit: int
@@ -362,9 +430,25 @@ class EnterpriseKnowledgeService:
         if self._is_revoked(user_id, as_of):
             raise PermissionError(f"portal authorization was revoked: {user_id}")
         if project_id == "PRJ-KM-001":
-            return self._knowledge_management_dashboard(user_id=user_id, as_of=as_of)
+            dashboard = self._knowledge_management_dashboard(user_id=user_id, as_of=as_of)
+            authority = self.list_project_sources(
+                project_id, user_id=user_id, as_of=as_of, limit=1
+            )
+            dashboard["authority_sources"] = {
+                "total": authority["total"],
+                "type_counts": authority["type_counts"],
+            }
+            return dashboard
         if project_id == "PRJ-AUTO-001":
-            return self._vehicle_procurement_dashboard(user_id=user_id, as_of=as_of)
+            dashboard = self._vehicle_procurement_dashboard(user_id=user_id, as_of=as_of)
+            authority = self.list_project_sources(
+                project_id, user_id=user_id, as_of=as_of, limit=1
+            )
+            dashboard["authority_sources"] = {
+                "total": authority["total"],
+                "type_counts": authority["type_counts"],
+            }
+            return dashboard
         self._require_tender_project(project_id)
         master = self._read_json(self.tender_root / "project_master.json")
         initiation = self._read_json(
@@ -430,7 +514,7 @@ class EnterpriseKnowledgeService:
             project_view["procurement_object"] = (
                 f"{applicable_version['quantity']:,}套磷酸铁锂动力电池包采购"
             )
-        return {
+        dashboard = {
             "project": project_view,
             "procurement_stages": self._stages_as_of(master["procurement_stages"], as_of),
             "ai_acceptance_capabilities": master["ai_acceptance_capabilities"],
@@ -460,6 +544,14 @@ class EnterpriseKnowledgeService:
             "is_real_business_result": master["is_real_business_result"],
             "disclaimer": master["disclaimer"],
         }
+        authority = self.list_project_sources(
+            project_id, user_id=user_id, as_of=as_of, limit=1
+        )
+        dashboard["authority_sources"] = {
+            "total": authority["total"],
+            "type_counts": authority["type_counts"],
+        }
+        return dashboard
 
     def _knowledge_management_dashboard(
         self, *, user_id: str, as_of: str
@@ -833,6 +925,214 @@ class EnterpriseKnowledgeService:
                 stage["status"] = "not_recorded_as_of"
         return result
 
+    def _source_content_allowed(
+        self, project_id: str, record: dict[str, Any], user_id: str
+    ) -> bool:
+        roles = set(self._user(user_id)["roles"])
+        path = record["source_path"]
+        if project_id == "PRJ-TENDER-001":
+            if any(
+                segment in path
+                for segment in ("03_供应商画像/", "06_合同履约/", "07_归档统计/")
+            ):
+                return bool({"procurement_owner", "legal_finance"} & roles)
+        if project_id == "PRJ-AUTO-001" and any(
+            segment in path
+            for segment in ("04_方案商务/", "05_合同订单/", "07_财务利润/")
+        ):
+            return bool({"procurement_owner", "legal_finance"} & roles)
+        return True
+
+    def _visible_authoritative_sources(
+        self, project_id: str, *, user_id: str, as_of: str
+    ) -> list[dict[str, Any]]:
+        self._user(user_id)
+        if self._is_revoked(user_id, as_of):
+            raise PermissionError(f"source access was revoked: {user_id}")
+        visible_tender_ids = (
+            self._visible_source_ids(user_id, as_of)
+            if project_id == "PRJ-TENDER-001"
+            else set()
+        )
+        records: list[dict[str, Any]] = []
+        for record in self.authoritative_catalog.records(project_id):
+            recorded_at = record.get("recorded_at")
+            if recorded_at and not self._at_or_before(recorded_at, as_of):
+                continue
+            if (
+                project_id == "PRJ-TENDER-001"
+                and record.get("_manifest_managed")
+                and record["source_id"] not in visible_tender_ids
+            ):
+                continue
+            records.append(record)
+        return records
+
+    def list_project_sources(
+        self,
+        project_id: str,
+        *,
+        user_id: str,
+        as_of: str,
+        source_type: str | None = None,
+        requirement_id: str | None = None,
+        query: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        limit = min(max(limit, 1), 500)
+        offset = max(offset, 0)
+        ranked: list[tuple[int, dict[str, Any]]] = []
+        for record in self._visible_authoritative_sources(
+            project_id, user_id=user_id, as_of=as_of
+        ):
+            if source_type and record["source_type"] != source_type:
+                continue
+            if requirement_id and not self.authoritative_catalog.matches_requirement(
+                record, requirement_id
+            ):
+                continue
+            score = 0
+            if query:
+                searchable_content = (
+                    record.get("_content") or ""
+                    if self._source_content_allowed(project_id, record, user_id)
+                    else ""
+                )
+                score = self._query_score(
+                    query,
+                    record["source_id"],
+                    record["title"],
+                    record["source_path"],
+                    " ".join(record["requirement_ids"]),
+                    searchable_content,
+                )
+                if not score:
+                    continue
+                if query.strip().casefold() in {
+                    record["source_id"].casefold(),
+                    record["title"].casefold(),
+                }:
+                    score += 1000
+            ranked.append((score, record))
+        ranked.sort(
+            key=lambda item: (
+                -item[0],
+                item[1]["source_type"],
+                item[1].get("recorded_at") or "",
+                item[1]["source_id"],
+            )
+        )
+        records = [record for _, record in ranked]
+        type_counts: dict[str, int] = {}
+        for record in records:
+            type_counts[record["source_type"]] = type_counts.get(record["source_type"], 0) + 1
+        page = records[offset : offset + limit]
+        sources: list[dict[str, Any]] = []
+        for record in page:
+            summary = self.authoritative_catalog.summary(record)
+            if not self._source_content_allowed(project_id, record, user_id):
+                summary["content_available"] = False
+                summary["content_preview"] = ""
+                summary["masked_fields"] = ["content"]
+            else:
+                summary["masked_fields"] = []
+            sources.append(summary)
+        return {
+            "project_id": project_id,
+            "authority_root": self.package_root.name,
+            "total": len(records),
+            "offset": offset,
+            "limit": limit,
+            "type_counts": dict(sorted(type_counts.items())),
+            "sources": sources,
+            "as_of": as_of,
+            "data_classification": "synthetic_demo",
+            "is_real_business_result": False,
+        }
+
+    def get_project_source(
+        self,
+        project_id: str,
+        source_id: str,
+        *,
+        user_id: str,
+        as_of: str,
+    ) -> dict[str, Any]:
+        record = next(
+            (
+                item
+                for item in self._visible_authoritative_sources(
+                    project_id, user_id=user_id, as_of=as_of
+                )
+                if item["source_id"] == source_id
+            ),
+            None,
+        )
+        if record is None:
+            raise ValueError(f"unknown or unavailable authoritative source: {source_id}")
+        return self.authoritative_catalog.detail(
+            record,
+            content_allowed=self._source_content_allowed(project_id, record, user_id),
+        )
+
+    def get_requirement_sources(
+        self,
+        project_id: str,
+        requirement_id: str,
+        *,
+        user_id: str,
+        as_of: str,
+    ) -> dict[str, Any]:
+        result = self.list_project_sources(
+            project_id,
+            user_id=user_id,
+            as_of=as_of,
+            requirement_id=requirement_id,
+            limit=500,
+        )
+        result["requirement_id"] = requirement_id
+        return result
+
+    def _authoritative_search_rows(
+        self,
+        project_id: str,
+        *,
+        query: str,
+        user_id: str,
+        as_of: str,
+        limit: int,
+    ) -> list[dict[str, Any]]:
+        catalog = self.list_project_sources(
+            project_id,
+            user_id=user_id,
+            as_of=as_of,
+            query=query,
+            limit=limit,
+        )
+        return [
+            {
+                "chunk_id": f"authority:{record['source_id']}",
+                "source_id": record["source_id"],
+                "source_path": record["source_path"],
+                "title": record["title"],
+                "content": record["content_preview"],
+                "source_version": record.get("source_version") or "current",
+                "occurred_at": record.get("occurred_at"),
+                "recorded_at": record.get("recorded_at"),
+                "valid_from": record.get("occurred_at"),
+                "valid_to": None,
+                "permission_version": record.get("permission_version") or "package-read-v1",
+                "masked_fields": [],
+                "fields": {
+                    "record_type": "authoritative_source",
+                    "source_type": record["source_type"],
+                    "requirement_ids": record["requirement_ids"],
+                },
+            }
+            for record in catalog["sources"]
+        ]
+
     def search_knowledge(
         self,
         project_id: str,
@@ -842,6 +1142,18 @@ class EnterpriseKnowledgeService:
         as_of: str,
         limit: int = 8,
     ) -> dict[str, Any]:
+        if project_id == "PUBLIC-CAPABILITIES":
+            results = self._public_capability_search(query=query, limit=limit)
+            return {
+                "project_id": project_id,
+                "query": query,
+                "as_of": as_of,
+                "results": results,
+                "insufficient_evidence": not results,
+                "permission_decision": "public_curated",
+                "data_classification": "curated_capability_reference",
+                "is_real_business_result": False,
+            }
         self._user(user_id)
         revoked = self._is_revoked(user_id, as_of)
         if revoked:
@@ -857,12 +1169,26 @@ class EnterpriseKnowledgeService:
         else:
             self._require_tender_project(project_id)
             results = self.adapter.search(query, user_id, as_of)[:limit]
+        source_records = (
+            []
+            if revoked
+            else self._authoritative_search_rows(
+                project_id,
+                query=query,
+                user_id=user_id,
+                as_of=as_of,
+                limit=limit,
+            )
+        )
+        if not results:
+            results = source_records[:limit]
         return {
             "project_id": project_id,
             "query": query,
             "as_of": as_of,
             "results": results,
-            "insufficient_evidence": not results,
+            "source_records": source_records,
+            "insufficient_evidence": not results and not source_records,
             "permission_decision": "revoked" if revoked else "allowed",
             "data_classification": "synthetic_demo",
         }
@@ -909,6 +1235,12 @@ class EnterpriseKnowledgeService:
                 "open_items": [],
                 "as_of": as_of,
                 "data_classification": "synthetic_demo",
+                "source_records": self.get_requirement_sources(
+                    project_id,
+                    requirement_id,
+                    user_id=user_id,
+                    as_of=as_of,
+                )["sources"],
             }
         if project_id == "PRJ-AUTO-001":
             root = self.projects_root / "东辰出行新能源车辆采购项目"
@@ -933,6 +1265,12 @@ class EnterpriseKnowledgeService:
                 "open_items": [],
                 "as_of": as_of,
                 "data_classification": "synthetic_demo",
+                "source_records": self.get_requirement_sources(
+                    project_id,
+                    requirement_id,
+                    user_id=user_id,
+                    as_of=as_of,
+                )["sources"],
             }
         self._require_tender_project(project_id)
         data = self._read_json(
@@ -970,6 +1308,12 @@ class EnterpriseKnowledgeService:
             ),
             "as_of": as_of,
             "data_classification": "synthetic_demo",
+            "source_records": self.get_requirement_sources(
+                project_id,
+                requirement_id,
+                user_id=user_id,
+                as_of=as_of,
+            )["sources"],
         }
 
     def analyze_suppliers(

@@ -98,6 +98,48 @@ class FeishuRequirementOrchestratorProtocol(Protocol):
         ...
 
 
+class CustomerEngagementProtocol(Protocol):
+    def active_feishu_project_id(self, tenant_key: str, chat_id: str) -> str: ...
+
+    def start_new_feishu_project(
+        self,
+        tenant_key: str,
+        chat_id: str,
+        *,
+        sender_open_id: str | None = None,
+    ) -> str: ...
+
+    def record_customer_message(
+        self,
+        *,
+        project_id: str,
+        channel: str,
+        message_id: str,
+        event_id: str,
+        content: str,
+        tenant_key: str | None = None,
+        chat_id: str | None = None,
+        sender_open_id: str | None = None,
+    ) -> None: ...
+
+    def record_agent_message(
+        self,
+        *,
+        project_id: str,
+        channel: str,
+        message_id: str,
+        event_id: str,
+        content: str,
+        delivery_status: str,
+    ) -> None: ...
+
+    def chat_history(self, project_id: str, limit: int = 20) -> list[ChatTurn]: ...
+
+    def customer_portal_url(self, project_id: str) -> str: ...
+
+    def internal_workbench_url(self) -> str: ...
+
+
 class FeishuAPIClient:
     """Minimal internal-app token and text-reply client."""
 
@@ -231,6 +273,10 @@ class ConversationMemory:
             turns.append(ChatTurn(role="user", content=user))
             turns.append(ChatTurn(role="assistant", content=assistant))
 
+    def clear(self, project_id: str) -> None:
+        with self._lock:
+            self._turns.pop(project_id, None)
+
 
 class FeishuBotService:
     def __init__(
@@ -246,6 +292,8 @@ class FeishuBotService:
         enterprise_project_id: str = "PRJ-TENDER-001",
         enterprise_user_id: str = "user-procurement-owner",
         enterprise_as_of: str = "2026-10-30T23:59:59+08:00",
+        internal_open_ids: set[str] | None = None,
+        engagement_service: CustomerEngagementProtocol | None = None,
     ) -> None:
         self._config = config
         self._reply_client = reply_client
@@ -257,6 +305,8 @@ class FeishuBotService:
         self._enterprise_project_id = enterprise_project_id
         self._enterprise_user_id = enterprise_user_id
         self._enterprise_as_of = enterprise_as_of
+        self._internal_open_ids = set(internal_open_ids or ())
+        self._engagement_service = engagement_service
 
     @classmethod
     def from_env(cls) -> "FeishuBotService":
@@ -271,13 +321,29 @@ class FeishuBotService:
 
         repository_root = Path(__file__).resolve().parents[3]
         assistant = EnterpriseAssistantService(
-            MCPDispatcher(EnterpriseKnowledgeService(repository_root))
+            MCPDispatcher(EnterpriseKnowledgeService(repository_root)),
+            provider=provider,
         )
+        internal_open_ids = {
+            value.strip()
+            for value in os.getenv("FEISHU_INTERNAL_OPEN_IDS", "").split(",")
+            if value.strip()
+        }
+        requirement_orchestrator = FeishuRequirementOrchestrator.from_env()
+        from backend.app.solution.customer_engagement import CustomerEngagementService
+
+        try:
+            engagement_service = CustomerEngagementService.from_env(
+                feedback_analyzer=requirement_orchestrator
+            )
+        except RuntimeError:
+            logger.warning("Customer engagement persistence is not configured")
+            engagement_service = None
         return cls(
             config,
             FeishuAPIClient(config),
             provider=provider,
-            requirement_orchestrator=FeishuRequirementOrchestrator.from_env(),
+            requirement_orchestrator=requirement_orchestrator,
             enterprise_assistant=assistant,
             enterprise_project_id=os.getenv(
                 "FEISHU_ENTERPRISE_PROJECT_ID", "PRJ-TENDER-001"
@@ -288,6 +354,8 @@ class FeishuBotService:
             enterprise_as_of=os.getenv(
                 "FEISHU_ENTERPRISE_AS_OF", "2026-10-30T23:59:59+08:00"
             ),
+            internal_open_ids=internal_open_ids,
+            engagement_service=engagement_service,
         )
 
     def _verify_token(self, token: object) -> None:
@@ -337,6 +405,97 @@ class FeishuBotService:
         text = text.strip()
         return text or None
 
+    @staticmethod
+    def _is_customer_capability_question(text: str) -> bool:
+        capability_markers = (
+            "能力",
+            "能做什么",
+            "可以做什么",
+            "提供哪些帮助",
+            "怎么帮助",
+            "产品介绍",
+        )
+        provider_markers = ("你们", "贵司", "你司", "DCForge", "公司")
+        return any(marker in text for marker in capability_markers) and any(
+            marker in text for marker in provider_markers
+        )
+
+    @staticmethod
+    def _is_customer_portal_request(text: str) -> bool:
+        normalized = text.strip().replace(" ", "")
+        return normalized in {
+            "/项目",
+            "查看需求",
+            "查看方案",
+            "项目进展",
+            "需求与方案",
+            "需求方案",
+        }
+
+    @staticmethod
+    def _is_internal_workbench_request(text: str) -> bool:
+        normalized = text.strip().replace(" ", "")
+        return normalized in {"/客户工作台", "客户工作台", "客户需求工作台"}
+
+    @staticmethod
+    def _project_reset_request(text: str) -> Literal["confirm", "prompt"] | None:
+        normalized = text.strip().replace(" ", "")
+        if normalized in {"/清空记忆确认", "/新项目确认"}:
+            return "confirm"
+        if normalized in {"/清空记忆", "/新项目"}:
+            return "prompt"
+        return None
+
+    def _record_customer_message(
+        self,
+        *,
+        project_id: str,
+        message_id: str,
+        event_id: str,
+        content: str,
+        tenant_key: str,
+        chat_id: str,
+        sender_open_id: str | None,
+    ) -> None:
+        if self._engagement_service is None:
+            return
+        try:
+            self._engagement_service.record_customer_message(
+                project_id=project_id,
+                channel="feishu",
+                message_id=message_id,
+                event_id=event_id,
+                content=content,
+                tenant_key=tenant_key,
+                chat_id=chat_id,
+                sender_open_id=sender_open_id,
+            )
+        except Exception:
+            logger.warning("Customer conversation persistence failed")
+
+    def _record_agent_message(
+        self,
+        *,
+        project_id: str,
+        message_id: str,
+        event_id: str,
+        content: str,
+        delivery_status: Literal["replied", "failed"],
+    ) -> None:
+        if self._engagement_service is None:
+            return
+        try:
+            self._engagement_service.record_agent_message(
+                project_id=project_id,
+                channel="feishu",
+                message_id=message_id,
+                event_id=event_id,
+                content=content,
+                delivery_status=delivery_status,
+            )
+        except Exception:
+            logger.warning("Agent conversation persistence failed")
+
     def process_event(self, payload: dict) -> str:
         header = payload.get("header")
         event = payload.get("event")
@@ -351,10 +510,12 @@ class FeishuBotService:
             return "ignored"
         if sender.get("sender_type") != "user":
             return "ignored"
+        sender_id = sender.get("sender_id")
+        sender_open_id = (
+            sender_id.get("open_id") if isinstance(sender_id, dict) else None
+        )
         if self._config.allowed_open_id:
-            sender_id = sender.get("sender_id")
-            open_id = sender_id.get("open_id") if isinstance(sender_id, dict) else None
-            if open_id != self._config.allowed_open_id:
+            if sender_open_id != self._config.allowed_open_id:
                 return "ignored"
 
         text = self._message_text(message)
@@ -371,7 +532,158 @@ class FeishuBotService:
         if not self._deduplicator.claim(event_id):
             return "duplicate"
 
-        if text.startswith("/mcp") and self._enterprise_assistant is not None:
+        project_id = f"feishu:{tenant_key}:{chat_id}"
+        if self._engagement_service is not None:
+            try:
+                project_id = self._engagement_service.active_feishu_project_id(
+                    tenant_key, chat_id
+                )
+            except Exception:
+                logger.warning("Active Feishu project mapping is unavailable")
+        is_internal = (
+            isinstance(sender_open_id, str)
+            and sender_open_id in self._internal_open_ids
+        )
+        is_allowlisted_creator = bool(
+            self._config.allowed_open_id
+            and sender_open_id == self._config.allowed_open_id
+        )
+        reset_request = self._project_reset_request(text)
+        if reset_request is not None:
+            if not (is_internal or is_allowlisted_creator):
+                answer = "该指令仅供已授权的企业内部人员使用。"
+            elif self._engagement_service is None:
+                answer = "项目存储暂时不可用，当前会话未做任何修改。"
+            elif reset_request == "prompt":
+                answer = (
+                    "该操作会在当前群开启全新项目，旧项目将归档保留。"
+                    "如需继续，请发送：/清空记忆 确认"
+                )
+            else:
+                try:
+                    self._engagement_service.start_new_feishu_project(
+                        tenant_key,
+                        chat_id,
+                        sender_open_id=(
+                            sender_open_id
+                            if isinstance(sender_open_id, str)
+                            else None
+                        ),
+                    )
+                    self._memory.clear(project_id)
+                    answer = (
+                        "已在当前群开启全新项目。旧项目已归档保留，"
+                        "不会参与新的需求分析。请重新发送客户背景和本次项目范围。"
+                    )
+                except Exception:
+                    logger.warning("Starting a clean Feishu project failed")
+                    answer = "新项目创建失败，旧项目未被删除，请稍后重试。"
+            try:
+                self._reply_client.reply_text(message_id, answer)
+            except Exception:
+                logger.warning("Feishu reply failed for message_id=%s", message_id)
+                return "failed"
+            return "replied"
+        if (
+            (is_internal or is_allowlisted_creator)
+            and self._engagement_service is not None
+            and self._is_internal_workbench_request(text)
+        ):
+            answer = (
+                "客户需求工作台："
+                + self._engagement_service.internal_workbench_url()
+            )
+            try:
+                self._reply_client.reply_text(message_id, answer)
+            except Exception:
+                logger.warning("Feishu reply failed for message_id=%s", message_id)
+                return "failed"
+            return "replied"
+
+        persistent_history: list[ChatTurn] = []
+        if not is_internal:
+            if self._engagement_service is not None:
+                try:
+                    persistent_history = self._engagement_service.chat_history(
+                        project_id, limit=20
+                    )
+                except Exception:
+                    logger.warning("Persistent customer conversation history unavailable")
+            self._record_customer_message(
+                project_id=project_id,
+                message_id=message_id,
+                event_id=event_id,
+                content=text,
+                tenant_key=tenant_key,
+                chat_id=chat_id,
+                sender_open_id=(
+                    sender_open_id if isinstance(sender_open_id, str) else None
+                ),
+            )
+
+        if (
+            not (is_internal or is_allowlisted_creator)
+            and self._engagement_service is not None
+            and self._is_customer_portal_request(text)
+        ):
+            answer = (
+                "您可以在这里查看当前需求理解和已发布方案："
+                + self._engagement_service.customer_portal_url(project_id)
+            )
+            self._memory.append_exchange(project_id, text, answer)
+            try:
+                self._reply_client.reply_text(message_id, answer)
+            except Exception:
+                self._record_agent_message(
+                    project_id=project_id,
+                    message_id=message_id,
+                    event_id=event_id,
+                    content=answer,
+                    delivery_status="failed",
+                )
+                logger.warning("Feishu reply failed for message_id=%s", message_id)
+                return "failed"
+            self._record_agent_message(
+                project_id=project_id,
+                message_id=message_id,
+                event_id=event_id,
+                content=answer,
+                delivery_status="replied",
+            )
+            return "replied"
+
+        if text.startswith("/mcp"):
+            if not (is_internal or is_allowlisted_creator):
+                answer = "该指令仅供已授权的企业内部人员使用。"
+                self._memory.append_exchange(project_id, text, answer)
+                try:
+                    self._reply_client.reply_text(message_id, answer)
+                except Exception:
+                    self._record_agent_message(
+                        project_id=project_id,
+                        message_id=message_id,
+                        event_id=event_id,
+                        content=answer,
+                        delivery_status="failed",
+                    )
+                    logger.warning("Feishu reply failed for message_id=%s", message_id)
+                    return "failed"
+                self._record_agent_message(
+                    project_id=project_id,
+                    message_id=message_id,
+                    event_id=event_id,
+                    content=answer,
+                    delivery_status="replied",
+                )
+                return "replied"
+            if self._enterprise_assistant is None:
+                answer = "抱歉，企业知识服务暂时不可用，请稍后重试。"
+                try:
+                    self._reply_client.reply_text(message_id, answer)
+                except Exception:
+                    logger.warning("Feishu reply failed for message_id=%s", message_id)
+                    return "failed"
+                return "replied"
             query = text.removeprefix("/mcp").strip()
             if not query:
                 answer = "请在 /mcp 后输入需求版本、供应商、文档审查或方案问题。"
@@ -383,6 +695,7 @@ class FeishuBotService:
                             user_id=self._enterprise_user_id,
                             as_of=self._enterprise_as_of,
                             message=query,
+                            audience="internal",
                         )
                     )
                     answer = result.answer
@@ -399,7 +712,31 @@ class FeishuBotService:
                 return "failed"
             return "replied"
 
-        project_id = f"feishu:{tenant_key}:{chat_id}"
+        if is_internal and self._enterprise_assistant is not None:
+            try:
+                result = self._enterprise_assistant.answer(
+                    EnterpriseAssistantRequest(
+                        project_id=self._enterprise_project_id,
+                        user_id=self._enterprise_user_id,
+                        as_of=self._enterprise_as_of,
+                        message=text,
+                        audience="internal",
+                    )
+                )
+                answer = result.answer
+                if result.citations:
+                    answer += "\n\n来源：" + "、".join(result.citations)
+            except Exception:
+                logger.warning("Enterprise Agent failed for Feishu internal event")
+                answer = "抱歉，企业知识服务暂时不可用，请稍后重试。"
+            self._memory.append_exchange(self._enterprise_project_id, text, answer)
+            try:
+                self._reply_client.reply_text(message_id, answer)
+            except Exception:
+                logger.warning("Feishu reply failed for message_id=%s", message_id)
+                return "failed"
+            return "replied"
+
         state = None
         if self._requirement_orchestrator is not None:
             try:
@@ -410,7 +747,7 @@ class FeishuBotService:
             project_id=project_id,
             message_id=event_id,
             message=text,
-            history=self._memory.history(project_id),
+            history=self._memory.history(project_id) or persistent_history,
             state=state,
         )
         response = run_chat_agent(request, provider=self._provider)
@@ -438,10 +775,49 @@ class FeishuBotService:
                 logger.warning("Requirement analysis failed for Feishu event")
                 answer = "抱歉，当前服务暂时繁忙，请稍后重新发送刚才的信息。"
                 analysis_failed = True
+        elif (
+            response.intent == "general"
+            or (
+                response.intent == "solution_request"
+                and response.next_action == "none"
+                and self._is_customer_capability_question(text)
+            )
+        ) and self._enterprise_assistant is not None:
+            try:
+                knowledge_result = self._enterprise_assistant.answer(
+                    EnterpriseAssistantRequest(
+                        project_id="PUBLIC-CAPABILITIES",
+                        user_id="external-customer",
+                        as_of=self._enterprise_as_of,
+                        message=text,
+                        audience="customer",
+                    )
+                )
+                answer = knowledge_result.answer
+                if knowledge_result.citations:
+                    answer += "\n\n来源：" + "、".join(
+                        knowledge_result.citations
+                    )
+            except Exception:
+                logger.warning("Public capability Agent failed for Feishu customer")
         self._memory.append_exchange(project_id, text, answer)
         try:
             self._reply_client.reply_text(message_id, answer)
         except Exception:
+            self._record_agent_message(
+                project_id=project_id,
+                message_id=message_id,
+                event_id=event_id,
+                content=answer,
+                delivery_status="failed",
+            )
             logger.warning("Feishu reply failed for message_id=%s", message_id)
             return "failed"
+        self._record_agent_message(
+            project_id=project_id,
+            message_id=message_id,
+            event_id=event_id,
+            content=answer,
+            delivery_status="replied",
+        )
         return "failed" if analysis_failed else "replied"

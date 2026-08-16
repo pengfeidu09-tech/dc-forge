@@ -54,7 +54,9 @@ _INTERNAL_OUTPUT_PATTERNS = (
     re.compile(r"(?i)\bautomotive-procurement-v1\b"),
     re.compile(r"需求状态池|客户确认基线|需求信息覆盖度|当前成熟度|需求候选"),
 )
-_CUSTOMER_SAFE_FALLBACK = "感谢您的关注。请继续告诉我您希望重点了解的业务环节。"
+_CUSTOMER_SAFE_FALLBACK = (
+    "我还缺少足够信息来回答。请告诉我您想了解的业务环节或当前做法。"
+)
 
 _SYSTEM_PROMPT = """You are the DCForge requirement conversation agent.
 Classify the latest customer message and write a concise Chinese reply.
@@ -219,7 +221,7 @@ def _unavailable(warnings: list[str]) -> ChatAgentResponse:
         safe_warnings.append("LLM 未返回可用内容")
     return ChatAgentResponse(
         status="unavailable",
-        answer="AI 服务暂不可用，请稍后再试。",
+        answer="当前无法完成回复，请稍后再试。",
         next_action="none",
         warnings=safe_warnings,
     )
