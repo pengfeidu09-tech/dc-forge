@@ -122,6 +122,7 @@ def test_requirement_intent_uses_state_snapshot_and_engine_answer() -> None:
             "message_id": "event-001",
             "message": "我们是汽车制造企业，希望优化采购合规。",
             "sender_open_id": "ou-owner",
+            "history": [],
         }
     ]
     assert reply_client.replies == [

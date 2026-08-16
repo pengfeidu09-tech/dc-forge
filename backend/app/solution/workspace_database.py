@@ -247,6 +247,25 @@ class SqliteRequirementRepository(WorkspaceSQLite):
             )
         return True
 
+    def dismiss_latest_question(self, project_id: str) -> bool:
+        self._validate_project_id(project_id)
+        with self._lock, self.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT sequence FROM requirement_question_history "
+                "WHERE project_id = ? AND status = 'asked' "
+                "ORDER BY sequence DESC LIMIT 1",
+                (project_id,),
+            ).fetchone()
+            if row is None:
+                return False
+            connection.execute(
+                "UPDATE requirement_question_history SET status = 'dismissed' "
+                "WHERE sequence = ?",
+                (row["sequence"],),
+            )
+        return True
+
     def list_question_history(self, project_id: str) -> list[QuestionHistoryEntry]:
         self._validate_project_id(project_id)
         with self.connect() as connection:
@@ -263,6 +282,25 @@ class SqliteRequirementRepository(WorkspaceSQLite):
                 status=row["status"],
                 answer_source_ids=json.loads(row["answer_source_ids_json"]),
             )
+            for row in rows
+        ]
+
+    def list_question_contexts(self, project_id: str) -> list[dict[str, str]]:
+        self._validate_project_id(project_id)
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT question_id, question_text, target_category, status "
+                "FROM requirement_question_history "
+                "WHERE project_id = ? ORDER BY sequence",
+                (project_id,),
+            ).fetchall()
+        return [
+            {
+                "question_id": str(row["question_id"]),
+                "question": str(row["question_text"]),
+                "topic": str(row["target_category"]),
+                "status": str(row["status"]),
+            }
             for row in rows
         ]
 

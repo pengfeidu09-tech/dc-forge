@@ -2,21 +2,22 @@
 
 from __future__ import annotations
 
-import os
 import json
-import re
+import os
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 from threading import Lock
 from typing import Literal
 
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
 from backend.app.contracts.requirement_intelligence import (
     CustomerContextPackage,
     CustomerSourceRecord,
     QuestionHistoryEntry,
+    RequirementGap,
     RequirementItem,
-    RequirementSourceRef,
 )
 from backend.app.internal_console.service import InternalConsoleService
 from backend.app.process.requirement_analysis import RequirementAnalysisBuilder
@@ -24,45 +25,13 @@ from backend.app.process.requirement_extractor import RequirementExtractor
 from backend.app.process.question_planner import QuestionPlanner
 from backend.app.process.requirement_reducer import RequirementReducer
 from backend.app.process.requirement_skill import RequirementSkillLoader
-from backend.app.solution.chat_agent import BusinessStateSnapshot
+from backend.app.solution.chat_agent import BusinessStateSnapshot, ChatTurn
 from backend.app.solution.llm_provider import LLMProvider, OpenAICompatibleProvider
 from backend.app.solution.llm_provider import LLMResponse
 from backend.app.solution.workspace_database import SqliteRequirementRepository
 
 
 _DEFAULT_SKILL_ID = "procurement-core-v1"
-_AUTOMOTIVE_SKILL_ID = "automotive-procurement-v1"
-_INSTITUTION_TERMS = (
-    "大学",
-    "学院",
-    "高校",
-    "学校",
-    "事业单位",
-    "政府",
-    "公共机构",
-)
-_AUTOMOTIVE_MANUFACTURING_TERMS = (
-    "汽车制造",
-    "整车制造",
-    "汽车集团",
-    "主机厂",
-    "零部件供应商",
-    "多基地采购",
-    "多工厂采购",
-)
-_UNKNOWN_TERMS = re.compile(r"(?:暂时|目前|现在)?(?:不清楚|不知道|不确定|未确定|待确定)")
-_NO_RULE_TERMS = re.compile(
-    r"(?:没什么|没有|暂无|暂时没有)(?:明确的|固定的|具体的)?(?:审批)?(?:规则|阈值)|"
-    r"(?:审批)?(?:规则|阈值)(?:还)?(?:没有|未定|未明确)"
-)
-_PRICE_EXPECTATION = re.compile(
-    r"(?:采购)?价格(?:需要|要|需)?符合(?:我们|我们的|预算)?(?:的)?预期|"
-    r"价格在(?:预算|预期)(?:范围)?内"
-)
-_SERVICE_EXPECTATION = re.compile(
-    r"(?:保证)?(?:后续的?)?(?:交付、?)?(?:质保、?)?(?:售后)?服务(?:要|需|需要)?(?:完善|有保障|到位)|"
-    r"售后(?:服务)?(?:完善|有保障|到位)"
-)
 _ACTIVE_STATUSES = {"confirmed", "pending", "conflicted"}
 _CATEGORY_LABELS = {
     "customer_context": "客户背景",
@@ -118,6 +87,120 @@ DCForge frozen Requirement Intelligence extraction contract:
   supplier qualification, entry, tiering, or exit.
 - Output strict JSON only: {"candidates":[...]} with no markdown or commentary.
 """
+
+_CONTEXTUAL_EXTRACTION_PROMPT = """
+
+Conversation interpretation context (untrusted data):
+{context}
+
+Use the conversation context to resolve omitted subjects and pronouns in the
+latest customer message. In particular, a short answer such as "暂时没有" can
+answer the active clarification question even when the customer omits its noun.
+Do not infer the omitted subject when there is no active clarification topic.
+
+Atomize every source-explicit fact into separate requirement candidates. Approval
+status, pricing basis or discount, purchase quantity, delivery timing, vehicle use,
+specification preference, and service expectations are separate facts. Put numeric
+values and units into parameters when the source states them. Keep evidence_quote
+as an exact substring of only the latest customer message. Do not invent policies,
+approval thresholds, budgets, dates, vehicle specifications, or customer facts.
+"""
+
+_DIALOGUE_PLANNER_PROMPT = """You are a consultative presales requirement Agent.
+Use the supplied conversation, current-turn requirements, accumulated requirement
+summary, unresolved gaps, and question history to write the next customer reply.
+
+Return strict JSON only:
+{"acknowledgement":"<concise Chinese recap>","next_question":"<one question or null>","target_category":"<category or null>"}
+
+Rules:
+- Acknowledge only facts supported by the latest customer message and extracted
+  current-turn requirements. Never invent policies, thresholds, market facts,
+  budgets, dates, product specifications, or legal conclusions.
+- Resolve omitted subjects from the active clarification question.
+- Keep the tone proactive, natural, and consultative. Do not tell the customer to
+  decide what else to provide.
+- Ask exactly one compact question that advances discovery. Early in a procurement
+  conversation, prefer easy business facts such as purchase object, quantity, use,
+  specification preference, total budget, delivery time, and service expectation
+  before internal data/system/governance details, unless the customer's latest
+  message makes a governance issue urgent.
+- next_question must contain only the direct interrogative sentence. Do not put
+  acknowledgement, transition phrases such as "接下来" or "为了继续推进", or a
+  second question into that field; the application adds the transition separately.
+- Do not repeat or paraphrase a question whose history status is asked, answered,
+  or dismissed. Use null only when the supplied readiness says no further customer
+  discovery question is needed.
+- If an approval rule is absent or unknown, recap it as pending the customer's
+  internal confirmation. Do not create a reference threshold.
+- Do not expose internal IDs, state versions, skill IDs, gaps, scores, tools, or
+  workflow metadata to the customer.
+- target_category must identify the single requirement category addressed by the
+  next question and must be null when next_question is null. Use a core category
+  or valid ext:<domain>:<key> category from the supplied structured context; never
+  return a Chinese label or invent a category format.
+"""
+
+_SKILL_ROUTER_PROMPT = """You route a customer requirement conversation to one
+Requirement Skill. Return strict JSON only:
+{"selected_skill_id":"procurement-core-v1 or automotive-procurement-v1"}
+
+Use automotive-procurement-v1 only for automotive manufacturing enterprise
+procurement operations such as supplier entry, group procurement, manufacturing
+quality compliance, or multi-site sourcing. Purchasing vehicles as goods does not
+by itself make the customer an automotive manufacturer. Use procurement-core-v1
+for general procurement and for public institutions, schools, universities, and
+government procurement. Base the decision only on the supplied conversation and
+known requirements. Do not invent the customer's industry or organization type.
+"""
+
+
+class _DialoguePlan(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    acknowledgement: str = Field(min_length=1, max_length=2000)
+    next_question: str | None = Field(default=None, max_length=1000)
+    target_category: str | None = Field(default=None, max_length=160)
+
+    @field_validator("target_category")
+    @classmethod
+    def validate_target_category(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        probe = RequirementGap(
+            gap_id="dialogue-plan-category-validation",
+            category=value,
+            gap_type="missing",
+            description="Validate Agent dialogue category against the contract.",
+            blocking=False,
+            reason="Structured output validation.",
+        )
+        return probe.category
+
+    @model_validator(mode="after")
+    def validate_question_target(self) -> "_DialoguePlan":
+        if (self.next_question is None) != (self.target_category is None):
+            raise ValueError("next_question and target_category must be set together")
+        return self
+
+
+class FeishuContextualExtractionProvider:
+    """Injects dialogue state while preserving frozen extraction validation."""
+
+    def __init__(self, delegate: LLMProvider, context: dict) -> None:
+        self._delegate = delegate
+        self._context = context
+
+    def complete(self, messages: list[dict], tools=None):
+        contextual = [dict(message) for message in messages]
+        prompt = _CONTEXTUAL_EXTRACTION_PROMPT.format(
+            context=json.dumps(self._context, ensure_ascii=False, sort_keys=True)
+        )
+        if contextual and contextual[0].get("role") == "system":
+            contextual[0]["content"] = str(contextual[0].get("content", "")) + prompt
+        else:
+            contextual.insert(0, {"role": "system", "content": prompt})
+        return self._delegate.complete(contextual, tools=tools)
 
 
 class FeishuRequirementExtractionProvider:
@@ -195,9 +278,11 @@ class FeishuRequirementOrchestrator:
         service: InternalConsoleService,
         *,
         skill_id: str = _DEFAULT_SKILL_ID,
+        dialogue_provider: LLMProvider | None = None,
     ) -> None:
         self.service = service
         self._skill_id = skill_id
+        self._dialogue_provider = dialogue_provider
         self._lock = Lock()
         self._fallback_question_records: dict[str, list[dict]] = {}
 
@@ -222,7 +307,7 @@ class FeishuRequirementOrchestrator:
             provider=FeishuRequirementExtractionProvider(delegate),
         )
         service.skill_loader.resolve(skill_id)
-        return cls(service, skill_id=skill_id)
+        return cls(service, skill_id=skill_id, dialogue_provider=delegate)
 
     @staticmethod
     def source_id(project_id: str, message_id: str) -> str:
@@ -236,6 +321,7 @@ class FeishuRequirementOrchestrator:
         message_id: str,
         message: str,
         sender_open_id: str | None = None,
+        history: list[ChatTurn] | None = None,
     ) -> FeishuRequirementTurnResult:
         with self._lock:
             versions = self.service.repository.list_versions(project_id)
@@ -246,7 +332,9 @@ class FeishuRequirementOrchestrator:
                 else None
             )
             pending_question = self._latest_question_context(project_id)
-            skill_id = self._select_skill_id(message, previous)
+            skill_id = self._select_skill_id(
+                message, previous, history=history or []
+            )
             skill = self.service.skill_loader.resolve(skill_id)
             source_id = self.source_id(project_id, message_id)
             source = CustomerSourceRecord(
@@ -273,59 +361,72 @@ class FeishuRequirementOrchestrator:
                 previous_state_version=previous_version,
                 requirement_skill_ids=[skill_id],
             )
-            extraction = RequirementExtractor(self.service.provider).extract(context)
-            candidates, approval_status = self._normalize_dialogue_candidates(
-                extraction.candidates,
-                message=message,
-                source=source,
-                clarification_topic=(
-                    pending_question.get("topic") if pending_question else None
-                ),
+            extraction_context = self._extraction_context(
+                previous=previous,
+                pending_question=pending_question,
+                history=history or [],
             )
+            extraction = RequirementExtractor(
+                FeishuContextualExtractionProvider(
+                    self.service.provider, extraction_context
+                )
+            ).extract(context)
+            candidates = extraction.candidates
             if not candidates:
                 raise RuntimeError("no valid requirement candidates were extracted")
             pending_answered = bool(
                 pending_question
-                and (
-                    approval_status is not None
-                    or any(
-                        item.category == pending_question.get("topic")
-                        for item in candidates
-                    )
+                and any(
+                    item.category == pending_question.get("topic")
+                    for item in candidates
                 )
             )
             state, changes = RequirementReducer().reduce(
                 previous, candidates, context
             )
             state = state.model_copy(update={"selected_skill_id": skill.skill_id})
-            history = self._list_question_history(project_id)
+            question_history_entries = self._list_question_history(project_id)
             analysis = RequirementAnalysisBuilder().build(
                 state,
                 skill,
                 changes=changes,
                 previous_state_version=previous_version,
-                history=history,
+                history=question_history_entries,
                 customer_confirmation_complete=False,
             )
             self.service.repository.save_state(analysis.current_state)
             if pending_answered:
                 self._answer_latest_question(project_id, source_id)
+            elif pending_question is not None:
+                self._dismiss_latest_question(project_id)
+            history_entries = self._list_question_history(project_id)
             discovery_questions = self._discovery_questions(
-                analysis, skill, history=history
+                analysis, skill, history=history_entries
             )
-            selected_question = None
-            if pending_question is None or pending_answered:
-                selected_question = (
-                    self._continuation_question(analysis.current_state, history)
-                    if approval_status is not None
-                    else None
+            question_contexts = self._list_question_contexts(project_id)
+            dialogue_plan = self._plan_dialogue(
+                message=message,
+                history=history or [],
+                pending_question=pending_question,
+                current_turn_items=candidates,
+                analysis=analysis,
+                question_history=question_contexts,
+            )
+            selected_question = self._question_from_plan(
+                project_id, dialogue_plan, question_contexts
+            )
+            if selected_question is None and discovery_questions:
+                used_texts = {
+                    item["question"].strip() for item in question_contexts
+                }
+                selected_question = next(
+                    (
+                        question
+                        for question in discovery_questions
+                        if question.text.strip() not in used_texts
+                    ),
+                    None,
                 )
-            if (
-                selected_question is None
-                and (pending_question is None or pending_answered)
-                and discovery_questions
-            ):
-                selected_question = discovery_questions[0]
             next_question = (
                 selected_question.text if selected_question is not None else None
             )
@@ -337,7 +438,12 @@ class FeishuRequirementOrchestrator:
                 )
             return FeishuRequirementTurnResult(
                 answer=self._format_customer_answer(
-                    next_question, approval_status=approval_status
+                    next_question,
+                    acknowledgement=(
+                        dialogue_plan.acknowledgement
+                        if dialogue_plan is not None
+                        else None
+                    ),
                 ),
                 state_version=analysis.current_state.state_version,
                 readiness_stage=analysis.readiness.stage,
@@ -432,28 +538,16 @@ class FeishuRequirementOrchestrator:
 
     @staticmethod
     def _format_customer_answer(
-        next_question: str | None, *, approval_status: str | None = None
+        next_question: str | None, *, acknowledgement: str | None = None
     ) -> str:
-        if approval_status is not None:
-            recorded = (
-                "目前没有明确的金额审批阈值"
-                if approval_status == "not_defined"
-                else "目前审批规则和金额阈值暂不清楚"
-            )
-            answer = (
-                f"明白，我先按以下口径记录：{recorded}。"
-                "该项已标记为待内部确认；正式执行前，建议由贵单位采购或财务负责人"
-                "确认内部制度、适用采购限额和固定资产管理要求。"
-            )
+        if acknowledgement:
+            answer = acknowledgement.strip()
             if next_question:
-                answer += f"\n\n接下来想确认一下：{next_question}"
+                answer += f"\n\n接下来想确认：{next_question}"
             return answer
         if next_question:
-            return f"我先确认一个信息：{next_question}"
-        return (
-            "目前的信息足够形成初步理解。"
-            "您可以继续补充审批规则、数据范围或部署要求。"
-        )
+            return f"了解。为了继续帮您梳理需求，想先确认：{next_question}"
+        return "目前已形成初步需求理解，我会基于已记录的信息继续整理。"
 
     @staticmethod
     def _label(category: str) -> str:
@@ -461,165 +555,177 @@ class FeishuRequirementOrchestrator:
             return category.split(":")[-1].replace("_", " ")
         return _CATEGORY_LABELS.get(category, category)
 
-    def _select_skill_id(self, message: str, previous) -> str:
-        state_text = " ".join(
-            f"{item.subject} {item.value}"
-            for item in (previous.items if previous is not None else [])
-            if item.status in _ACTIVE_STATUSES
+    def _select_skill_id(
+        self, message: str, previous, *, history: list[ChatTurn]
+    ) -> str:
+        fallback_skill_id = (
+            previous.selected_skill_id
+            if previous is not None and previous.selected_skill_id
+            else self._skill_id
         )
-        evidence = f"{state_text} {message}"
-        if any(term in evidence for term in _INSTITUTION_TERMS):
-            return _DEFAULT_SKILL_ID
-        if any(term in evidence for term in _AUTOMOTIVE_MANUFACTURING_TERMS):
-            return _AUTOMOTIVE_SKILL_ID
-        if self._skill_id not in {_DEFAULT_SKILL_ID, _AUTOMOTIVE_SKILL_ID}:
-            return self._skill_id
-        return _DEFAULT_SKILL_ID
+        if self._dialogue_provider is None:
+            return fallback_skill_id
+        context = {
+            "latest_customer_message": message,
+            "recent_conversation": [
+                turn.model_dump(mode="json") for turn in history[-10:]
+            ],
+            "known_requirements": self._active_requirement_summary(previous),
+        }
+        try:
+            response = self._dialogue_provider.complete(
+                [
+                    {"role": "system", "content": _SKILL_ROUTER_PROMPT},
+                    {
+                        "role": "user",
+                        "content": json.dumps(
+                            context, ensure_ascii=False, sort_keys=True
+                        ),
+                    },
+                ]
+            )
+            payload = self._json_object(response.content)
+            selected = payload.get("selected_skill_id") if payload else None
+            if isinstance(selected, str):
+                self.service.skill_loader.resolve(selected)
+                return selected
+        except Exception:
+            pass
+        return fallback_skill_id
+
+    @classmethod
+    def _extraction_context(
+        cls,
+        *,
+        previous,
+        pending_question: dict[str, str] | None,
+        history: list[ChatTurn],
+    ) -> dict:
+        return {
+            "active_clarification": pending_question,
+            "recent_conversation": [
+                turn.model_dump(mode="json") for turn in history[-10:]
+            ],
+            "known_requirements": cls._active_requirement_summary(previous),
+        }
 
     @staticmethod
-    def _approval_answer_status(message: str, topic: str | None) -> str | None:
-        approval_context = topic == "approval" or any(
-            term in message for term in ("审批", "规则", "阈值")
-        )
-        if not approval_context:
-            return None
-        if _UNKNOWN_TERMS.search(message):
-            return "unknown"
-        if _NO_RULE_TERMS.search(message):
-            return "not_defined"
-        return None
+    def _active_requirement_summary(state) -> list[dict[str, object]]:
+        if state is None:
+            return []
+        return [
+            {
+                "category": item.category,
+                "value": item.value,
+                "parameters": item.parameters,
+            }
+            for item in state.items
+            if item.status in _ACTIVE_STATUSES
+        ][:30]
 
-    def _normalize_dialogue_candidates(
+    def _plan_dialogue(
         self,
-        candidates: list[RequirementItem],
         *,
         message: str,
-        source: CustomerSourceRecord,
-        clarification_topic: str | None,
-    ) -> tuple[list[RequirementItem], str | None]:
-        approval_status = self._approval_answer_status(
-            message, clarification_topic
-        )
-        if approval_status is None:
-            return candidates, None
-
-        replacements: list[RequirementItem] = []
-        approval_match = (
-            _UNKNOWN_TERMS.search(message)
-            if approval_status == "unknown"
-            else _NO_RULE_TERMS.search(message)
-        )
-        approval_quote = approval_match.group(0) if approval_match else message
-        replacements.append(
-            self._direct_item(
-                category="approval",
-                subject="人工审批规则",
-                value=(
-                    "当前没有明确的金额审批阈值"
-                    if approval_status == "not_defined"
-                    else "当前审批规则和金额阈值暂不清楚"
-                ),
-                parameters={
-                    "rule_status": approval_status,
-                    "needs_internal_confirmation": True,
-                },
-                quote=approval_quote,
-                source=source,
-            )
-        )
-        price_match = _PRICE_EXPECTATION.search(message)
-        if price_match:
-            replacements.append(
-                self._direct_item(
-                    category="budget",
-                    subject="采购价格预期",
-                    value="采购价格符合客户预算预期",
-                    parameters={"expectation_status": "qualitative"},
-                    quote=price_match.group(0),
-                    source=source,
-                )
-            )
-        service_match = _SERVICE_EXPECTATION.search(message)
-        if service_match:
-            replacements.append(
-                self._direct_item(
-                    category="deliverable",
-                    subject="交付与售后服务",
-                    value="后续交付、质保与售后服务需要完善",
-                    parameters={"service_expectation": "complete_after_sales"},
-                    quote=service_match.group(0),
-                    source=source,
-                )
-            )
-
-        replacement_categories = {item.category for item in replacements}
-        normalized = [
-            item
-            for item in candidates
-            if item.category not in replacement_categories
-            and item.category != "ext:procurement:supplier_entry_policy"
-        ]
-        normalized.extend(replacements)
-        return normalized, approval_status
-
-    @staticmethod
-    def _direct_item(
-        *,
-        category: str,
-        subject: str,
-        value: str,
-        parameters: dict,
-        quote: str,
-        source: CustomerSourceRecord,
-    ) -> RequirementItem:
-        return RequirementItem(
-            category=category,
-            subject=subject,
-            value=value,
-            parameters=parameters,
-            provenance="ai_extracted",
-            status="pending",
-            confirmation_level="none",
-            confidence=1.0,
-            source_refs=[
-                RequirementSourceRef(
-                    source_id=source.source_id,
-                    locator=source.locator,
-                    excerpt=quote,
-                )
+        history: list[ChatTurn],
+        pending_question: dict[str, str] | None,
+        current_turn_items: list[RequirementItem],
+        analysis,
+        question_history: list[dict[str, str]],
+    ) -> _DialoguePlan | None:
+        if self._dialogue_provider is None:
+            return None
+        payload = {
+            "latest_customer_message": message,
+            "recent_conversation": [
+                turn.model_dump(mode="json") for turn in history[-10:]
             ],
+            "active_clarification_before_this_turn": pending_question,
+            "current_turn_requirements": [
+                {
+                    "category": item.category,
+                    "value": item.value,
+                    "parameters": item.parameters,
+                    "evidence": [ref.excerpt for ref in item.source_refs],
+                }
+                for item in current_turn_items
+            ],
+            "known_requirements": self._active_requirement_summary(
+                analysis.current_state
+            ),
+            "unresolved_gaps": [
+                {
+                    "category": gap.category,
+                    "gap_type": gap.gap_type,
+                    "blocking": gap.blocking,
+                }
+                for gap in analysis.current_state.gaps
+            ],
+            "question_history": [
+                {
+                    "question": item["question"],
+                    "topic": item["topic"],
+                    "status": item["status"],
+                }
+                for item in question_history
+            ],
+            "readiness": analysis.readiness.stage,
+        }
+        try:
+            response = self._dialogue_provider.complete(
+                [
+                    {"role": "system", "content": _DIALOGUE_PLANNER_PROMPT},
+                    {
+                        "role": "user",
+                        "content": json.dumps(
+                            payload, ensure_ascii=False, sort_keys=True
+                        ),
+                    },
+                ]
+            )
+            parsed = self._json_object(response.content)
+            plan = _DialoguePlan.model_validate(parsed) if parsed else None
+        except Exception:
+            return None
+        if (
+            plan is not None
+            and analysis.readiness.stage == "DISCOVERY"
+            and plan.next_question is None
+        ):
+            return None
+        return plan
+
+    @staticmethod
+    def _question_from_plan(
+        project_id: str,
+        plan: _DialoguePlan | None,
+        history: list[dict[str, str]],
+    ) -> _DialogueQuestion | None:
+        if plan is None or plan.next_question is None or plan.target_category is None:
+            return None
+        text = plan.next_question.strip()
+        if text in {item["question"].strip() for item in history}:
+            return None
+        material = f"{project_id}|agent|{plan.target_category}|{text}"
+        return _DialogueQuestion(
+            question_id=(
+                "question-" + sha256(material.encode("utf-8")).hexdigest()[:12]
+            ),
+            text=text,
+            target_category=plan.target_category,
         )
 
     @staticmethod
-    def _continuation_question(state, history) -> _DialogueQuestion | None:
-        used_ids = {entry.question_id for entry in history}
-        budget_id = (
-            "question-"
-            + sha256(f"{state.project_id}|dialogue|total-budget".encode()).hexdigest()[:12]
-        )
-        has_quantified_budget = any(
-            item.category == "budget"
-            and item.status in _ACTIVE_STATUSES
-            and re.search(r"\d", item.value)
-            for item in state.items
-        )
-        if not has_quantified_budget and budget_id not in used_ids:
-            return _DialogueQuestion(
-                question_id=budget_id,
-                text="这次采购预计的总预算大概是多少？",
-                target_category="budget",
-            )
-        time_id = (
-            "question-"
-            + sha256(f"{state.project_id}|dialogue|delivery-time".encode()).hexdigest()[:12]
-        )
-        if time_id not in used_ids:
-            return _DialogueQuestion(
-                question_id=time_id,
-                text="这批采购期望在什么时间完成交付？",
-                target_category="time",
-            )
-        return None
+    def _json_object(content: str) -> dict | None:
+        payload = content.strip()
+        if payload.startswith("```") and payload.endswith("```"):
+            lines = payload.splitlines()
+            payload = "\n".join(lines[1:-1]).strip()
+        try:
+            parsed = json.loads(payload)
+        except (TypeError, json.JSONDecodeError):
+            return None
+        return parsed if isinstance(parsed, dict) else None
 
     def _list_question_history(self, project_id: str) -> list[QuestionHistoryEntry]:
         loader = getattr(self.service.repository, "list_question_history", None)
@@ -627,6 +733,20 @@ class FeishuRequirementOrchestrator:
             return loader(project_id)
         return [
             record["entry"]
+            for record in self._fallback_question_records.get(project_id, [])
+        ]
+
+    def _list_question_contexts(self, project_id: str) -> list[dict[str, str]]:
+        loader = getattr(self.service.repository, "list_question_contexts", None)
+        if callable(loader):
+            return loader(project_id)
+        return [
+            {
+                "question_id": record["entry"].question_id,
+                "question": record["question"],
+                "topic": record["topic"],
+                "status": record["entry"].status,
+            }
             for record in self._fallback_question_records.get(project_id, [])
         ]
 
@@ -656,6 +776,18 @@ class FeishuRequirementOrchestrator:
                 record["entry"] = entry.model_copy(
                     update={"status": "answered", "answer_source_ids": [source_id]}
                 )
+                return
+
+    def _dismiss_latest_question(self, project_id: str) -> None:
+        updater = getattr(self.service.repository, "dismiss_latest_question", None)
+        if callable(updater):
+            updater(project_id)
+            return
+        records = self._fallback_question_records.get(project_id, [])
+        for record in reversed(records):
+            entry = record["entry"]
+            if entry.status == "asked":
+                record["entry"] = entry.model_copy(update={"status": "dismissed"})
                 return
 
     def _record_question(

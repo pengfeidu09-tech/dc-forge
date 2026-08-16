@@ -94,6 +94,7 @@ class FeishuRequirementOrchestratorProtocol(Protocol):
         message_id: str,
         message: str,
         sender_open_id: str | None = None,
+        history: list[ChatTurn] | None = None,
     ):
         ...
 
@@ -799,6 +800,7 @@ class FeishuBotService:
                     sender_open_id=(
                         sender_open_id if isinstance(sender_open_id, str) else None
                     ),
+                    history=conversation_history,
                 )
                 answer = requirement_result.answer
             except Exception:
