@@ -18,7 +18,7 @@ from backend.app.process.requirement_baseline import RequirementBaselineBuilder
 from backend.app.process.requirement_confirmation import RequirementConfirmationApplier
 from backend.app.process.requirement_extractor import RequirementExtractor
 from backend.app.process.requirement_reducer import RequirementReducer
-from backend.app.process.requirement_repository import FileRequirementRepository
+from backend.app.process.requirement_repository import RequirementRepository
 from backend.app.process.requirement_skill import RequirementSkillLoader
 from backend.app.process.service import RequirementIntelligenceService
 from backend.app.requirement_change.change_set import (
@@ -32,24 +32,38 @@ from backend.app.requirement_change.formal_removal import (
     FormalRemovalService,
 )
 from backend.app.solution.llm_provider import LLMProvider, OpenAICompatibleProvider
+from backend.app.solution.agent_configuration import configured_database_path
+from backend.app.solution.workspace_database import (
+    SqliteRemovalAuditRepository,
+    SqliteRequirementRepository,
+)
 
 
 class InternalConsoleService:
     def __init__(
         self,
-        repository: FileRequirementRepository | None = None,
+        repository: RequirementRepository | None = None,
         skill_loader: RequirementSkillLoader | None = None,
         provider: LLMProvider | None = None,
     ) -> None:
         repository_root = Path(__file__).parents[3]
-        self.repository = repository or self._configured_repository(repository_root)
+        self.repository = repository or SqliteRequirementRepository(
+            configured_database_path()
+        )
+        self.audit_repository = (
+            SqliteRemovalAuditRepository(self.repository.database_path)
+            if isinstance(self.repository, SqliteRequirementRepository)
+            else FileRemovalAuditRepository(
+                self.repository._root / "requirement-change-audits"
+            )
+        )
         self.skill_loader = skill_loader or RequirementSkillLoader(
             repository_root / "data" / "requirement_skills"
         )
         self.provider = provider or self._extraction_provider()
 
     @staticmethod
-    def _extraction_provider() -> OpenAICompatibleProvider:
+    def _extraction_provider() -> LLMProvider:
         timeout_raw = os.getenv("EXTRACTION_LLM_TIMEOUT_SECONDS", "90").strip()
         try:
             timeout = float(timeout_raw)
@@ -66,31 +80,18 @@ class InternalConsoleService:
         if response_format != "json_object":
             raise RuntimeError("EXTRACTION_LLM_RESPONSE_FORMAT must be json_object")
 
-        return OpenAICompatibleProvider(
+        delegate = OpenAICompatibleProvider(
             timeout=timeout,
             request_options={
                 "enable_thinking": thinking_raw == "true",
                 "response_format": {"type": response_format},
             },
         )
-
-    @staticmethod
-    def _configured_repository(repository_root: Path) -> FileRequirementRepository:
-        configured = os.getenv("INTERNAL_CONSOLE_DATA_ROOT") or os.getenv(
-            "REQUIREMENT_REPOSITORY_ROOT"
+        from backend.app.solution.feishu_requirement import (
+            FeishuRequirementExtractionProvider,
         )
-        if not configured or not configured.strip():
-            raise RuntimeError(
-                "Internal Console repository is not configured; set "
-                "INTERNAL_CONSOLE_DATA_ROOT to a directory outside the Git working tree"
-            )
-        data_root = Path(configured).expanduser().resolve()
-        working_tree = repository_root.resolve()
-        if data_root == working_tree or data_root.is_relative_to(working_tree):
-            raise RuntimeError(
-                "INTERNAL_CONSOLE_DATA_ROOT must be outside the Git working tree"
-            )
-        return FileRequirementRepository(data_root)
+
+        return FeishuRequirementExtractionProvider(delegate)
 
     def analyze(
         self,
@@ -218,9 +219,8 @@ class InternalConsoleService:
         state = self.repository.load_state(project_id, state_version)
         if state is None:
             raise FileNotFoundError("RequirementState does not exist")
-        audit_root = self.repository._root / "requirement-change-audits"
         orchestrator = MultiChangeConfirmationOrchestrator(
-            FormalRemovalService(FileRemovalAuditRepository(audit_root))
+            FormalRemovalService(self.audit_repository)
         )
         reviewed = orchestrator.apply(
             previous, state, feedback_sources, actions,

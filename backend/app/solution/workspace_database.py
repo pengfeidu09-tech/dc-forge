@@ -15,6 +15,9 @@ from backend.app.contracts.requirement_intelligence import (
     RequirementDiff,
     RequirementState,
 )
+from backend.app.requirement_change.formal_removal import (
+    RequirementChangeAuditRecord,
+)
 
 
 _SCHEMA = """
@@ -58,6 +61,14 @@ CREATE TABLE IF NOT EXISTS requirement_question_history (
 );
 CREATE INDEX IF NOT EXISTS idx_requirement_question_status
     ON requirement_question_history (project_id, status, sequence);
+CREATE TABLE IF NOT EXISTS requirement_removal_audits (
+    audit_id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    source_state_version INTEGER NOT NULL,
+    payload_json TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_requirement_removal_audits_project
+    ON requirement_removal_audits (project_id, source_state_version, audit_id);
 CREATE TABLE IF NOT EXISTS feishu_event_claims (
     event_id TEXT PRIMARY KEY,
     claimed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -96,6 +107,15 @@ CREATE TABLE IF NOT EXISTS presales_projects (
     project_id TEXT PRIMARY KEY,
     updated_at TEXT NOT NULL,
     payload_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS internal_console_projects (
+    sequence INTEGER PRIMARY KEY,
+    project_id TEXT NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    snapshot_json TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS agent_profiles (
     agent_id TEXT PRIMARY KEY,
@@ -164,6 +184,43 @@ class SqliteFeishuEventClaimStore(WorkspaceSQLite):
                 (normalized,),
             )
         return cursor.rowcount == 1
+
+
+class SqliteRemovalAuditRepository(WorkspaceSQLite):
+    """Append-only formal-removal audits stored with the workspace."""
+
+    def save(self, record: RequirementChangeAuditRecord) -> None:
+        try:
+            with self._lock, self.connect() as connection:
+                connection.execute(
+                    "INSERT INTO requirement_removal_audits "
+                    "(audit_id, project_id, source_state_version, payload_json) "
+                    "VALUES (?, ?, ?, ?)",
+                    (
+                        record.audit_id,
+                        record.project_id,
+                        record.source_state_version,
+                        serialize(record.model_dump(mode="json")),
+                    ),
+                )
+        except sqlite3.IntegrityError as error:
+            raise FileExistsError(
+                f"formal removal audit already exists: {record.audit_id}"
+            ) from error
+
+    def list_records(self, project_id: str) -> list[RequirementChangeAuditRecord]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT payload_json FROM requirement_removal_audits "
+                "WHERE project_id = ? ORDER BY source_state_version, audit_id",
+                (project_id,),
+            ).fetchall()
+        return [
+            RequirementChangeAuditRecord.model_validate(
+                deserialize(row["payload_json"])
+            )
+            for row in rows
+        ]
 
 
 class SqliteRequirementRepository(WorkspaceSQLite):

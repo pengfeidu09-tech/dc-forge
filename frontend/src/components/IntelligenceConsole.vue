@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { consoleApi } from '../services/intelligenceConsoleApi'
+import { summarizeExtractionWarnings } from '../utils/extractionWarnings'
 import {
   buildRecompilePayload,
   captureFeedbackCycleSnapshot,
@@ -88,16 +89,10 @@ const localizedReuseJson = (value) => JSON.stringify(value, (_, item) => (
   typeof item === 'string' && reuseLabels[item] ? `${reuseLabels[item]} (${item})` : item
 ), null, 2)
 
-const goldenSources = {
-  meeting: '客户为汽车制造企业，项目由采购中心负责。当前流程由采购专员接收招标文件，随后采购专员依据审查规则审查招标文件并定位风险。人工审查周期长且合规风险定位慢。',
-  email: '项目目标是缩短招标文件编制与审查周期，降低合规风险。现有系统包括OA。',
-  document: '可用材料包括历史招标文件、企业采购制度和审查规则。数据不得出企业私域。审批规则为超过50万元必须人工审批。目标指标包括processing_time、manual_steps和risk_findings。',
-  sales: '客户希望先验证汽车采购招标文件审查场景。',
-}
-
 const emptySession = () => ({
-  projectId: 'internal-console-project',
+  projectId: '',
   sources: { meeting: '', email: '', document: '', sales: '' },
+  uploadedFiles: [],
   analysis: null,
   extractionWarnings: [],
   baseline: null,
@@ -117,15 +112,10 @@ const emptySession = () => ({
   recompileResult: null,
 })
 
-function restoreSession() {
-  try {
-    return { ...emptySession(), ...JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}') }
-  } catch {
-    return emptySession()
-  }
-}
-
-const session = reactive(restoreSession())
+const session = reactive(emptySession())
+const projects = ref([])
+const selectedProjectId = ref(sessionStorage.getItem(STORAGE_KEY) || '')
+const projectsLoading = ref(false)
 const activeTab = ref('Requirement')
 const health = ref({ status: 'checking', service: 'backend' })
 const loading = ref('')
@@ -139,10 +129,11 @@ const selectedPlanId = ref('')
 const rawOpen = ref(false)
 const rawKey = ref('RequirementAnalysis')
 
-watch(session, (value) => sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value)), { deep: true })
+watch(selectedProjectId, (value) => sessionStorage.setItem(STORAGE_KEY, value || ''))
 
 const currentState = computed(() => session.analysis?.current_state)
 const readiness = computed(() => session.analysis?.readiness)
+const currentProject = computed(() => projects.value.find((item) => item.project_id === selectedProjectId.value))
 const currentPlan = computed(() => {
   const plans = session.solutionBundle?.plans || []
   return plans.find((plan) => plan.solution_id === selectedPlanId.value) || session.recommendedSolution || plans[0]
@@ -163,6 +154,51 @@ const rawArtifacts = computed(() => ({
   RecompileResult: session.recompileResult,
 }))
 const rawValue = computed(() => rawArtifacts.value[rawKey.value])
+const extractionWarningSummary = computed(() => summarizeExtractionWarnings(session.extractionWarnings))
+
+function hydrateSession(snapshot) {
+  const empty = emptySession()
+  Object.assign(session, empty, snapshot, {
+    sources: { ...empty.sources, ...(snapshot?.sources || {}) },
+    uploadedFiles: [...(snapshot?.uploadedFiles || [])],
+  })
+  selectedIds.value = (session.analysis?.current_state?.items || [])
+    .filter((item) => ['pending', 'conflicted'].includes(item.status))
+    .map((item) => item.requirement_id)
+  selectedPlanId.value = session.solutionBundle?.recommended_solution_id || ''
+}
+
+function selectProject(project) {
+  selectedProjectId.value = project.project_id
+  hydrateSession(project.snapshot)
+  activeTab.value = 'Requirement'
+  error.value = ''
+  success.value = project.kind === 'demo' ? '已加载数据库中的汽车采购示例' : `已加载${project.title}`
+}
+
+function replaceProject(project) {
+  const index = projects.value.findIndex((item) => item.project_id === project.project_id)
+  if (index >= 0) projects.value.splice(index, 1, project)
+  else projects.value.push(project)
+}
+
+async function loadProjects() {
+  projectsLoading.value = true
+  try {
+    const result = await consoleApi.listProjects()
+    projects.value = result.projects
+    const selected = projects.value.find((item) => item.project_id === selectedProjectId.value) || projects.value[0]
+    if (selected) selectProject(selected)
+  } finally {
+    projectsLoading.value = false
+  }
+}
+
+async function saveCurrentProject() {
+  if (!session.projectId || currentProject.value?.kind === 'demo') return
+  const saved = await consoleApi.saveProject(session.projectId, { snapshot: { ...session } })
+  replaceProject(saved)
+}
 
 async function withTask(name, task) {
   loading.value = name
@@ -180,15 +216,27 @@ async function withTask(name, task) {
   }
 }
 
-function loadGolden() {
-  Object.assign(session, emptySession())
-  session.projectId = `automotive-golden-${Date.now()}`
-  session.sources = { ...goldenSources }
-  selectedIds.value = []
-  selectedPlanId.value = ''
-  activeTab.value = 'Requirement'
-  error.value = ''
-  success.value = '汽车采购示例原始资料已加载'
+async function handleTextUpload(file) {
+  const extension = file.name.split('.').pop()?.toLowerCase()
+  if (!['txt', 'md', 'json', 'csv'].includes(extension)) {
+    error.value = '当前仅支持上传 UTF-8 文本文件：.txt、.md、.json、.csv'
+    return false
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    error.value = '单个文本文件不能超过 2 MB'
+    return false
+  }
+  try {
+    const content = await file.text()
+    const section = `【上传文件：${file.name}】\n${content.trim()}`
+    session.sources.document = [session.sources.document.trim(), section].filter(Boolean).join('\n\n')
+    session.uploadedFiles = [...new Set([...session.uploadedFiles, file.name])]
+    error.value = ''
+    success.value = `已读取 ${file.name}，点击“开始需求分析并保存”后写入数据库`
+  } catch (reason) {
+    error.value = reason instanceof Error ? reason.message : String(reason)
+  }
+  return false
 }
 
 function setRequirementSelected(requirementId, checked) {
@@ -216,6 +264,12 @@ function sourceRecords() {
 
 async function analyzeRequirements() {
   await withTask('analyze', async () => {
+    const created = await consoleApi.createProject({
+      sources: { ...session.sources },
+      uploaded_files: [...session.uploadedFiles],
+    })
+    replaceProject(created)
+    selectProject(created)
     const result = await consoleApi.analyze({
       project_id: session.projectId,
       sources: sourceRecords(),
@@ -227,6 +281,7 @@ async function analyzeRequirements() {
     selectedIds.value = result.analysis.current_state.items
       .filter((item) => ['pending', 'conflicted'].includes(item.status))
       .map((item) => item.requirement_id)
+    await saveCurrentProject()
   })
 }
 
@@ -254,6 +309,7 @@ async function confirmSelected() {
           !(item.status === 'confirmed' && item.confirmation_level === 'customer'),
       )
       .map((item) => item.requirement_id)
+    await saveCurrentProject()
   })
 }
 
@@ -268,6 +324,7 @@ async function compileSolution() {
     session.recommendedSolution = result.recommended_solution
     session.blueprint = result.demo_blueprint
     selectedPlanId.value = result.solution_bundle.recommended_solution_id
+    await saveCurrentProject()
   })
 }
 
@@ -295,6 +352,7 @@ async function analyzeFeedback() {
       previous_baseline_version: session.previousBaseline.baseline_version,
       state_version: result.analysis.current_state.state_version,
     })).change_set
+    await saveCurrentProject()
   })
 }
 
@@ -329,6 +387,7 @@ async function reviewChangeSet() {
       session.requirementDiff = result.requirement_diff
       session.route = result.route
     }
+    await saveCurrentProject()
   })
 }
 
@@ -341,18 +400,22 @@ async function buildDiff() {
     })
     session.requirementDiff = result.requirement_diff
     session.route = result.route
+    await saveCurrentProject()
   })
 }
 
 async function recompileSolution() {
   await withTask('recompile', async () => {
     session.recompileResult = await consoleApi.recompile(buildRecompilePayload(session))
+    await saveCurrentProject()
   })
 }
 
 onMounted(async () => {
   try { health.value = await consoleApi.health() }
   catch (reason) { health.value = { status: 'offline', service: reason.message } }
+  try { await loadProjects() }
+  catch (reason) { error.value = reason instanceof Error ? reason.message : String(reason) }
 })
 </script>
 
@@ -367,7 +430,7 @@ onMounted(async () => {
         <p>智能引擎内部调试与演示工作台 <small>ENGINE DEBUG TOOL</small> · 非最终客户展示界面</p>
       </div>
       <div class="header-status">
-        <label>项目 ID<a-input v-model:value="session.projectId" :disabled="Boolean(currentState)" /></label>
+        <a-tag color="blue">{{ currentProject?.title || '正在加载分析记录' }}</a-tag>
         <a-tag :color="health.status === 'ok' ? 'green' : health.status === 'offline' ? 'red' : 'orange'">{{ health.status === 'ok' ? '后端已连接' : health.status === 'offline' ? '后端未连接' : '正在连接后端' }}</a-tag>
         <a-tag>需求状态 v{{ currentState?.state_version || '—' }}</a-tag>
         <a-tag>需求基线 v{{ session.baseline?.baseline_version || '—' }}</a-tag>
@@ -377,9 +440,39 @@ onMounted(async () => {
 
     <a-alert v-if="error" class="error-banner" type="error" show-icon message="请求失败" :description="error" />
     <a-alert v-else-if="success" class="success-banner" type="success" show-icon message="操作成功" :description="success" />
-    <a-alert v-if="session.extractionWarnings.length" class="warning-banner" type="warning" show-icon message="需求提取提示">
-      <template #description><div v-for="warning in session.extractionWarnings" :key="`${warning.source_id}-${warning.code}-${warning.locator || ''}`">{{ warning.source_id }} · {{ warning.code }} · {{ warning.message }}</div></template>
+    <a-alert v-if="session.extractionWarnings.length" class="warning-banner" type="warning" show-icon :message="extractionWarningSummary.headline">
+      <template #description>
+        <p>{{ extractionWarningSummary.description }}</p>
+        <div class="extraction-warning-groups">
+          <div v-for="group in extractionWarningSummary.groups" :key="group.sourceId">
+            <strong>{{ group.sourceLabel }}</strong>
+            <span>{{ group.count }} 条提示</span>
+            <a-tag v-for="issue in group.issues" :key="issue.code" color="orange">{{ issue.label }} × {{ issue.count }}</a-tag>
+          </div>
+        </div>
+        <a-collapse ghost class="warning-details">
+          <a-collapse-panel key="technical" header="查看技术详情">
+            <div v-for="(warning, index) in extractionWarningSummary.details" :key="`${warning.source_id}-${warning.code}-${warning.locator || ''}-${index}`" class="warning-detail">
+              <strong>{{ warning.source_id }}</strong><code>{{ warning.code }}</code><span>{{ warning.message }}</span>
+            </div>
+          </a-collapse-panel>
+        </a-collapse>
+      </template>
     </a-alert>
+    <a-card class="project-history" :bordered="false">
+      <div class="panel-heading"><div><small>数据库记录</small><h2>分析记录</h2></div><span>Demo 固定为第 1 条，新的分析自动顺序保存</span></div>
+      <a-list :data-source="projects" :loading="projectsLoading" :grid="{ gutter: 12, xs: 1, sm: 2, lg: 4 }">
+        <template #renderItem="{ item }">
+          <a-list-item>
+            <a-button class="project-item" :class="{ selected: item.project_id === selectedProjectId }" type="text" @click="selectProject(item)">
+              <span><a-tag :color="item.kind === 'demo' ? 'gold' : 'blue'">第 {{ item.sequence }} 条</a-tag>{{ item.kind === 'demo' ? '内置 Demo' : '数据库记录' }}</span>
+              <strong>{{ item.title }}</strong>
+              <small>需求状态 v{{ item.snapshot.analysis?.current_state?.state_version || '—' }} · 基线 v{{ item.snapshot.baseline?.baseline_version || '—' }}</small>
+            </a-button>
+          </a-list-item>
+        </template>
+      </a-list>
+    </a-card>
     <a-segmented class="tabs" v-model:value="activeTab" :options="tabs.map((tab) => ({ label: tabLabels[tab], value: tab }))" block />
 
     <a-layout-content class="console-main">
@@ -390,13 +483,18 @@ onMounted(async () => {
           <label>客户邮件<a-textarea v-model:value="session.sources.email" :rows="4" /></label>
           <label>需求 / 招标材料<a-textarea v-model:value="session.sources.document" :rows="7" /></label>
           <label>销售备注<a-textarea v-model:value="session.sources.sales" :rows="3" /></label>
+          <div v-if="session.uploadedFiles.length" class="uploaded-files">
+            <small>已读取文件</small><a-tag v-for="name in session.uploadedFiles" :key="name">{{ name }}</a-tag>
+          </div>
           <div class="button-row">
-            <a-button @click="loadGolden">加载汽车采购示例</a-button>
-            <a-button type="primary" :loading="loading === 'analyze'" :disabled="loading || !Object.values(session.sources).some(Boolean) || Boolean(currentState)" @click="analyzeRequirements">
-              {{ loading === 'analyze' ? '正在分析客户需求…' : '开始需求分析' }}
+            <a-upload :before-upload="handleTextUpload" :show-upload-list="false" accept=".txt,.md,.json,.csv">
+              <a-button>上传文本资料</a-button>
+            </a-upload>
+            <a-button type="primary" :loading="loading === 'analyze'" :disabled="Boolean(loading) || !Object.values(session.sources).some(Boolean)" @click="analyzeRequirements">
+              {{ loading === 'analyze' ? '正在创建记录并分析…' : '开始需求分析并保存' }}
             </a-button>
           </div>
-          <p class="hint">示例仅加载客户原始资料，不会加载已确认的需求状态或需求基线。</p>
+          <p class="hint">每次分析都会创建下一条数据库记录，不覆盖 Demo 或历史结果。上传首版支持 UTF-8 文本、Markdown、JSON 和 CSV，单文件不超过 2 MB。</p>
         </a-card>
 
         <div class="content-stack">
@@ -660,7 +758,6 @@ h3 { font-size: 14px; }
 .topbar p small { margin-left: 5px; color: #8993a5; font-size: 9px; letter-spacing: .04em; }
 code { display: block; margin-top: 3px; color: #8993a5; background: transparent; font: 9px/1.35 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; }
 .header-status { display: flex; gap: 10px; align-items: end; font-size: 12px; color: #5e687a; }
-.header-status label { width: 230px; }
 label { display: grid; gap: 6px; color: #566176; font-size: 12px; font-weight: 650; }
 input, textarea, select { width: 100%; border: 1px solid #cfd7e3; border-radius: 6px; background: #fff; padding: 9px 10px; color: #172033; outline: none; }
 input:focus, textarea:focus, select:focus { border-color: #3478df; box-shadow: 0 0 0 2px #3478df20; }
@@ -687,6 +784,24 @@ textarea { resize: vertical; line-height: 1.5; }
 .success-banner, .warning-banner { margin: 16px 28px 0; padding: 12px 15px; border-radius: 7px; display: flex; gap: 12px; }
 .success-banner { border: 1px solid #9bd5ba; background: #effaf4; color: #117548; }
 .warning-banner { border: 1px solid #e6c16b; background: #fff8e8; color: #76540c; flex-direction: column; }
+.warning-banner p { margin: 0 0 10px; }
+.extraction-warning-groups { display: grid; gap: 8px; }
+.extraction-warning-groups > div { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 9px 10px; border: 1px solid #ead39b; border-radius: 6px; background: #fffdf7; }
+.extraction-warning-groups > div > span { margin-right: auto; color: #806a35; font-size: 11px; }
+.warning-details { margin-top: 8px; }
+.warning-detail { display: grid; grid-template-columns: 150px 150px minmax(0, 1fr); gap: 8px; padding: 7px 0; border-bottom: 1px solid #eadfbf; font-size: 11px; }
+.warning-detail code { margin: 0; }
+.project-history { margin: 16px 28px; border: 1px solid #dce2ea; }
+.project-history .panel-heading { margin-bottom: 10px; }
+.project-history .panel-heading > span { color: #707b8f; font-size: 12px; }
+.project-history :deep(.ant-list-item) { padding: 0; }
+.project-item { width: 100%; height: auto; min-height: 92px; padding: 13px; border: 1px solid #dce2ea; border-radius: 8px; display: grid; gap: 7px; justify-items: start; text-align: left; background: #fff; white-space: normal; }
+.project-item:hover, .project-item.selected { border-color: #3478df; background: #f5f9ff; box-shadow: 0 0 0 2px #3478df16; }
+.project-item > span { color: #707b8f; font-size: 11px; }
+.project-item > strong { color: #172033; font-size: 14px; }
+.project-item > small { color: #707b8f; }
+.uploaded-files { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.uploaded-files small { color: #707b8f; font-weight: 700; }
 .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .metric-grid > div { padding: 13px; border: 1px solid #e0e5ed; border-radius: 7px; background: #f8fafc; display: grid; gap: 5px; }
 .metric-grid small { color: #707b8f; }

@@ -39,6 +39,35 @@ def test_console_component_preserves_the_complete_internal_workflow() -> None:
     assert all(text in component for text in required_workflow_copy)
 
 
+def test_console_uses_database_project_history_and_text_upload() -> None:
+    component = (FRONTEND / "src/components/IntelligenceConsole.vue").read_text(
+        encoding="utf-8"
+    )
+
+    assert "<a-list" in component
+    assert "分析记录" in component
+    assert "<a-upload" in component
+    assert "上传文本资料" in component
+    assert "开始需求分析并保存" in component
+    assert "consoleApi.createProject" in component
+    assert "consoleApi.saveProject" in component
+    assert "Date.now()" not in component
+    assert "<label>项目 ID" not in component
+
+
+def test_console_summarizes_extraction_warnings_and_hides_technical_noise() -> None:
+    component = (FRONTEND / "src/components/IntelligenceConsole.vue").read_text(
+        encoding="utf-8"
+    )
+
+    assert "summarizeExtractionWarnings" in component
+    assert "查看技术详情" in component
+    assert "字段格式不符合需求合同" in (
+        FRONTEND / "src/utils/extractionWarnings.js"
+    ).read_text(encoding="utf-8")
+    assert 'v-for="warning in session.extractionWarnings"' not in component
+
+
 def test_console_api_and_session_tools_live_under_frontend() -> None:
     api = (FRONTEND / "src/services/intelligenceConsoleApi.js").read_text(
         encoding="utf-8"
@@ -48,6 +77,7 @@ def test_console_api_and_session_tools_live_under_frontend() -> None:
     )
 
     for endpoint in (
+        "/internal-console/projects",
         "/internal-console/analyze",
         "/internal-console/confirm",
         "/internal-console/compile",

@@ -23,6 +23,14 @@ from backend.app.internal_console.models import (
     ConsoleChangeSetReviewResponse,
 )
 from backend.app.internal_console.service import InternalConsoleService
+from backend.app.solution.agent_configuration import configured_database_path
+from backend.app.solution.internal_console_projects import (
+    InternalConsoleProjectCreateRequest,
+    InternalConsoleProjectListResponse,
+    InternalConsoleProjectRecord,
+    InternalConsoleProjectRepository,
+    InternalConsoleProjectSnapshotRequest,
+)
 
 
 router = APIRouter(prefix="/internal-console", tags=["internal-console"])
@@ -34,6 +42,54 @@ def get_internal_console_service() -> InternalConsoleService:
         return InternalConsoleService()
     except RuntimeError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
+
+
+@lru_cache(maxsize=1)
+def get_internal_console_project_repository() -> InternalConsoleProjectRepository:
+    try:
+        return InternalConsoleProjectRepository(configured_database_path())
+    except RuntimeError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+
+
+@router.get("/projects", response_model=InternalConsoleProjectListResponse)
+def list_projects_endpoint(
+    repository: InternalConsoleProjectRepository = Depends(
+        get_internal_console_project_repository
+    ),
+) -> InternalConsoleProjectListResponse:
+    return InternalConsoleProjectListResponse(projects=repository.list_projects())
+
+
+@router.post(
+    "/projects", status_code=201, response_model=InternalConsoleProjectRecord
+)
+def create_project_endpoint(
+    request: InternalConsoleProjectCreateRequest,
+    repository: InternalConsoleProjectRepository = Depends(
+        get_internal_console_project_repository
+    ),
+) -> InternalConsoleProjectRecord:
+    return repository.create_project(
+        sources=request.sources,
+        uploaded_files=request.uploaded_files,
+    )
+
+
+@router.put("/projects/{project_id}", response_model=InternalConsoleProjectRecord)
+def save_project_endpoint(
+    project_id: str,
+    request: InternalConsoleProjectSnapshotRequest,
+    repository: InternalConsoleProjectRepository = Depends(
+        get_internal_console_project_repository
+    ),
+) -> InternalConsoleProjectRecord:
+    try:
+        return repository.save_snapshot(project_id, request.snapshot)
+    except FileNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except PermissionError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
 
 
 def _http_error(error: Exception) -> HTTPException:

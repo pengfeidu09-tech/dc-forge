@@ -755,6 +755,11 @@ class PresalesOrchestrationService:
 
     def _demo_process_spec(self, project: PresalesProjectRecord, state) -> ProcessSpec:
         items = self._active_requirement_items(state)
+        explicit_rule_items = [
+            item
+            for item in items
+            if item.category in {"business_rule", "budget", "approval"}
+        ]
         messages = self.engagement_service.repository.list_messages(project.project_id)
         latest_customer_message = next(
             (
@@ -820,6 +825,11 @@ class PresalesOrchestrationService:
         missing_information.append(
             "当前方案为基于最新需求状态生成的演示预览，尚未形成正式客户确认基线。"
         )
+        if explicit_rule_items:
+            missing_information.append(
+                "演示编译将客户明确的价格、数量或审批条件归一化为审查规则，"
+                "不代表客户已提供正式制度文档。"
+            )
 
         constraints = []
         if state.selected_skill_id:
@@ -858,16 +868,25 @@ class PresalesOrchestrationService:
             2,
         )
         blocking_gaps = [gap for gap in state.gaps if gap.blocking]
+        business_goal = scalar(
+            "business_goal",
+            latest_customer_message or "基于当前客户需求生成演示方案",
+        )
+        available_data = self._requirement_values(items, "available_data")
+        if explicit_rule_items:
+            business_goal = (
+                f"{business_goal}；审查规则配置："
+                + "；".join(item.value for item in explicit_rule_items)
+            )
+            if "审查规则" not in available_data:
+                available_data.append("审查规则")
         return ProcessSpec(
             project_id=project.project_id,
             industry=scalar("industry", project.industry or "待确认行业"),
             department=scalar("department", "待确认业务部门"),
-            business_goal=scalar(
-                "business_goal",
-                latest_customer_message or "基于当前客户需求生成演示方案",
-            ),
+            business_goal=business_goal,
             roles=self._requirement_values(items, "role") or ["待确认项目角色"],
-            available_data=self._requirement_values(items, "available_data"),
+            available_data=available_data,
             existing_systems=self._requirement_values(items, "existing_system"),
             as_is_nodes=process_nodes,
             pain_points=pain_points,
@@ -937,6 +956,51 @@ class PresalesOrchestrationService:
             citations=citations,
         )
 
+    @classmethod
+    def _automatic_research_query(
+        cls,
+        project: PresalesProjectRecord,
+        requirement_items: list,
+    ) -> str:
+        parts: list[str] = []
+        if project.industry:
+            parts.append(project.industry)
+        if project.title != project.project_id:
+            parts.append(project.title)
+        preferred_categories = {
+            "business_goal",
+            "pain_point",
+            "department",
+            "current_process",
+            "business_rule",
+            "budget",
+        }
+        parts.extend(
+            item.value
+            for item in requirement_items
+            if item.category in preferred_categories
+        )
+        query = "；".join(dict.fromkeys(part for part in parts if part.strip()))
+        return (query or "客户需求解决方案与行业参考案例")[:2000]
+
+    def _research_for_draft(
+        self,
+        project: PresalesProjectRecord,
+        requirement_items: list,
+        *,
+        generated_by: str,
+    ) -> tuple[ResearchSnapshot, bool]:
+        if project.research_snapshots:
+            return project.research_snapshots[-1], False
+        payload = self.run_research(
+            project.project_id,
+            query=self._automatic_research_query(project, requirement_items),
+            user_id=generated_by,
+            as_of=_now(),
+            generated_by=generated_by,
+        )
+        return ResearchSnapshot.model_validate(payload), True
+
     def generate_draft(
         self,
         project_id: str,
@@ -951,8 +1015,6 @@ class PresalesOrchestrationService:
         selected_baseline = baseline_version or (
             baseline_versions[-1] if baseline_versions else None
         )
-        if not project.research_snapshots:
-            raise ValueError("knowledge research snapshot is required")
         baseline = None
         state = None
         draft_warnings: list[str] = []
@@ -961,6 +1023,14 @@ class PresalesOrchestrationService:
                 project_id, selected_baseline
             )
         if baseline is not None:
+            requirement_items = list(baseline.confirmed_items)
+            requirement_state_version = baseline.source_state_version
+            requirement_basis = "confirmed_baseline"
+            research, research_generated = self._research_for_draft(
+                project,
+                requirement_items,
+                generated_by=generated_by,
+            )
             handoff = self.engagement_service.internal_console.compile(
                 project_id, selected_baseline
             )
@@ -971,21 +1041,12 @@ class PresalesOrchestrationService:
                 )
                 for plan in bundle.plans
             ]
-            requirement_items = list(baseline.confirmed_items)
-            requirement_state_version = baseline.source_state_version
-            requirement_basis = "confirmed_baseline"
+            recommended_solution_id = bundle.recommended_solution_id
         else:
             state = self.engagement_service.requirement_repository.load_state(project_id)
             if state is None:
                 raise ValueError("latest RequirementState is required")
             process = self._demo_process_spec(project, state)
-            bundle = compile_solution_v2(process)
-            plans = [
-                self.engagement_service._safe_plan(
-                    plan, bundle.recommended_solution_id
-                )
-                for plan in bundle.plans
-            ]
             requirement_items = self._active_requirement_items(state)
             requirement_state_version = state.state_version
             requirement_basis = "latest_requirement_state"
@@ -993,7 +1054,23 @@ class PresalesOrchestrationService:
             draft_warnings.append(
                 "演示预览：方案基于最新 RequirementState 实时生成，尚未形成正式客户确认基线。"
             )
-        research = project.research_snapshots[-1]
+            research, research_generated = self._research_for_draft(
+                project,
+                requirement_items,
+                generated_by=generated_by,
+            )
+            bundle = compile_solution_v2(process)
+            plans = [
+                self.engagement_service._safe_plan(
+                    plan, bundle.recommended_solution_id
+                )
+                for plan in bundle.plans
+            ]
+            recommended_solution_id = bundle.recommended_solution_id
+        if research_generated:
+            draft_warnings.append(
+                "生成草稿前已根据当前需求自动生成知识研究快照；引用范围以快照记录为准。"
+            )
         timestamp = _now()
         draft = SolutionDraft(
             draft_version=len(project.drafts) + 1,
@@ -1002,7 +1079,7 @@ class PresalesOrchestrationService:
             requirement_basis=requirement_basis,
             research_version=research.research_version,
             plans=plans,
-            selected_solution_id=bundle.recommended_solution_id,
+            selected_solution_id=recommended_solution_id,
             warnings=draft_warnings,
             deliverable_revision=1,
             deliverable=self._deliverable(

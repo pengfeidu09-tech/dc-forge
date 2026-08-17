@@ -384,41 +384,63 @@ def test_demo_draft_uses_latest_requirement_state_without_a_baseline(
     )
 
 
-def test_demo_draft_blocks_when_v2_has_no_executable_asset(
+def test_demo_draft_auto_researches_and_compiles_explicit_rules_with_v2(
     tmp_path,
 ) -> None:
     service = _orchestration(tmp_path)
     complete_state, _ = state_and_baseline(goal="采购10台 Xiaomi SU7")
+    budget_rule = next(
+        item
+        for item in complete_state.items
+        if item.category == "available_data" and item.value == "审查规则"
+    ).model_copy(
+        update={
+            "requirement_id": "req-demo-budget-rule",
+            "category": "budget",
+            "subject": "采购价格目标",
+            "value": "采购价格低于市场价 10%",
+            "parameters": {"benchmark_discount_percent": 10.0},
+        }
+    )
     sparse_state = complete_state.model_copy(
         update={
             "items": [
                 item
                 for item in complete_state.items
                 if item.category in {"department", "business_goal", "role"}
-            ],
+            ]
+            + [budget_rule],
             "gaps": [],
             "process_observations": [],
             "pain_observations": [],
         }
     )
     service.engagement_service.requirement_repository.save_state(sparse_state)
-    service.run_research(
-        PROJECT_ID,
-        query="车辆采购演示",
-        user_id="user-procurement-owner",
-        as_of="2026-08-15T10:00:00+08:00",
-        generated_by="presales-owner",
-    )
 
-    with pytest.raises(
-        ValueError,
-        match="no executable reuse decisions are available for SolutionBundleV2",
-    ):
-        service.generate_draft(
-            PROJECT_ID,
-            baseline_version=None,
-            generated_by="demo-workbench",
+    set_customer_engagement_service(service.engagement_service)
+    set_presales_orchestration_service(service)
+    try:
+        client = TestClient(create_app(frontend_dist=tmp_path / "missing-dist"))
+        response = client.post(
+            f"/presales/projects/{PROJECT_ID}/drafts",
+            json={"generated_by": "demo-workbench"},
         )
+    finally:
+        set_presales_orchestration_service(None)
+        set_customer_engagement_service(None)
+
+    assert response.status_code == 201
+    draft = response.json()
+    workspace = service.get_workspace(PROJECT_ID)
+    assert len(workspace["research_snapshots"]) == 1
+    assert "采购10台 Xiaomi SU7" in workspace["research_snapshots"][0]["query"]
+    assert draft["research_version"] == 1
+    assert len(draft["plans"]) == 3
+    assert next(plan for plan in draft["plans"] if plan["recommended"])[
+        "strategy"
+    ] == "生产适配"
+    assert all(plan["solution_id"].endswith("-v2") for plan in draft["plans"])
+    assert any("自动生成知识研究快照" in warning for warning in draft["warnings"])
 
 
 def test_v2_workbench_generates_from_current_state_without_version_prompt() -> None:

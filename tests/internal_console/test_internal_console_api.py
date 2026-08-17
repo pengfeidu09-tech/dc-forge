@@ -306,24 +306,22 @@ def test_router_is_default_closed_and_explicitly_enabled(monkeypatch) -> None:
         assert "/internal-console/analyze" in create_app().openapi()["paths"]
 
 
-def test_repository_configuration_is_required_and_must_be_outside_repo(monkeypatch) -> None:
+def test_repository_configuration_uses_workspace_database_outside_repo(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
     monkeypatch.delenv("INTERNAL_CONSOLE_DATA_ROOT", raising=False)
     monkeypatch.delenv("REQUIREMENT_REPOSITORY_ROOT", raising=False)
+    database = tmp_path / "workspace.sqlite3"
+    monkeypatch.setenv("DCFORGE_DATABASE_PATH", str(database))
     get_internal_console_service.cache_clear()
-    application = create_app(True)
-    with TestClient(application, raise_server_exceptions=False) as client:
-        response = client.post(
-            "/internal-console/analyze",
-            json={
-                "project_id": "missing-config",
-                "sources": _sources("missing-config"),
-                "skill_id": "automotive-procurement-v1",
-            },
-        )
-    assert response.status_code == 503
-    assert "INTERNAL_CONSOLE_DATA_ROOT" in response.json()["detail"]
+    service = InternalConsoleService()
+    assert service.repository.database_path == database.resolve()
 
-    monkeypatch.setenv("INTERNAL_CONSOLE_DATA_ROOT", str(Path(__file__).parents[2] / "data"))
+    monkeypatch.setenv(
+        "DCFORGE_DATABASE_PATH",
+        str(Path(__file__).parents[2] / "data" / "workspace.sqlite3"),
+    )
     with pytest.raises(RuntimeError, match="outside the Git working tree"):
         InternalConsoleService()
     get_internal_console_service.cache_clear()

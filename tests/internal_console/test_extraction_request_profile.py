@@ -2,6 +2,9 @@ import pytest
 
 from backend.app.internal_console.service import InternalConsoleService
 from backend.app.process.requirement_repository import FileRequirementRepository
+from backend.app.solution.feishu_requirement import (
+    FeishuRequirementExtractionProvider,
+)
 from backend.app.solution.llm_provider import FakeLLMProvider, OpenAICompatibleProvider
 
 
@@ -11,9 +14,10 @@ def test_default_internal_console_provider_uses_extraction_profile(monkeypatch, 
     monkeypatch.setenv("EXTRACTION_LLM_RESPONSE_FORMAT", "json_object")
     service = InternalConsoleService(repository=FileRequirementRepository(tmp_path))
 
-    assert isinstance(service.provider, OpenAICompatibleProvider)
-    assert service.provider._timeout == 90
-    assert service.provider._request_options == {
+    assert isinstance(service.provider, FeishuRequirementExtractionProvider)
+    assert isinstance(service.provider._delegate, OpenAICompatibleProvider)
+    assert service.provider._delegate._timeout == 90
+    assert service.provider._delegate._request_options == {
         "enable_thinking": False,
         "response_format": {"type": "json_object"},
     }

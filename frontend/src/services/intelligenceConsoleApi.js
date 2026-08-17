@@ -13,9 +13,13 @@ async function request(path, options = {}) {
   return payload
 }
 const post = (path, body) => request(path, { method: 'POST', body: JSON.stringify(body) })
+const put = (path, body) => request(path, { method: 'PUT', body: JSON.stringify(body) })
 
 export const consoleApi = {
   health: () => request('/health'),
+  listProjects: () => request('/internal-console/projects'),
+  createProject: (body) => post('/internal-console/projects', body),
+  saveProject: (projectId, body) => put(`/internal-console/projects/${encodeURIComponent(projectId)}`, body),
   analyze: (body) => post('/internal-console/analyze', body),
   confirm: (body) => post('/internal-console/confirm', body),
   compile: (body) => post('/internal-console/compile', body),
